@@ -79,6 +79,29 @@ export class App {
     return total > 0 ? total / 12 : 0;
   });
 
+  // 1. Calculamos qué tan lleno está el plan actual (0 a 100)
+  progressPercentage = computed(() => {
+    const total = this.grandTotal();
+    const plan = this.recommendedPlan();
+    if (!plan || total === 0) return 0;
+    
+    // Si excedió el plan, la barra debe estar al 100%
+    if (plan.exceeded) return 100;
+
+    const percentage = (total / plan.maxAmount) * 100;
+    return Math.min(percentage, 100); 
+  });
+
+  // 2. Definimos el color según el porcentaje (Verde -> Ámbar -> Rojo)
+  progressBarColor = computed(() => {
+    const p = this.progressPercentage();
+    const isExceeded = this.recommendedPlan()?.exceeded;
+
+    if (isExceeded || p > 90) return 'bg-rose-500'; // Rojo: Límite o excedido
+    if (p > 65) return 'bg-amber-500';             // Ámbar: Cerca del límite
+    return 'bg-emerald-500';                       // Verde: Seguro
+  });
+
   updateQuantity(id: string, event: Event) {
     const val = Number((event.target as HTMLInputElement).value);
     const newBasket = new Map(this.basket());
