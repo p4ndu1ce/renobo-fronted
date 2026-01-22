@@ -1,32 +1,92 @@
-import { Component, computed, inject, signal, ViewEncapsulation } from '@angular/core';
+import { Component, inject, signal, computed, ViewEncapsulation } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { CurrencyPipe } from '@angular/common';
-import { ConfigService, type Service } from './services/config.service';
+import { ConfigService, type CreditPlan } from './services/config.service';
+import { CurrencyPipe, CommonModule } from '@angular/common';
+
+type CreditPlanWithExceeded = CreditPlan & { exceeded?: boolean };
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, CurrencyPipe],
+  imports: [CommonModule, CurrencyPipe, RouterOutlet],
   templateUrl: './app.html',
   styleUrl: './app.scss',
   encapsulation: ViewEncapsulation.None
 })
 export class App {
-  protected readonly title = signal('renobo-frontend');
-  protected readonly configService = inject(ConfigService);
-  protected readonly searchTerm = signal('');
+  public configService = inject(ConfigService);
 
-  protected readonly filteredServices = computed(() => {
-    const catalog = this.configService.catalog();
+  // 1. Buscador
+  searchTerm = signal('');
+
+  // 2. Cesta de Obra (ID del material -> cantidad)
+  basket = signal<Map<string, number>>(new Map());
+
+  // 3. Lógica del Buscador Inteligente
+  filteredServices = computed(() => {
+    const allServices = this.configService.catalog()?.services || [];
     const term = this.searchTerm().toLowerCase().trim();
 
-    if (!catalog || term === '') {
-      return catalog?.services ?? [];
+    if (!term) return allServices;
+
+    return allServices.filter(s => 
+      s.name.toLowerCase().includes(term) || 
+      s.category.toLowerCase().includes(term)
+    );
+  });
+
+  // 4. Cálculo del Presupuesto Total
+  totalBudget = computed(() => {
+    const allServices = this.configService.catalog()?.services || [];
+    const currentBasket = this.basket();
+    
+    let total = 0;
+    currentBasket.forEach((qty, id) => {
+      const service = allServices.find(s => s.id === id);
+      if (service) total += service.price.value * qty;
+    });
+    return total;
+  });
+
+  // Alias para grandTotal (compatibilidad con la lógica de planes)
+  grandTotal = computed(() => this.totalBudget());
+
+  // 1. Buscamos el plan recomendado basado en el total
+  recommendedPlan = computed<CreditPlanWithExceeded | null>(() => {
+    const total = this.grandTotal();
+    // Obtenemos los planes y los ordenamos de menor a mayor por su monto máximo
+    const plans = [...(this.configService.catalog()?.creditPlans || [])]
+      .sort((a, b) => a.maxAmount - b.maxAmount);
+
+    if (total === 0) return null;
+
+    // 1. Buscamos el primer plan que cubra el monto total
+    const match = plans.find(plan => total <= plan.maxAmount);
+
+    if (match) return match;
+
+    // 2. Si no hay match pero hay total, significa que EXCEDIO el plan máximo
+    // Retornamos el último plan pero con una bandera de "monto excedido"
+    if (total > 0 && plans.length > 0) {
+      return { ...plans[plans.length - 1], exceeded: true };
     }
 
-    return catalog.services.filter((service: Service) => {
-      const nameMatch = service.name.toLowerCase().includes(term);
-      const categoryMatch = service.category.toLowerCase().includes(term);
-      return nameMatch || categoryMatch;
-    });
+    return null;
   });
+
+  // 2. Calculamos una cuota estimada (ejemplo a 12 meses, puedes ajustarlo)
+  estimatedQuota = computed(() => {
+    const total = this.grandTotal();
+    return total > 0 ? total / 12 : 0;
+  });
+
+  updateQuantity(id: string, event: Event) {
+    const val = Number((event.target as HTMLInputElement).value);
+    const newBasket = new Map(this.basket());
+    if (val > 0) {
+      newBasket.set(id, val);
+    } else {
+      newBasket.delete(id);
+    }
+    this.basket.set(newBasket);
+  }
 }
