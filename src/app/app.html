@@ -47,9 +47,11 @@
           <p class="text-xs font-bold text-slate-400 uppercase tracking-tighter">
             {{ plan.exceeded ? 'Presupuesto Elevado' : 'Plan Recomendado' }}
           </p>
-          <h4 class="text-xl font-black text-slate-900 leading-tight">{{ plan.name }}</h4>
+          <h4 class="text-xl font-black text-slate-900 leading-tight">{{ plan.name }} {{ plan.exceeded ? '+' : '' }}</h4>
 
-          @if (!plan.exceeded && grandTotal() > 0) {
+          @if (plan.exceeded) {
+          <p class="text-[10px] text-orange-600 font-bold uppercase">Requiere Evaluación Especial</p>
+          } @else if (grandTotal() > 0) {
           <p class="text-[10px] font-medium text-slate-400">
             Te quedan <span class="text-slate-600 font-bold">{{ (plan.maxAmount - grandTotal()) | currency }}</span>
             disponibles
@@ -75,9 +77,15 @@
         </p>
       </div>
 
-      <button
-        class="w-full md:w-auto px-8 py-4 bg-accent text-white font-black rounded-2xl hover:bg-blue-700 hover:scale-105 transition-all shadow-lg shadow-blue-200">
-        SOLICITAR CRÉDITO
+      <button (click)="handleRequestCredit()"
+        class="w-full md:w-auto px-10 py-4 bg-accent text-white font-black rounded-2xl hover:bg-blue-700 hover:scale-105 active:scale-95 transition-all shadow-lg shadow-blue-200 flex items-center justify-center gap-2">
+        @if (!authService.isLoggedIn()) {
+        <span class="text-sm opacity-80">🔒</span>
+        INGRESAR PARA SOLICITAR
+        } @else {
+        CONTINUAR SOLICITUD
+        <span class="text-xl">→</span>
+        }
       </button>
 
     </div>

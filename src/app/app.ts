@@ -1,6 +1,7 @@
 import { Component, inject, signal, computed, ViewEncapsulation } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { RouterOutlet, Router } from '@angular/router';
 import { ConfigService, type CreditPlan } from './services/config.service';
+import { AuthService } from './services/auth.service';
 import { CurrencyPipe, CommonModule } from '@angular/common';
 
 type CreditPlanWithExceeded = CreditPlan & { exceeded?: boolean };
@@ -14,6 +15,8 @@ type CreditPlanWithExceeded = CreditPlan & { exceeded?: boolean };
 })
 export class App {
   public configService = inject(ConfigService);
+  public authService = inject(AuthService);
+  private router = inject(Router);
 
   // 1. Buscador
   searchTerm = signal('');
@@ -111,5 +114,19 @@ export class App {
       newBasket.delete(id);
     }
     this.basket.set(newBasket);
+  }
+
+  handleRequestCredit() {
+    if (this.authService.isLoggedIn()) {
+      // Si está logueado, lo enviamos al formulario de solicitud final
+      console.log('Enviando presupuesto:', this.basket());
+      this.router.navigate(['/solicitud-credito']);
+    } else {
+      // Si no, lo mandamos a que se registre o inicie sesión
+      // Podemos pasarle el presupuesto por estado para no perderlo
+      this.router.navigate(['/auth/login'], { 
+        queryParams: { returnUrl: '/calculadora' } 
+      });
+    }
   }
 }
