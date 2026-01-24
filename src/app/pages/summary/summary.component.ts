@@ -17,6 +17,11 @@ export class SummaryComponent {
   private router = inject(Router);
   private http = inject(HttpClient);
 
+  logout() {
+    this.authService.logout();
+    this.router.navigate(['/login']);
+  }
+
   confirmAndSend() {
     // El interceptor añade automáticamente el token en el header Authorization
     // Solo verificamos que el usuario esté autenticado

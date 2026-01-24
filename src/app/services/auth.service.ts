@@ -13,16 +13,29 @@ export class AuthService {
   public isSupervisor = computed(() => this.userRole() === 'SUPERVISOR');
 
   constructor() {
+    console.log('🔧 AuthService constructor - Estado inicial:', {
+      isLoggedIn: this.isLoggedIn(),
+      hasToken: !!this._token(),
+      hasUser: !!this.currentUser(),
+      userRole: this.userRole()
+    });
+    
     // Sincronizamos el signal con localStorage cuando cambia (solo en el navegador)
     if (isPlatformBrowser(this.platformId)) {
       effect(() => {
         const loggedIn = this.isLoggedIn();
         const user = this.currentUser();
         const token = this._token();
+        const currentRole = this.userRole();
         
         if (loggedIn && user) {
           localStorage.setItem('isLoggedIn', 'true');
           localStorage.setItem('currentUser', JSON.stringify(user));
+          
+          // Si el usuario tiene rol, usarlo directamente (más confiable que decodificar)
+          if (user.role && user.role !== currentRole) {
+            this.userRole.set(user.role);
+          }
         } else {
           localStorage.removeItem('isLoggedIn');
           localStorage.removeItem('currentUser');
@@ -30,9 +43,13 @@ export class AuthService {
         
         if (token) {
           localStorage.setItem('authToken', token);
-          // Decodificar el token y actualizar el rol
-          const decodedRole = this.decodeTokenRole(token);
-          this.userRole.set(decodedRole);
+          // Solo decodificar el rol del token si no tenemos uno del usuario
+          if (!currentRole || !user?.role) {
+            const decodedRole = this.decodeTokenRole(token);
+            if (decodedRole) {
+              this.userRole.set(decodedRole);
+            }
+          }
         } else {
           localStorage.removeItem('authToken');
           this.userRole.set(null);
@@ -109,12 +126,23 @@ export class AuthService {
   }
 
   setAuth(token: string, user: { id: string; email?: string; role?: string }) {
+    // Establecer todo de forma síncrona para evitar problemas de timing
     this._token.set(token);
     this.currentUser.set(user);
     this.isLoggedIn.set(true);
-    // Decodificar el rol del token
-    const decodedRole = this.decodeTokenRole(token);
-    this.userRole.set(decodedRole);
+    
+    // Usar el rol del usuario si está disponible, sino decodificarlo del token
+    const role = user.role || this.decodeTokenRole(token);
+    this.userRole.set(role);
+    
+    // Debug: Log para verificar
+    console.log('AuthService.setAuth:', {
+      hasToken: !!token,
+      userRole: user.role,
+      decodedRole: this.decodeTokenRole(token),
+      finalRole: role,
+      isSupervisor: role === 'SUPERVISOR'
+    });
   }
   
   login(email?: string) { 

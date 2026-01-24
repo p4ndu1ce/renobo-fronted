@@ -37,15 +37,28 @@ export class LoginComponent {
         { email, password }
       ).subscribe({
         next: (response) => {
+          console.log('Login response:', response);
+          
           // Guardar token y usuario
           this.authService.setAuth(
             response.token,
             { id: `user-${response.user.email}`, email: response.user.email, role: response.user.role }
           );
           
-          // Redirigir a la URL de retorno o a la calculadora
-          const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/calculadora';
-          this.router.navigate([returnUrl]);
+          // Verificar que se estableció correctamente
+          console.log('Después de setAuth:', {
+            isLoggedIn: this.authService.isLoggedIn(),
+            userRole: this.authService.userRole(),
+            currentUser: this.authService.currentUser()
+          });
+          
+          // Pequeño delay para asegurar que los signals se actualicen
+          setTimeout(() => {
+            // Redirigir a la URL de retorno o a la calculadora
+            const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/calculadora';
+            console.log('Navegando a:', returnUrl);
+            this.router.navigate([returnUrl]);
+          }, 0);
         },
         error: (err) => {
           this.errorMessage = err.error?.error || 'Error al iniciar sesión. Verifica tus credenciales.';

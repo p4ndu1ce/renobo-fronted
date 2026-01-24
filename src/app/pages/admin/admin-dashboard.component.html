@@ -5,12 +5,67 @@
         <h1 class="text-3xl font-black text-slate-900 tracking-tight">PANEL DE SUPERVISIÓN</h1>
         <p class="text-slate-500 font-medium">Gestiona y aprueba las solicitudes de obra entrantes.</p>
       </div>
-      <div class="bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm text-sm font-bold text-slate-600">
-        Pendientes: <span class="text-orange-500">{{ pendingCount() }}</span>
+      <div class="flex items-center gap-4">
+        <div class="bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm text-sm font-bold text-slate-600">
+          Pendientes: <span class="text-orange-500">{{ pendingCount() }}</span>
+        </div>
+        <button
+          (click)="logout()"
+          class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-xl transition-all border border-slate-200"
+        >
+          Cerrar Sesión
+        </button>
       </div>
     </div>
 
-    <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200">
+    <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200 p-6">
+      <div class="mb-6 flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div class="relative w-full md:w-96">
+          <span class="absolute left-4 top-3.5 text-slate-400">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </span>
+          <input 
+            type="text" 
+            [value]="searchTerm()"
+            (input)="searchTerm.set($any($event.target).value)"
+            placeholder="Buscar por ID o Monto..." 
+            class="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-2xl shadow-sm focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all text-sm"
+          >
+        </div>
+
+        <div class="flex gap-2">
+          <button 
+            (click)="filterStatus.set('all')"
+            [class.bg-accent]="filterStatus() === 'all'"
+            [class.text-white]="filterStatus() === 'all'"
+            [class.bg-white]="filterStatus() !== 'all'"
+            [class.text-slate-600]="filterStatus() !== 'all'"
+            class="px-4 py-2 border border-slate-200 rounded-xl text-xs font-bold hover:bg-slate-50 transition-colors"
+          >
+            TODAS
+          </button>
+          <button 
+            (click)="filterStatus.set('pending')"
+            [class.bg-orange-500]="filterStatus() === 'pending'"
+            [class.text-white]="filterStatus() === 'pending'"
+            [class.bg-white]="filterStatus() !== 'pending'"
+            [class.text-orange-500]="filterStatus() !== 'pending'"
+            class="px-4 py-2 border border-slate-200 rounded-xl text-xs font-bold hover:bg-orange-50 transition-colors"
+          >
+            PENDIENTES
+          </button>
+        </div>
+      </div>
+
+      @if (filteredWorks().length === 0 && searchTerm() !== '') {
+        <div class="bg-white rounded-3xl p-12 text-center border border-dashed border-slate-300 mb-6">
+          <p class="text-4xl mb-4">🔍</p>
+          <h3 class="text-lg font-bold text-slate-800">No hay coincidencias</h3>
+          <p class="text-slate-500">No encontramos ninguna obra que coincida con "{{ searchTerm() }}"</p>
+        </div>
+      } @else {
       <table class="w-full text-left border-collapse">
         <thead>
           <tr class="bg-slate-900 text-white uppercase text-[10px] tracking-widest font-bold">
@@ -22,7 +77,7 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-100">
-          @for (work of works(); track work.id) {
+          @for (work of filteredWorks(); track work.id) {
             <tr class="hover:bg-slate-50 transition-colors group">
               <td class="p-5">
                 <p class="font-bold text-slate-800">#{{ work.id.slice(0,8) }}</p>
@@ -53,6 +108,7 @@
           }
         </tbody>
       </table>
+      }
     </div>
   </div>
 </div>
