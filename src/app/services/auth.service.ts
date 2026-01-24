@@ -5,37 +5,79 @@ import { isPlatformBrowser } from '@angular/common';
 export class AuthService {
   private platformId = inject(PLATFORM_ID);
   
-  // En un caso real, esto vendría de un token en localStorage o de AWS Cognito
-  public isLoggedIn = signal<boolean>(this.loadAuthState()); 
+  public isLoggedIn = signal<boolean>(this.loadAuthState());
+  public currentUser = signal<{ id: string; email?: string; role?: string } | null>(this.loadCurrentUser());
+  private _token = signal<string | null>(this.loadToken());
 
   constructor() {
     // Sincronizamos el signal con localStorage cuando cambia (solo en el navegador)
     if (isPlatformBrowser(this.platformId)) {
       effect(() => {
         const loggedIn = this.isLoggedIn();
-        if (loggedIn) {
+        const user = this.currentUser();
+        const token = this._token();
+        
+        if (loggedIn && user) {
           localStorage.setItem('isLoggedIn', 'true');
+          localStorage.setItem('currentUser', JSON.stringify(user));
         } else {
           localStorage.removeItem('isLoggedIn');
+          localStorage.removeItem('currentUser');
+        }
+        
+        if (token) {
+          localStorage.setItem('authToken', token);
+        } else {
+          localStorage.removeItem('authToken');
         }
       });
     }
   }
 
   private loadAuthState(): boolean {
-    // Cargamos el estado desde localStorage al iniciar (solo en el navegador)
     if (isPlatformBrowser(this.platformId)) {
       return localStorage.getItem('isLoggedIn') === 'true';
     }
     return false;
   }
 
-  // Simulamos un login para pruebas
-  login() { 
-    this.isLoggedIn.set(true); 
+  private loadCurrentUser(): { id: string; email?: string; role?: string } | null {
+    if (isPlatformBrowser(this.platformId)) {
+      const userJson = localStorage.getItem('currentUser');
+      return userJson ? JSON.parse(userJson) : null;
+    }
+    return null;
+  }
+
+  private loadToken(): string | null {
+    if (isPlatformBrowser(this.platformId)) {
+      return localStorage.getItem('authToken');
+    }
+    return null;
+  }
+
+  getToken(): string | null {
+    return this._token();
+  }
+
+  setAuth(token: string, user: { id: string; email?: string; role?: string }) {
+    this._token.set(token);
+    this.currentUser.set(user);
+    this.isLoggedIn.set(true);
+  }
+  
+  login(email?: string) { 
+    // Método legacy para compatibilidad - ahora se usa setAuth después de llamar al backend
+    this.isLoggedIn.set(true);
+    this.currentUser.set({ 
+      id: `user-${Date.now()}`, 
+      email: email || 'usuario@renobo.com' 
+    });
   }
   
   logout() { 
-    this.isLoggedIn.set(false); 
+    this.isLoggedIn.set(false);
+    this.currentUser.set(null);
+    this._token.set(null);
   }
 }

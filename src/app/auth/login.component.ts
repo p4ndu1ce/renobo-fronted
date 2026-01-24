@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, ActivatedRoute } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../services/auth.service';
 import { CommonModule } from '@angular/common';
 
@@ -14,6 +15,12 @@ export class LoginComponent {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private http = inject(HttpClient);
+  
+  private readonly AUTH_API_URL = 'https://m587zdkcje.execute-api.us-east-1.amazonaws.com/dev/auth/login';
+  
+  errorMessage = '';
 
   loginForm: FormGroup = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
@@ -22,9 +29,29 @@ export class LoginComponent {
 
   onSubmit() {
     if (this.loginForm.valid) {
-      // Simulamos login exitoso
-      this.authService.login();
-      this.router.navigate(['/calculadora']);
+      this.errorMessage = '';
+      const { email, password } = this.loginForm.value;
+      
+      this.http.post<{ token: string; user: { name: string; email: string; role: string } }>(
+        this.AUTH_API_URL,
+        { email, password }
+      ).subscribe({
+        next: (response) => {
+          // Guardar token y usuario
+          this.authService.setAuth(
+            response.token,
+            { id: `user-${response.user.email}`, email: response.user.email, role: response.user.role }
+          );
+          
+          // Redirigir a la URL de retorno o a la calculadora
+          const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/calculadora';
+          this.router.navigate([returnUrl]);
+        },
+        error: (err) => {
+          this.errorMessage = err.error?.error || 'Error al iniciar sesión. Verifica tus credenciales.';
+          console.error('Error en login:', err);
+        }
+      });
     }
   }
 }

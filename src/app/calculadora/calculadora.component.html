@@ -32,7 +32,7 @@
         <input 
           type="number" 
           min="0" 
-          [value]="basket().get(item.id) || ''"
+          [value]="cartService.basket().get(item.id) || ''"
           (input)="updateQuantity(item.id, $event)"
           class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-center font-bold focus:border-accent outline-none"
           placeholder="0.00">
@@ -45,19 +45,19 @@
   <footer
     class="fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 p-6 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] z-20">
     <div class="absolute top-0 left-0 w-full h-1.5 bg-slate-100 overflow-hidden">
-      <div [class]="progressBarColor()" [style.width.%]="progressPercentage()"
+      <div [class]="cartService.progressBarColor()" [style.width.%]="cartService.progressPercentage()"
         class="h-full transition-all duration-700 ease-out shadow-[0_0_10px_rgba(0,0,0,0.1)]"></div>
     </div>
 
     <div class="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 mt-2">
 
       <div class="flex items-center gap-4">
-        <div [class]="recommendedPlan()?.exceeded ? 'bg-orange-100' : 'bg-accent/10'"
+        <div [class]="cartService.recommendedPlan()?.exceeded ? 'bg-orange-100' : 'bg-accent/10'"
           class="p-3 rounded-2xl transition-colors">
-          <span class="text-2xl">{{ recommendedPlan()?.exceeded ? '⚠️' : '💳' }}</span>
+          <span class="text-2xl">{{ cartService.recommendedPlan()?.exceeded ? '⚠️' : '💳' }}</span>
         </div>
         <div>
-          @if (recommendedPlan(); as plan) {
+          @if (cartService.recommendedPlan(); as plan) {
           <p class="text-xs font-bold text-slate-400 uppercase tracking-tighter">
             {{ plan.exceeded ? 'Presupuesto Elevado' : 'Plan Recomendado' }}
           </p>
@@ -65,9 +65,9 @@
 
           @if (plan.exceeded) {
           <p class="text-[10px] text-orange-600 font-bold uppercase">Requiere Evaluación Especial</p>
-          } @else if (grandTotal() > 0) {
+          } @else if (cartService.grandTotal() > 0) {
           <p class="text-[10px] font-medium text-slate-400">
-            Te quedan <span class="text-slate-600 font-bold">{{ (plan.maxAmount - grandTotal()) | currency }}</span>
+            Te quedan <span class="text-slate-600 font-bold">{{ (plan.maxAmount - cartService.grandTotal()) | currency }}</span>
             disponibles
           </p>
           }
@@ -77,17 +77,17 @@
         </div>
       </div>
 
-      @if (grandTotal() > 0) {
+      @if (cartService.grandTotal() > 0) {
       <div class="text-center md:text-left px-8 border-x border-slate-100 hidden md:block">
         <p class="text-xs font-bold text-slate-400 uppercase">Cuota Mensual Est. (12m)</p>
-        <p class="text-xl font-bold text-slate-700">{{ estimatedQuota() | currency }}</p>
+        <p class="text-xl font-bold text-slate-700">{{ cartService.estimatedQuota() | currency }}</p>
       </div>
       }
 
       <div class="text-right">
         <p class="text-xs font-bold text-slate-400 uppercase">Total Presupuesto</p>
         <p class="text-4xl font-black text-slate-900 leading-none">
-          {{ grandTotal() | currency }}
+          {{ cartService.grandTotal() | currency }}
         </p>
       </div>
 
@@ -114,7 +114,7 @@
   >
     <span class="text-xl">📋</span>
     <span class="bg-accent text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-      {{ selectedItemsDetail().length }}
+      {{ cartService.selectedItemsDetail().length }}
     </span>
   </button>
 
@@ -138,7 +138,7 @@
     </div>
 
     <div class="flex-1 overflow-y-auto p-6 space-y-4">
-      @for (item of selectedItemsDetail(); track item.id) {
+      @for (item of cartService.selectedItemsDetail(); track item.id) {
         <div class="flex justify-between items-start border-b border-slate-50 pb-4">
           <div class="flex-1">
             <p class="text-xs font-bold text-accent uppercase">{{ item.category }}</p>
@@ -147,7 +147,7 @@
           </div>
           <div class="text-right">
             <p class="font-black text-slate-900">{{ item.subtotal | currency }}</p>
-            <button (click)="removeItem(item.id)" class="text-[10px] text-rose-500 hover:underline">Eliminar</button>
+            <button (click)="cartService.removeItem(item.id)" class="text-[10px] text-rose-500 hover:underline">Eliminar</button>
           </div>
         </div>
       } @empty {
@@ -161,7 +161,7 @@
     <div class="p-6 bg-slate-50 border-t border-slate-100">
       <div class="flex justify-between items-center mb-6">
         <span class="font-bold text-slate-500">TOTAL ESTIMADO</span>
-        <span class="text-2xl font-black text-slate-900">{{ grandTotal() | currency }}</span>
+        <span class="text-2xl font-black text-slate-900">{{ cartService.grandTotal() | currency }}</span>
       </div>
       <button 
         (click)="isCartOpen.set(false); handleRequestCredit()"

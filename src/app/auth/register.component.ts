@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../services/auth.service';
 import { CommonModule } from '@angular/common';
 
@@ -24,19 +25,41 @@ export class RegisterComponent {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private http = inject(HttpClient);
+  
+  private readonly AUTH_API_URL = 'https://m587zdkcje.execute-api.us-east-1.amazonaws.com/dev/auth/register';
+  
+  errorMessage = '';
 
   registerForm: FormGroup = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(2)]],
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(6)]],
-    confirmPassword: ['', [Validators.required]]
+    confirmPassword: ['', [Validators.required]],
+    documentId: ['', [Validators.required, Validators.minLength(5)]],
+    role: ['CLIENT', [Validators.required]] // Por defecto CLIENT para usuarios nuevos
   }, { validators: passwordMatchValidator });
 
   onSubmit() {
     if (this.registerForm.valid) {
-      // Simulamos registro exitoso
-      this.authService.login();
-      this.router.navigate(['/calculadora']);
+      this.errorMessage = '';
+      const { name, email, password, documentId, role } = this.registerForm.value;
+      
+      this.http.post<{ message: string; usuario: { name: string; email: string; role: string } }>(
+        this.AUTH_API_URL,
+        { name, email, password, documentId, role }
+      ).subscribe({
+        next: (response) => {
+          // Después del registro exitoso, redirigir al login
+          // El usuario deberá iniciar sesión con sus credenciales
+          alert('¡Registro exitoso! Ahora puedes iniciar sesión.');
+          this.router.navigate(['/login']);
+        },
+        error: (err) => {
+          this.errorMessage = err.error?.error || 'Error al registrar. Intenta nuevamente.';
+          console.error('Error en registro:', err);
+        }
+      });
     }
   }
 }
