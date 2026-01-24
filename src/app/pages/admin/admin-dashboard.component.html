@@ -1,0 +1,58 @@
+<div class="min-h-screen bg-slate-50 p-8">
+  <div class="max-w-7xl mx-auto">
+    <div class="flex justify-between items-end mb-8">
+      <div>
+        <h1 class="text-3xl font-black text-slate-900 tracking-tight">PANEL DE SUPERVISIÓN</h1>
+        <p class="text-slate-500 font-medium">Gestiona y aprueba las solicitudes de obra entrantes.</p>
+      </div>
+      <div class="bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm text-sm font-bold text-slate-600">
+        Pendientes: <span class="text-orange-500">{{ pendingCount() }}</span>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-slate-900 text-white uppercase text-[10px] tracking-widest font-bold">
+            <th class="p-5">ID Solicitud</th>
+            <th class="p-5">Monto Total</th>
+            <th class="p-5">Plan</th>
+            <th class="p-5">Estado</th>
+            <th class="p-5 text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          @for (work of works(); track work.id) {
+            <tr class="hover:bg-slate-50 transition-colors group">
+              <td class="p-5">
+                <p class="font-bold text-slate-800">#{{ work.id.slice(0,8) }}</p>
+                <p class="text-xs text-slate-400">{{ work.createdAt | date:'short' }}</p>
+              </td>
+              <td class="p-5 font-black text-slate-900">{{ work.totalAmount | currency }}</td>
+              <td class="p-5">
+                <span class="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-bold uppercase">
+                  {{ work.planId }}
+                </span>
+              </td>
+              <td class="p-5">
+                <span [class]="getStatusClass(work.status)" class="px-3 py-1 rounded-full text-[10px] font-bold uppercase">
+                  {{ work.status }}
+                </span>
+              </td>
+              <td class="p-5 text-right">
+                @if (work.status === 'PENDING') {
+                  <div class="flex justify-end gap-2">
+                    <button (click)="approve(work.id)" class="p-2 bg-emerald-100 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all">✔️</button>
+                    <button (click)="reject(work.id)" class="p-2 bg-rose-100 text-rose-600 rounded-lg hover:bg-rose-600 hover:text-white transition-all">✖️</button>
+                  </div>
+                } @else {
+                  <span class="text-xs text-slate-400 italic">Procesada</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
