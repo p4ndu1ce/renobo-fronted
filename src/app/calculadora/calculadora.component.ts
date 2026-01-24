@@ -26,6 +26,23 @@ export class CalculadoraComponent {
   // 2. Cesta de Obra (ID del material -> cantidad)
   basket = signal<Map<string, number>>(this.loadBasket());
 
+  // 1. Estado del panel lateral
+  isCartOpen = signal(false);
+
+  // 2. Detalle de items seleccionados (Une la info del catálogo con las cantidades de la cesta)
+  selectedItemsDetail = computed(() => {
+    const allServices = this.configService.catalog()?.services || [];
+    const currentBasket = this.basket();
+    
+    return allServices
+      .filter(service => currentBasket.has(service.id))
+      .map(service => ({
+        ...service,
+        quantity: currentBasket.get(service.id) || 0,
+        subtotal: service.price.value * (currentBasket.get(service.id) || 0)
+      }));
+  });
+
   constructor() {
     // Sincronizamos la cesta con localStorage cuando cambia (solo en el navegador)
     if (isPlatformBrowser(this.platformId)) {
@@ -142,6 +159,12 @@ export class CalculadoraComponent {
     } else {
       newBasket.delete(id);
     }
+    this.basket.set(newBasket);
+  }
+
+  removeItem(id: string) {
+    const newBasket = new Map(this.basket());
+    newBasket.delete(id);
     this.basket.set(newBasket);
   }
 

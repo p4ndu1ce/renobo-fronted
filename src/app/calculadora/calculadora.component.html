@@ -107,4 +107,69 @@
     </div>
   </footer>
 
+  <!-- Botón flotante para abrir el panel -->
+  <button 
+    (click)="isCartOpen.set(true)"
+    class="fixed top-24 right-6 z-30 bg-white border border-slate-200 p-3 rounded-2xl shadow-xl hover:scale-110 transition-all flex items-center gap-2 group"
+  >
+    <span class="text-xl">📋</span>
+    <span class="bg-accent text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+      {{ selectedItemsDetail().length }}
+    </span>
+  </button>
+
+  <!-- Overlay de fondo -->
+  @if (isCartOpen()) {
+  <div 
+    (click)="isCartOpen.set(false)"
+    class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 transition-opacity"
+  ></div>
+  }
+
+  <!-- Panel lateral -->
+  <aside 
+    [class.translate-x-0]="isCartOpen()"
+    [class.translate-x-full]="!isCartOpen()"
+    class="fixed top-0 right-0 h-full w-full max-w-md bg-white z-50 shadow-2xl transition-transform duration-300 ease-in-out flex flex-col"
+  >
+    <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+      <h2 class="text-xl font-black text-slate-900 uppercase tracking-tight">Detalle de Obra</h2>
+      <button (click)="isCartOpen.set(false)" class="p-2 hover:bg-slate-100 rounded-full transition-colors">✕</button>
+    </div>
+
+    <div class="flex-1 overflow-y-auto p-6 space-y-4">
+      @for (item of selectedItemsDetail(); track item.id) {
+        <div class="flex justify-between items-start border-b border-slate-50 pb-4">
+          <div class="flex-1">
+            <p class="text-xs font-bold text-accent uppercase">{{ item.category }}</p>
+            <p class="font-bold text-slate-800">{{ item.name }}</p>
+            <p class="text-sm text-slate-500">{{ item.quantity }} {{ item.unit }} x {{ item.price.value | currency }}</p>
+          </div>
+          <div class="text-right">
+            <p class="font-black text-slate-900">{{ item.subtotal | currency }}</p>
+            <button (click)="removeItem(item.id)" class="text-[10px] text-rose-500 hover:underline">Eliminar</button>
+          </div>
+        </div>
+      } @empty {
+        <div class="h-full flex flex-col items-center justify-center text-center opacity-40">
+          <span class="text-6xl mb-4">🏗️</span>
+          <p class="text-slate-500">Tu presupuesto está vacío.<br>Agrega partidas para ver el detalle.</p>
+        </div>
+      }
+    </div>
+
+    <div class="p-6 bg-slate-50 border-t border-slate-100">
+      <div class="flex justify-between items-center mb-6">
+        <span class="font-bold text-slate-500">TOTAL ESTIMADO</span>
+        <span class="text-2xl font-black text-slate-900">{{ grandTotal() | currency }}</span>
+      </div>
+      <button 
+        (click)="isCartOpen.set(false); handleRequestCredit()"
+        class="w-full py-4 bg-accent text-white font-black rounded-2xl shadow-lg shadow-blue-100"
+      >
+        SOLICITAR CRÉDITO AHORA
+      </button>
+    </div>
+  </aside>
+
 </div>
