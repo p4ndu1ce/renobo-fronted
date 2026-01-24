@@ -3,12 +3,13 @@ import { LoginComponent } from './auth/login.component';
 import { RegisterComponent } from './auth/register.component';
 import { CalculadoraComponent } from './calculadora/calculadora.component';
 import { SummaryComponent } from './pages/summary/summary.component';
+import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/calculadora', pathMatch: 'full' },
   { path: 'calculadora', component: CalculadoraComponent },
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
-  { path: 'resumen', component: SummaryComponent },
+  { path: 'resumen', component: SummaryComponent, canActivate: [authGuard] },
   { path: '**', redirectTo: '/calculadora' }
 ];

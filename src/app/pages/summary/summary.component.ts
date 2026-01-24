@@ -18,9 +18,9 @@ export class SummaryComponent {
   private http = inject(HttpClient);
 
   confirmAndSend() {
-    const token = this.authService.getToken();
-    
-    if (!token) {
+    // El interceptor añade automáticamente el token en el header Authorization
+    // Solo verificamos que el usuario esté autenticado
+    if (!this.authService.isLoggedIn()) {
       alert('No estás autenticado. Por favor, inicia sesión.');
       this.router.navigate(['/login']);
       return;
@@ -39,15 +39,10 @@ export class SummaryComponent {
       presupuestoInicial: this.cartService.grandTotal()
     };
 
-    // Enviar token en el header Authorization
+    // El interceptor añadirá automáticamente el header Authorization
     this.http.post(
       'https://s6txacomrf.execute-api.us-east-1.amazonaws.com/dev/works',
-      payload,
-      {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      }
+      payload
     ).subscribe({
       next: (res) => {
         alert('¡Solicitud enviada con éxito a AWS! Un asesor te contactará.');
