@@ -1,6 +1,6 @@
-import { Component, inject, OnInit, computed, signal } from '@angular/core';
+import { Component, inject, OnInit, computed, signal, PLATFORM_ID } from '@angular/core';
 import { Router } from '@angular/router';
-import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
+import { CommonModule, CurrencyPipe, DatePipe, isPlatformBrowser } from '@angular/common';
 import { WorkService, type Work } from '../../services/work.service';
 import { AuthService } from '../../services/auth.service';
 
@@ -15,6 +15,7 @@ export class AdminDashboardComponent implements OnInit {
   public workService = inject(WorkService);
   public authService = inject(AuthService);
   private router = inject(Router);
+  private platformId = inject(PLATFORM_ID);
 
   // Signal para el término de búsqueda
   searchTerm = signal('');
@@ -65,8 +66,10 @@ export class AdminDashboardComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    // Cargar todas las obras al inicializar el componente
-    this.workService.getAllWorks();
+    // Cargar obras solo en el navegador: en SSR no hay token (localStorage) y la petición daría 401
+    if (isPlatformBrowser(this.platformId)) {
+      this.workService.getAllWorks();
+    }
   }
 
   /**
