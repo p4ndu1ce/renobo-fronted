@@ -3,6 +3,16 @@ import { Router } from '@angular/router';
 import { CommonModule, CurrencyPipe, DatePipe, isPlatformBrowser } from '@angular/common';
 import { WorkService, type Work } from '../../services/work.service';
 import { AuthService } from '../../services/auth.service';
+import { ConfigService } from '../../services/config.service';
+
+/** Partida para el expediente: cantidad, unidad, precio unitario, subtotal */
+interface PartidaExpediente {
+  nombre: string;
+  cantidad: number;
+  unidad: string;
+  precioUnitario: number;
+  subtotal: number;
+}
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -14,8 +24,12 @@ import { AuthService } from '../../services/auth.service';
 export class AdminDashboardComponent implements OnInit {
   public workService = inject(WorkService);
   public authService = inject(AuthService);
+  public configService = inject(ConfigService);
   private router = inject(Router);
   private platformId = inject(PLATFORM_ID);
+
+  /** Obra seleccionada para el panel de auditoría (drawer). Null cuando el drawer está cerrado. */
+  selectedWork = signal<any | null>(null);
 
   // Signal para el término de búsqueda
   searchTerm = signal('');
@@ -120,6 +134,43 @@ export class AdminDashboardComponent implements OnInit {
     if (confirm(`¿Estás seguro de rechazar la solicitud #${workId.slice(0, 8)}?`)) {
       this.workService.updateWorkStatus(workId, 'REJECTED');
     }
+  }
+
+  /** Asigna la obra al drawer y lo abre. */
+  selectWork(work: unknown): void {
+    this.selectedWork.set(work);
+  }
+
+  /** Cierra el panel de auditoría. */
+  closeDrawer(): void {
+    this.selectedWork.set(null);
+  }
+
+  /**
+   * Partidas para el expediente. Por ahora: una línea de resumen con el presupuesto total.
+   * Cuando el backend envíe partidas, se podrán mapear aquí.
+   */
+  partidasParaExpediente(work: { presupuestoInicial: number }): PartidaExpediente[] {
+    return [{
+      nombre: 'Presupuesto total',
+      cantidad: 1,
+      unidad: '—',
+      precioUnitario: work.presupuestoInicial,
+      subtotal: work.presupuestoInicial
+    }];
+  }
+
+  /**
+   * Plan de crédito recomendado según el presupuesto, usando la misma lógica que la calculadora.
+   */
+  planRecomendadoParaExpediente(work: { presupuestoInicial: number }): { name: string; maxAmount: number; exceeded?: boolean } | null {
+    const plans = [...(this.configService.catalog()?.creditPlans || [])]
+      .sort((a, b) => a.maxAmount - b.maxAmount);
+    const total = work.presupuestoInicial;
+    if (total === 0 || plans.length === 0) return null;
+    const match = plans.find(p => total <= p.maxAmount);
+    if (match) return { name: match.name, maxAmount: match.maxAmount };
+    return { ...plans[plans.length - 1], exceeded: true };
   }
 
   /**

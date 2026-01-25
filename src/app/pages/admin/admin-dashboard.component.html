@@ -78,7 +78,10 @@
         </thead>
         <tbody class="divide-y divide-slate-100">
           @for (work of filteredWorks(); track work.id) {
-            <tr class="hover:bg-slate-50 transition-colors group">
+            <tr
+              (click)="selectWork(work)"
+              class="hover:bg-slate-50 transition-colors group cursor-pointer"
+            >
               <td class="p-5">
                 <p class="font-bold text-slate-800">#{{ work.id.slice(0,8) }}</p>
                 <p class="text-xs text-slate-400">{{ work.createdAt | date:'short' }}</p>
@@ -94,7 +97,7 @@
                   {{ work.status }}
                 </span>
               </td>
-              <td class="p-5 text-right">
+              <td class="p-5 text-right" (click)="$event.stopPropagation()">
                 @if (work.status === 'PENDING') {
                   <div class="flex justify-end gap-2">
                     <button (click)="approve(work.id)" class="p-2 bg-emerald-100 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all">✔️</button>
@@ -111,4 +114,120 @@
       }
     </div>
   </div>
+
+  <!-- Overlay -->
+  @if (selectedWork()) {
+  <div
+    (click)="closeDrawer()"
+    class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 transition-opacity"
+  ></div>
+  }
+
+  <!-- Panel lateral: Expediente Técnico (Auditoría) -->
+  <aside
+    [class.translate-x-0]="selectedWork()"
+    [class.translate-x-full]="!selectedWork()"
+    class="fixed top-0 right-0 h-full w-full max-w-lg bg-white z-50 shadow-2xl transition-transform duration-300 ease-in-out flex flex-col"
+  >
+    @if (selectedWork(); as w) {
+    <header class="shrink-0 border-b border-slate-200 bg-slate-50/80 px-6 py-4 flex justify-between items-start">
+      <div>
+        <h2 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Expediente técnico</h2>
+        <p class="text-lg font-black text-slate-900 mt-0.5">Solicitud #{{ w.id.slice(0, 8) }}</p>
+      </div>
+      <button (click)="closeDrawer()" class="p-2 hover:bg-slate-200 rounded-lg transition-colors text-slate-500" aria-label="Cerrar">✕</button>
+    </header>
+
+    <div class="flex-1 overflow-y-auto">
+      <!-- 1. Identificación -->
+      <section class="px-6 py-5 border-b border-slate-100">
+        <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">1. Identificación</h3>
+        <dl class="space-y-2 text-sm">
+          <div>
+            <dt class="text-slate-400 font-medium">Descripción</dt>
+            <dd class="text-slate-800 font-medium mt-0.5">{{ w.descripcion || '—' }}</dd>
+          </div>
+          <div>
+            <dt class="text-slate-400 font-medium">Ubicación</dt>
+            <dd class="text-slate-800 font-medium mt-0.5">{{ w.ubicacion || '—' }}</dd>
+          </div>
+          <div>
+            <dt class="text-slate-400 font-medium">Fecha de solicitud</dt>
+            <dd class="text-slate-800 font-medium mt-0.5">{{ w.createdAt | date:'longDate' }}</dd>
+          </div>
+          @if (w.userEmail) {
+          <div>
+            <dt class="text-slate-400 font-medium">Solicitante</dt>
+            <dd class="text-slate-800 font-medium mt-0.5">{{ w.userEmail }}</dd>
+          </div>
+          }
+        </dl>
+      </section>
+
+      <!-- 2. Detalle de partidas -->
+      <section class="px-6 py-5 border-b border-slate-100">
+        <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">2. Detalle de partidas</h3>
+        <table class="w-full text-left border border-slate-200 rounded-lg overflow-hidden">
+          <thead>
+            <tr class="bg-slate-50 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
+              <th class="px-4 py-3">Partida</th>
+              <th class="px-4 py-3 text-center">Cant.</th>
+              <th class="px-4 py-3 text-center">Unidad</th>
+              <th class="px-4 py-3 text-right">P. unit.</th>
+              <th class="px-4 py-3 text-right">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            @for (p of partidasParaExpediente(w); track p.nombre) {
+            <tr>
+              <td class="px-4 py-3 font-medium text-slate-800">{{ p.nombre }}</td>
+              <td class="px-4 py-3 text-center text-slate-600 tabular-nums">{{ p.cantidad }}</td>
+              <td class="px-4 py-3 text-center text-slate-500 text-sm">{{ p.unidad }}</td>
+              <td class="px-4 py-3 text-right tabular-nums font-medium text-slate-700">{{ p.precioUnitario | currency }}</td>
+              <td class="px-4 py-3 text-right tabular-nums font-bold text-slate-900">{{ p.subtotal | currency }}</td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </section>
+
+      <!-- 3. Plan de crédito recomendado -->
+      <section class="px-6 py-5 border-b border-slate-100">
+        <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">3. Plan de crédito recomendado</h3>
+        @if (planRecomendadoParaExpediente(w); as plan) {
+        <div class="bg-slate-50 border border-slate-200 rounded-lg p-4">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">💳</span>
+            <div>
+              <p class="font-black text-slate-900">{{ plan.name }}{{ plan.exceeded ? ' +' : '' }}</p>
+              <p class="text-xs text-slate-500 mt-0.5">Límite del plan: {{ plan.maxAmount | currency }}</p>
+              @if (plan.exceeded) {
+              <p class="text-[10px] font-bold text-amber-600 uppercase mt-1">Requiere evaluación especial</p>
+              }
+            </div>
+          </div>
+        </div>
+        } @else {
+        <p class="text-sm text-slate-500 italic">No aplica o sin datos de planes.</p>
+        }
+      </section>
+
+      <!-- 4. Decisión -->
+      <section class="px-6 py-5">
+        <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">4. Decisión</h3>
+        <div class="flex flex-col gap-3">
+          @if (w.status === 'PENDING') {
+          <div class="flex gap-3">
+            <button (click)="approve(w.id)" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-colors">Aprobar</button>
+            <button (click)="reject(w.id)" class="flex-1 py-3 bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold rounded-xl transition-colors">Rechazar</button>
+          </div>
+          } @else {
+          <p class="text-sm text-slate-500 italic">Esta solicitud ya fue procesada.</p>
+          }
+          <button (click)="closeDrawer()" class="py-2.5 text-slate-500 font-medium hover:bg-slate-100 rounded-xl transition-colors">Cerrar</button>
+        </div>
+      </section>
+    </div>
+    }
+  </aside>
 </div>
