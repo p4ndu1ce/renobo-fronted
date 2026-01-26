@@ -52,7 +52,7 @@ export class SummaryComponent {
       next: (res) => {
         alert('¡Solicitud enviada con éxito a AWS! Un asesor te contactará.');
         this.cartService.clearCart();
-        this.router.navigate(['/exito']);
+        this.router.navigate(['/home']);
       },
       error: (err) => {
         console.error('Error completo:', err);
