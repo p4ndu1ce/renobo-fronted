@@ -40,10 +40,12 @@ export class LoginComponent {
           console.log('Login response:', response);
           
           // Guardar token y usuario
-          this.authService.setAuth(
-            response.token,
-            { id: `user-${response.user.email}`, email: response.user.email, role: response.user.role }
-          );
+          this.authService.setAuth(response.token, {
+            id: `user-${response.user.email}`,
+            name: response.user.name,
+            email: response.user.email,
+            role: response.user.role,
+          });
           
           // Verificar que se estableció correctamente
           console.log('Después de setAuth:', {
@@ -54,8 +56,8 @@ export class LoginComponent {
           
           // Pequeño delay para asegurar que los signals se actualicen
           setTimeout(() => {
-            // Redirigir a la URL de retorno o a la calculadora
-            const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/calculadora';
+            // Redirigir a la URL de retorno o a la home
+            const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/home';
             console.log('Navegando a:', returnUrl);
             this.router.navigate([returnUrl]);
           }, 0);

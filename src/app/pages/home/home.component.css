@@ -1,0 +1,8 @@
+/* Ocultar scrollbar en el carrusel de planes pero mantener scroll */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
