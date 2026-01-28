@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, ViewEncapsulation } from '@angular/core';
+import { Component, inject, signal, computed, ViewEncapsulation, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { ConfigService } from '../services/config.service';
 import { AuthService } from '../services/auth.service';
@@ -12,7 +12,7 @@ import { CurrencyPipe, CommonModule } from '@angular/common';
   styleUrl: './calculadora.component.css',
   encapsulation: ViewEncapsulation.None
 })
-export class CalculadoraComponent {
+export class CalculadoraComponent implements OnInit {
   public configService = inject(ConfigService);
   public authService = inject(AuthService);
   public cartService = inject(CartService);
@@ -20,6 +20,11 @@ export class CalculadoraComponent {
 
   // 1. Buscador
   searchTerm = signal('');
+
+  ngOnInit(): void {
+    // Asegurar que el catálogo se cargue al entrar en la calculadora (petición a config/public)
+    this.configService.loadConfig();
+  }
 
   // 1. Estado del panel lateral
   isCartOpen = signal(false);

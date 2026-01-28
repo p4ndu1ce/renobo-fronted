@@ -1,9 +1,7 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { AuthService } from '../../services/auth.service';
 import { ConfigService } from '../../services/config.service';
-import { BottomNavbarComponent } from '../../components/bottom-navbar/bottom-navbar.component';
 
 export interface ServicioReciente {
   titulo: string;
@@ -20,17 +18,13 @@ export interface Categoria {
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, BottomNavbarComponent],
+  imports: [CommonModule],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css',
 })
 export class HomeComponent {
-  private authService = inject(AuthService);
   private router = inject(Router);
   public configService = inject(ConfigService);
-
-  userName = this.authService.userName;
-  isProfileMenuOpen = signal(false);
 
   categorias: Categoria[] = [
     { nombre: 'Electricidad', icono: '💡', bg: 'bg-amber-50' },
@@ -49,19 +43,5 @@ export class HomeComponent {
 
   goToCalculator() {
     this.router.navigate(['/calculadora']);
-  }
-
-  toggleProfileMenu() {
-    this.isProfileMenuOpen.update((v) => !v);
-  }
-
-  closeProfileMenu() {
-    this.isProfileMenuOpen.set(false);
-  }
-
-  logout() {
-    this.closeProfileMenu();
-    this.authService.logout();
-    this.router.navigate(['/login']);
   }
 }

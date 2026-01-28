@@ -1,0 +1,4 @@
+/* Layout wrapper: asegura que el contenido principal ocupe el espacio entre header y bottom-nav */
+.main-layout main {
+  display: block;
+}

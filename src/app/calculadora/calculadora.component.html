@@ -1,26 +1,25 @@
-<div class="min-h-screen app-bg pb-40">
-  <header class="bg-white border-b border-slate-200 p-6 mb-8 sticky top-0 z-10 shadow-sm">
-    <div class="max-w-5xl mx-auto flex justify-between items-center gap-4">
-      <h1 class="text-2xl font-black text-slate-900 tracking-tight">RENOBO</h1>
-      <div class="flex items-center gap-4 flex-1 justify-end">
-        <div class="relative w-64">
-          <input type="text" (input)="searchTerm.set($any($event.target).value)" placeholder="Buscar material..."
-            class="w-full pl-10 pr-4 py-2 bg-slate-100 border-none rounded-full text-sm focus:ring-2 focus:ring-accent outline-none transition-all">
-          <span class="absolute left-3 top-2.5 text-slate-400">🔍</span>
-        </div>
-        @if (authService.isLoggedIn()) {
-        <button 
-          type="button"
-          (click)="logout()"
-          class="px-4 py-2 text-sm font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all">
-          Cerrar Sesión
-        </button>
-        }
-      </div>
+<div class="min-h-screen pb-40">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 pt-2 pb-4">
+    <div class="relative w-full max-w-xs mb-4">
+      <input type="text" (input)="searchTerm.set($any($event.target).value)" placeholder="Buscar material..."
+        class="w-full pl-10 pr-4 py-2 bg-slate-100 border border-slate-200 rounded-2xl text-sm focus:ring-2 focus:ring-accent outline-none transition-all">
+      <span class="absolute left-3 top-2.5 text-slate-400">🔍</span>
     </div>
-  </header>
+  </div>
 
-  <main class="max-w-5xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+  <main class="max-w-5xl mx-auto px-4 sm:px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    @if (configService.catalog() === null) {
+      <div class="col-span-full flex flex-col items-center justify-center py-16 text-slate-500">
+        <span class="text-4xl mb-4">⏳</span>
+        <p class="font-medium">Cargando catálogo de servicios...</p>
+        <p class="text-sm mt-1">Se está consultando la configuración al servidor.</p>
+      </div>
+    } @else if (filteredServices().length === 0) {
+      <div class="col-span-full rounded-2xl bg-white border border-slate-200 p-8 text-center text-slate-500">
+        <p class="font-medium">No hay servicios que coincidan con tu búsqueda.</p>
+        <button type="button" (click)="searchTerm.set('')" class="text-accent font-medium mt-2">Limpiar búsqueda</button>
+      </div>
+    } @else {
     @for (item of filteredServices(); track item.id) {
     <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
       <span class="text-[10px] font-bold text-accent uppercase tracking-widest bg-blue-50 px-2 py-1 rounded">{{
@@ -40,10 +39,11 @@
       </div>
     </div>
     }
+    }
   </main>
 
   <footer
-    class="fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 p-6 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] z-20">
+    class="cart-footer fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 p-6 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] z-20">
     <div class="absolute top-0 left-0 w-full h-1.5 bg-slate-100 overflow-hidden">
       <div [class]="cartService.progressBarColor()" [style.width.%]="cartService.progressPercentage()"
         class="h-full transition-all duration-700 ease-out shadow-[0_0_10px_rgba(0,0,0,0.1)]"></div>
@@ -93,8 +93,9 @@
 
       <button 
         type="button"
+        [disabled]="cartService.grandTotal() === 0"
         (click)="handleRequestCredit()"
-        class="w-full md:w-auto px-10 py-4 bg-accent text-white font-black rounded-2xl hover:bg-blue-700 hover:scale-105 active:scale-95 transition-all shadow-lg shadow-blue-200 flex items-center justify-center gap-2 cursor-pointer">
+        class="w-full md:w-auto px-10 py-4 bg-accent text-white font-black rounded-2xl transition-all shadow-lg shadow-blue-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none disabled:hover:scale-100 hover:bg-blue-700 hover:scale-105 active:scale-95">
         @if (!authService.isLoggedIn()) {
         <span class="text-sm opacity-80">🔒</span>
         INGRESAR PARA SOLICITAR

@@ -53,3 +53,8 @@ body {
   ::view-transition-new(root) {
     animation-duration: 0.5s;
   }
+
+  /* Calculadora dentro del layout: la barra del carrito queda por encima del bottom-nav */
+  .main-layout app-calculadora .cart-footer {
+    bottom: 4rem;
+  }
