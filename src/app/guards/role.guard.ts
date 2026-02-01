@@ -22,18 +22,16 @@ export const roleGuard: CanActivateFn = (route, state) => {
   const userRole = authService.userRole();
   const currentUser = authService.currentUser();
   const userRoleFromUser = currentUser?.role;
-  
+  const allowedRoles = route.data['roles'] as string[] | undefined;
+
   // Usar el rol del usuario si está disponible, sino el del signal
   const finalRole = userRoleFromUser || userRole;
-  const isSupervisor = finalRole === 'SUPERVISOR';
 
   console.log('👮 roleGuard check:', {
     isLoggedIn,
     userRole,
-    userRoleFromUser,
     finalRole,
-    isSupervisor,
-    currentUser,
+    allowedRoles,
     url: state.url
   });
 
@@ -45,13 +43,25 @@ export const roleGuard: CanActivateFn = (route, state) => {
     return false;
   }
 
-  if (isSupervisor) {
+  // Si la ruta define roles permitidos, comprobar si el usuario tiene uno de ellos
+  if (allowedRoles?.length) {
+    const allowed = allowedRoles.includes(finalRole ?? '');
+    if (allowed) {
+      console.log('✅ roleGuard: Rol permitido para esta ruta');
+      return true;
+    }
+    console.log('❌ roleGuard: Rol no permitido, redirigiendo a home');
+    router.navigate(['/home']);
+    return false;
+  }
+
+  // Compatibilidad: rutas sin data.roles (ej. /admin) exigen SUPERVISOR
+  if (finalRole === 'SUPERVISOR') {
     console.log('✅ roleGuard: Usuario es supervisor, permitiendo acceso');
     return true;
   }
 
-  // Si no es supervisor, redirigir a la calculadora
-  console.log('❌ roleGuard: Usuario NO es supervisor, redirigiendo a calculadora');
-  router.navigate(['/calculadora']);
+  console.log('❌ roleGuard: Usuario NO tiene rol para esta ruta, redirigiendo a home');
+  router.navigate(['/home']);
   return false;
 };

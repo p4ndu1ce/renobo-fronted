@@ -48,22 +48,26 @@ export class SummaryComponent {
     };
 
     // El interceptor añadirá automáticamente el header Authorization
-    this.http.post<{ message: string; work: { id: string; descripcion: string; ubicacion: string; presupuestoInicial: number; estado: string; createdAt: string } }>(
+    const api = this.http.post<{ message: string; work: Record<string, unknown> }>(
       'https://s6txacomrf.execute-api.us-east-1.amazonaws.com/dev/works',
       payload
-    ).subscribe({
+    );
+    api.subscribe({
       next: (res) => {
         alert('¡Solicitud enviada con éxito a AWS! Un asesor te contactará.');
         this.cartService.clearCart();
-        // Mostrar la obra de inmediato en Servicios Recientes (evita esperar consistencia eventual del GSI)
         if (res?.work) {
+          const r = res.work;
           const work: Work = {
-            id: res.work.id,
-            descripcion: res.work.descripcion,
-            ubicacion: res.work.ubicacion,
-            presupuestoInicial: res.work.presupuestoInicial,
-            estado: res.work.estado as Work['estado'],
-            createdAt: res.work.createdAt,
+            id: String(r['id'] ?? ''),
+            status: (r['status'] as Work['status']) ?? 'CREDIT_PENDING',
+            planId: (r['planId'] as Work['planId']) ?? 'BRONZE',
+            engineerId: String(r['engineerId'] ?? ''),
+            items: Array.isArray(r['items']) ? (r['items'] as Work['items']) : [],
+            createdAt: String(r['createdAt'] ?? new Date().toISOString()),
+            descripcion: r['descripcion'] as string,
+            ubicacion: r['ubicacion'] as string,
+            presupuestoInicial: r['presupuestoInicial'] as number,
           };
           this.workService.prependToMyWorks(work);
         }

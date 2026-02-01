@@ -50,6 +50,20 @@ export class AuthService {
   });
 
   public isSupervisor = computed(() => this.userRole() === 'SUPERVISOR');
+  public isEngineer = computed(() => this.userRole() === 'ENGINEER');
+
+  /**
+   * ID del ingeniero para filtrar obras asignadas.
+   * Si el usuario tiene rol ENGINEER, devuelve su id (o 'engineer-simulado' para pruebas).
+   */
+  public engineerId = computed(() => {
+    const role = this.userRole();
+    const user = this.currentUser();
+    if (role === 'ENGINEER') {
+      return user?.id ?? user?.email ?? 'engineer-simulado';
+    }
+    return null;
+  });
 
   /** Primer nombre del usuario o 'Invitado' si no hay sesión. */
   public userName = computed(() => {

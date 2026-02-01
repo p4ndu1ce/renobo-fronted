@@ -60,41 +60,29 @@ export class HomeComponent implements OnInit {
     return icons[category] ?? '🛠️';
   }
 
-  getStatusClass(estado: WorkStatus): string {
-    switch (estado) {
-      case 'APPROVED':
+  getStatusClass(status: WorkStatus): string {
+    switch (status) {
       case 'CREDIT_APPROVED':
         return 'bg-emerald-100 text-emerald-700';
-      case 'REJECTED':
-      case 'CREDIT_REJECTED':
-        return 'bg-rose-100 text-rose-700';
-      case 'IN_PROGRESS':
-      case 'OPEN':
-      case 'PENDING_CREDIT':
-      case 'ASSIGNED':
+      case 'CREDIT_PENDING':
         return 'bg-amber-100 text-amber-700';
-      case 'COMPLETED':
-        return 'bg-slate-100 text-slate-700';
-      case 'CANCELLED':
-        return 'bg-slate-100 text-slate-500';
+      case 'TECHNICAL_VISIT':
+      case 'WAITING_PARTNERS':
+      case 'IN_PROGRESS':
+        return 'bg-amber-100 text-amber-700';
       default:
         return 'bg-slate-100 text-slate-700';
     }
   }
 
-  getStatusLabel(estado: WorkStatus): string {
+  getStatusLabel(status: WorkStatus): string {
     const labels: Record<WorkStatus, string> = {
-      OPEN: 'En revisión',
-      IN_PROGRESS: 'En proceso',
-      COMPLETED: 'Completado',
-      CANCELLED: 'Cancelado',
-      APPROVED: 'Aprobado',
-      REJECTED: 'Rechazado',
-      PENDING_CREDIT: 'Pendiente de crédito',
+      CREDIT_PENDING: 'Pendiente de crédito',
       CREDIT_APPROVED: 'Crédito aprobado',
-      CREDIT_REJECTED: 'Crédito rechazado',
-      ASSIGNED: 'Asignado',
+      TECHNICAL_VISIT: 'Visita técnica',
+      WAITING_PARTNERS: 'Esperando proveedores',
+      IN_PROGRESS: 'En proceso',
     };
-    return labels[estado] ?? estado;
+    return labels[status] ?? status;
   }
 }

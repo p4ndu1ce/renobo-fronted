@@ -1,0 +1,87 @@
+<div class="engineer-page min-h-screen">
+  <div class="max-w-lg mx-auto px-4 py-6 sm:py-8">
+    @if (successMessage()) {
+      <div class="mb-4 rounded-2xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-emerald-800 text-sm font-medium flex items-center gap-2">
+        <span aria-hidden="true">✓</span>
+        {{ successMessage() }}
+      </div>
+    }
+    <header class="mb-6 sm:mb-8">
+      <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Mis asignaciones</h1>
+      <p class="text-slate-500 font-medium mt-1 text-sm sm:text-base">Obras asignadas a ti (crédito aprobado o esperando proveedores).</p>
+    </header>
+
+    @if (assignedWorks().length === 0) {
+      <div class="rounded-[2.5rem] bg-white border border-slate-200 shadow-sm p-8 sm:p-10 text-center">
+        <p class="text-4xl mb-4">📋</p>
+        <h2 class="text-lg font-bold text-slate-800 mb-2">Sin asignaciones</h2>
+        <p class="text-sm text-slate-500">No tienes visitas técnicas pendientes.</p>
+      </div>
+    } @else {
+      <ul class="space-y-4 sm:space-y-5">
+        @for (work of assignedWorks(); track work.id) {
+          <li class="rounded-[2.5rem] bg-white border border-slate-200 shadow-sm overflow-hidden">
+            <div class="p-5 sm:p-6">
+              <div class="flex flex-col gap-4">
+                <div>
+                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Cliente</p>
+                  <p class="font-bold text-slate-900 text-lg mt-0.5">{{ work.userEmail || '—' }}</p>
+                </div>
+                <div class="flex items-center justify-between gap-3 flex-wrap">
+                  <span class="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-full text-xs font-bold">
+                    Plan {{ work.planLabel }}
+                  </span>
+                  @if (work.status === 'WAITING_PARTNERS') {
+                    <span class="px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-xs font-bold">
+                      Esperando Proveedores
+                    </span>
+                  }
+                  @if (work.planAmount != null) {
+                    <span class="text-sm text-slate-500 font-medium">{{ work.planAmount | currency }}</span>
+                  }
+                </div>
+                @if (work.status === 'WAITING_PARTNERS' && work.deadlineInfo) {
+                  <div class="rounded-xl bg-slate-50 border border-slate-200 p-3">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Plazo proveedores (48 h)</p>
+                    <p
+                      class="text-sm font-bold"
+                      [class.text-rose-600]="work.deadlineInfo.expired || work.deadlineInfo.urgent"
+                      [class.text-slate-700]="!work.deadlineInfo.expired && !work.deadlineInfo.urgent"
+                    >
+                      {{ work.deadlineInfo.text }}
+                    </p>
+                    <div class="mt-2 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                      <div
+                        class="h-full rounded-full transition-all duration-500"
+                        [class.bg-rose-400]="work.deadlineInfo.expired || work.deadlineInfo.urgent"
+                        [class.bg-emerald-500]="!work.deadlineInfo.expired && !work.deadlineInfo.urgent"
+                        [style.width.%]="work.deadlineInfo.percentRemaining"
+                      ></div>
+                    </div>
+                  </div>
+                }
+                @if (work.status === 'CREDIT_APPROVED') {
+                  <button
+                    type="button"
+                    (click)="startTechnicalVisit(work)"
+                    class="w-full py-3.5 rounded-2xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm sm:text-base transition-colors shadow-sm"
+                  >
+                    Iniciar Visita Técnica
+                  </button>
+                } @else if (work.status === 'WAITING_PARTNERS') {
+                  <button
+                    type="button"
+                    (click)="startTechnicalVisit(work)"
+                    class="w-full py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm transition-colors border border-slate-200"
+                  >
+                    Ver detalle de visita
+                  </button>
+                }
+              </div>
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+</div>

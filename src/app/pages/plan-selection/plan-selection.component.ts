@@ -26,9 +26,9 @@ export class PlanSelectionComponent {
   private workService = inject(WorkService);
 
   readonly plans: CreditPlanOption[] = [
-    { id: 'BRONCE', name: 'Bronce', amount: 1_000, shortLabel: '$1k' },
-    { id: 'PLATA', name: 'Plata', amount: 5_000, shortLabel: '$5k' },
-    { id: 'ORO', name: 'Oro', amount: 15_000, shortLabel: '$15k' },
+    { id: 'BRONZE', name: 'Bronce', amount: 1_000, shortLabel: '$1k' },
+    { id: 'SILVER', name: 'Plata', amount: 5_000, shortLabel: '$5k' },
+    { id: 'GOLD', name: 'Oro', amount: 15_000, shortLabel: '$15k' },
   ];
 
   selectedPlanId = signal<CreditPlanId | null>(null);

@@ -11,6 +11,10 @@ export interface Service {
     value: number;
   };
   unit: string;
+  /** ID del partner (ferretería) que provee este material. Usado en calculadora técnica. */
+  partnerId?: string;
+  /** Nombre del partner para mostrar en calculadora técnica. */
+  partnerName?: string;
 }
 
 export interface CreditPlan {

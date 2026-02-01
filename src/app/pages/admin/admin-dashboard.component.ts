@@ -1,7 +1,7 @@
 import { Component, inject, OnInit, computed, signal, PLATFORM_ID } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule, CurrencyPipe, DatePipe, isPlatformBrowser } from '@angular/common';
-import { WorkService, type Work, type CreditPlanId } from '../../services/work.service';
+import { WorkService, type Work, type CreditPlanId, type WorkStatus } from '../../services/work.service';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -32,7 +32,7 @@ export class AdminDashboardComponent implements OnInit {
       ...work,
       planIdDisplay: this.getPlanLabel(work.planId),
       score: work.userProfile?.score ?? '—',
-      status: this.mapStatusToTemplate(work.estado)
+      status: this.mapStatusToTemplate(work.status)
     }));
   });
 
@@ -74,28 +74,26 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   /**
-   * Mapea el estado del backend al formato del template
+   * Mapea el estado del backend al formato del template (PENDING / APPROVED / REJECTED).
    */
-  private mapStatusToTemplate(estado: Work['estado']): string {
-    switch (estado) {
-      case 'OPEN':
-      case 'PENDING_CREDIT':
-        return 'PENDING';
-      case 'APPROVED':
+  private mapStatusToTemplate(status: WorkStatus): string {
+    switch (status) {
+      case 'CREDIT_PENDING':
+      case 'TECHNICAL_VISIT':
+      case 'WAITING_PARTNERS':
+      case 'IN_PROGRESS':
+        return status === 'CREDIT_PENDING' ? 'PENDING' : status;
       case 'CREDIT_APPROVED':
         return 'APPROVED';
-      case 'REJECTED':
-      case 'CREDIT_REJECTED':
-        return 'REJECTED';
       default:
-        return estado;
+        return 'REJECTED';
     }
   }
 
   /** Etiqueta del plan para mostrar (Bronce / Plata / Oro). */
   getPlanLabel(planId?: CreditPlanId | null): string {
     if (!planId) return '—';
-    const labels: Record<CreditPlanId, string> = { BRONCE: 'Bronce', PLATA: 'Plata', ORO: 'Oro' };
+    const labels: Record<CreditPlanId, string> = { BRONZE: 'Bronce', SILVER: 'Plata', GOLD: 'Oro' };
     return labels[planId] ?? planId;
   }
 
@@ -112,10 +110,14 @@ export class AdminDashboardComponent implements OnInit {
   getStatusClass(status: string): string {
     switch (status) {
       case 'APPROVED':
+      case 'CREDIT_APPROVED':
         return 'bg-emerald-100 text-emerald-700';
       case 'REJECTED':
         return 'bg-rose-100 text-rose-700';
       case 'PENDING':
+      case 'TECHNICAL_VISIT':
+      case 'WAITING_PARTNERS':
+      case 'IN_PROGRESS':
         return 'bg-amber-100 text-amber-700';
       default:
         return 'bg-slate-100 text-slate-700';
@@ -131,12 +133,9 @@ export class AdminDashboardComponent implements OnInit {
     }
   }
 
-  /**
-   * Rechaza la solicitud de crédito (estado CREDIT_REJECTED).
-   */
   reject(workId: string): void {
     if (confirm(`¿Estás seguro de rechazar la solicitud #${workId.slice(0, 8)}?`)) {
-      this.workService.updateWorkStatus(workId, 'CREDIT_REJECTED');
+      this.workService.updateWorkStatus(workId, 'CREDIT_PENDING');
     }
   }
 
