@@ -3,6 +3,8 @@ import { Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { CartService } from '../../services/cart.service';
 import { AuthService } from '../../services/auth.service';
+import { WorkService } from '../../services/work.service';
+import type { Work } from '../../services/work.service';
 import { CurrencyPipe, CommonModule } from '@angular/common';
 
 @Component({
@@ -14,6 +16,7 @@ import { CurrencyPipe, CommonModule } from '@angular/common';
 export class SummaryComponent {
   public cartService = inject(CartService);
   public authService = inject(AuthService);
+  private workService = inject(WorkService);
   private router = inject(Router);
   private http = inject(HttpClient);
 
@@ -45,13 +48,25 @@ export class SummaryComponent {
     };
 
     // El interceptor añadirá automáticamente el header Authorization
-    this.http.post(
+    this.http.post<{ message: string; work: { id: string; descripcion: string; ubicacion: string; presupuestoInicial: number; estado: string; createdAt: string } }>(
       'https://s6txacomrf.execute-api.us-east-1.amazonaws.com/dev/works',
       payload
     ).subscribe({
       next: (res) => {
         alert('¡Solicitud enviada con éxito a AWS! Un asesor te contactará.');
         this.cartService.clearCart();
+        // Mostrar la obra de inmediato en Servicios Recientes (evita esperar consistencia eventual del GSI)
+        if (res?.work) {
+          const work: Work = {
+            id: res.work.id,
+            descripcion: res.work.descripcion,
+            ubicacion: res.work.ubicacion,
+            presupuestoInicial: res.work.presupuestoInicial,
+            estado: res.work.estado as Work['estado'],
+            createdAt: res.work.createdAt,
+          };
+          this.workService.prependToMyWorks(work);
+        }
         this.router.navigate(['/home']);
       },
       error: (err) => {

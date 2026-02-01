@@ -3,6 +3,7 @@ import { LoginComponent } from './auth/login.component';
 import { RegisterComponent } from './auth/register.component';
 import { CalculadoraComponent } from './calculadora/calculadora.component';
 import { HomeComponent } from './pages/home/home.component';
+import { PlanSelectionComponent } from './pages/plan-selection/plan-selection.component';
 import { ServiciosComponent } from './pages/servicios/servicios.component';
 import { PlaceholderComponent } from './pages/placeholder/placeholder.component';
 import { SummaryComponent } from './pages/summary/summary.component';
@@ -19,6 +20,7 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'home', pathMatch: 'full' },
       { path: 'home', component: HomeComponent },
+      { path: 'plan-selection', component: PlanSelectionComponent, canActivate: [authGuard] },
       { path: 'servicios', component: ServiciosComponent },
       { path: 'calculadora', component: CalculadoraComponent },
       { path: 'seguimiento', component: PlaceholderComponent, data: { title: 'Seguimiento' } },

@@ -1,0 +1,78 @@
+<div class="max-w-lg mx-auto px-4 sm:px-6 py-6 animate-page-in">
+  <header class="mb-6">
+    <button
+      type="button"
+      (click)="goBack()"
+      class="flex items-center gap-2 text-slate-600 hover:text-slate-900 mb-4"
+      aria-label="Volver"
+    >
+      <span aria-hidden="true">←</span>
+      <span class="text-sm font-medium">Volver</span>
+    </button>
+    <h1 class="text-xl font-black text-slate-900">Elige tu plan de crédito</h1>
+    <p class="text-slate-500 text-sm mt-1">Selecciona el monto que necesitas. Un supervisor revisará tu perfil financiero.</p>
+  </header>
+
+  <div class="space-y-4 mb-8">
+    @for (plan of plans; track plan.id) {
+      <button
+        type="button"
+        (click)="selectPlan(plan.id)"
+        class="w-full text-left p-5 rounded-[2.5rem] border-2 transition-all"
+        [class.border-[#fa5404]]="selectedPlanId() === plan.id"
+        [class.bg-[#fa5404]/5]="selectedPlanId() === plan.id"
+        [class.border-slate-200]="selectedPlanId() !== plan.id"
+        [class.bg-white]="selectedPlanId() !== plan.id"
+        [class.shadow-md]="selectedPlanId() === plan.id"
+      >
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-4">
+            <span
+              class="flex items-center justify-center w-12 h-12 rounded-2xl text-xl"
+              [class.bg-[#fa5404]/15]="selectedPlanId() === plan.id"
+              [class.bg-slate-100]="selectedPlanId() !== plan.id"
+            >
+              {{ plan.id === 'BRONCE' ? '🥉' : plan.id === 'PLATA' ? '🥈' : '🥇' }}
+            </span>
+            <div>
+              <p class="font-bold text-slate-900">{{ plan.name }}</p>
+              <p class="text-slate-500 text-sm">{{ plan.amount | currency:'USD':'symbol':'1.0-0' }}</p>
+            </div>
+          </div>
+          @if (selectedPlanId() === plan.id) {
+            <span class="w-6 h-6 rounded-full bg-[#fa5404] flex items-center justify-center text-white text-sm">✓</span>
+          }
+        </div>
+      </button>
+    }
+  </div>
+
+  <section class="mb-8">
+    <label for="description" class="block text-sm font-bold text-slate-800 mb-2">Descripción / Motivo de la solicitud</label>
+    <textarea
+      id="description"
+      [value]="description()"
+      (input)="description.set($any($event.target).value)"
+      placeholder="Ej.: Reparación de instalación eléctrica en cocina, cambio de tuberías..."
+      rows="4"
+      class="w-full px-4 py-3 rounded-[2.5rem] border-2 border-slate-200 bg-white text-slate-800 placeholder-slate-400 focus:border-[#fa5404] focus:ring-2 focus:ring-[#fa5404]/20 outline-none transition-all resize-none"
+    ></textarea>
+  </section>
+
+  @if (errorMessage()) {
+    <p class="mb-4 text-sm text-rose-600 font-medium">{{ errorMessage() }}</p>
+  }
+
+  <button
+    type="button"
+    (click)="onSubmit()"
+    [disabled]="!selectedPlanId() || isSubmitting()"
+    class="w-full py-4 px-6 bg-[#fa5404] text-white font-bold rounded-[2.5rem] shadow-lg hover:shadow-[0_6px_20px_0_rgba(250,84,4,0.3)] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+  >
+    @if (isSubmitting()) {
+      Enviando…
+    } @else {
+      Enviar solicitud de crédito
+    }
+  </button>
+</div>

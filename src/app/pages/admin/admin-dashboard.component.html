@@ -30,7 +30,7 @@
             type="text" 
             [value]="searchTerm()"
             (input)="searchTerm.set($any($event.target).value)"
-            placeholder="Buscar por ID o Monto..." 
+            placeholder="Buscar por cliente, plan o score..." 
             class="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-2xl shadow-sm focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all text-sm"
           >
         </div>
@@ -69,9 +69,9 @@
       <table class="w-full text-left border-collapse">
         <thead>
           <tr class="bg-slate-900 text-white uppercase text-[10px] tracking-widest font-bold">
-            <th class="p-5">ID Solicitud</th>
-            <th class="p-5">Monto Total</th>
-            <th class="p-5">Plan</th>
+            <th class="p-5">Nombre del Cliente</th>
+            <th class="p-5">Plan Solicitado</th>
+            <th class="p-5">Score Crediticio</th>
             <th class="p-5">Estado</th>
             <th class="p-5 text-right">Acciones</th>
           </tr>
@@ -83,15 +83,15 @@
               class="hover:bg-slate-50 transition-colors group cursor-pointer"
             >
               <td class="p-5">
-                <p class="font-bold text-slate-800">#{{ work.id.slice(0,8) }}</p>
-                <p class="text-xs text-slate-400">{{ work.createdAt | date:'short' }}</p>
+                <p class="font-bold text-slate-800">{{ work.userEmail || '—' }}</p>
+                <p class="text-xs text-slate-400">#{{ work.id.slice(0,8) }} · {{ work.createdAt | date:'short' }}</p>
               </td>
-              <td class="p-5 font-black text-slate-900">{{ work.totalAmount | currency }}</td>
               <td class="p-5">
-                <span class="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-bold uppercase">
-                  {{ work.planId }}
+                <span class="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-bold">
+                  {{ work.planIdDisplay }}
                 </span>
               </td>
+              <td class="p-5 font-black text-slate-900 tabular-nums">{{ work.score }}</td>
               <td class="p-5">
                 <span [class]="getStatusClass(work.status)" class="px-3 py-1 rounded-full text-[10px] font-bold uppercase">
                   {{ work.status }}
@@ -123,7 +123,7 @@
   ></div>
   }
 
-  <!-- Panel lateral: Expediente Técnico (Auditoría) -->
+  <!-- Panel lateral: Detalle de la solicitud (tarjeta dividida) -->
   <aside
     [class.translate-x-0]="selectedWork()"
     [class.translate-x-full]="!selectedWork()"
@@ -132,89 +132,59 @@
     @if (selectedWork(); as w) {
     <header class="shrink-0 border-b border-slate-200 bg-slate-50/80 px-6 py-4 flex justify-between items-start">
       <div>
-        <h2 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Expediente técnico</h2>
-        <p class="text-lg font-black text-slate-900 mt-0.5">Solicitud #{{ w.id.slice(0, 8) }}</p>
+        <h2 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Detalle de solicitud</h2>
+        <p class="text-lg font-black text-slate-900 mt-0.5">{{ w.userEmail || 'Cliente' }} · #{{ w.id.slice(0, 8) }}</p>
       </div>
       <button (click)="closeDrawer()" class="p-2 hover:bg-slate-200 rounded-lg transition-colors text-slate-500" aria-label="Cerrar">✕</button>
     </header>
 
-    <div class="flex-1 overflow-y-auto">
-      <!-- 1. Identificación -->
-      <section class="px-6 py-5 border-b border-slate-100">
-        <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">1. Identificación</h3>
-        <dl class="space-y-2 text-sm">
-          <div>
-            <dt class="text-slate-400 font-medium">Descripción</dt>
-            <dd class="text-slate-800 font-medium mt-0.5">{{ w.descripcion || '—' }}</dd>
-          </div>
-          <div>
-            <dt class="text-slate-400 font-medium">Ubicación</dt>
-            <dd class="text-slate-800 font-medium mt-0.5">{{ w.ubicacion || '—' }}</dd>
-          </div>
-          <div>
-            <dt class="text-slate-400 font-medium">Fecha de solicitud</dt>
-            <dd class="text-slate-800 font-medium mt-0.5">{{ w.createdAt | date:'longDate' }}</dd>
-          </div>
-          @if (w.userEmail) {
-          <div>
-            <dt class="text-slate-400 font-medium">Solicitante</dt>
-            <dd class="text-slate-800 font-medium mt-0.5">{{ w.userEmail }}</dd>
-          </div>
-          }
-        </dl>
-      </section>
-
-      <!-- 2. Detalle de partidas -->
-      <section class="px-6 py-5 border-b border-slate-100">
-        <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">2. Detalle de partidas</h3>
-        <table class="w-full text-left border border-slate-200 rounded-lg overflow-hidden">
-          <thead>
-            <tr class="bg-slate-50 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
-              <th class="px-4 py-3">Partida</th>
-              <th class="px-4 py-3 text-center">Cant.</th>
-              <th class="px-4 py-3 text-center">Unidad</th>
-              <th class="px-4 py-3 text-right">P. unit.</th>
-              <th class="px-4 py-3 text-right">Subtotal</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100">
-            @for (p of partidasParaExpediente(w); track p.nombre) {
-            <tr>
-              <td class="px-4 py-3 font-medium text-slate-800">{{ p.nombre }}</td>
-              <td class="px-4 py-3 text-center text-slate-600 tabular-nums">{{ p.cantidad }}</td>
-              <td class="px-4 py-3 text-center text-slate-500 text-sm">{{ p.unidad }}</td>
-              <td class="px-4 py-3 text-right tabular-nums font-medium text-slate-700">{{ p.precioUnitario | currency }}</td>
-              <td class="px-4 py-3 text-right tabular-nums font-bold text-slate-900">{{ p.subtotal | currency }}</td>
-            </tr>
-            }
-          </tbody>
-        </table>
-      </section>
-
-      <!-- 3. Plan de crédito recomendado -->
-      <section class="px-6 py-5 border-b border-slate-100">
-        <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">3. Plan de crédito recomendado</h3>
-        @if (planRecomendadoParaExpediente(w); as plan) {
-        <div class="bg-slate-50 border border-slate-200 rounded-lg p-4">
-          <div class="flex items-center gap-3">
-            <span class="text-2xl">💳</span>
+    <div class="flex-1 overflow-y-auto px-6 py-5">
+      <!-- Tarjeta dividida: La Petición | Riesgo -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <!-- Lado A: La Petición -->
+        <section class="bg-slate-50 border border-slate-200 rounded-2xl p-5">
+          <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">La Petición</h3>
+          <dl class="space-y-3 text-sm">
             <div>
-              <p class="font-black text-slate-900">{{ plan.name }}{{ plan.exceeded ? ' +' : '' }}</p>
-              <p class="text-xs text-slate-500 mt-0.5">Límite del plan: {{ plan.maxAmount | currency }}</p>
-              @if (plan.exceeded) {
-              <p class="text-[10px] font-bold text-amber-600 uppercase mt-1">Requiere evaluación especial</p>
-              }
+              <dt class="text-slate-400 font-medium">Plan</dt>
+              <dd class="text-slate-800 font-bold mt-0.5">{{ getPlanLabel(w.planId) }}</dd>
             </div>
-          </div>
-        </div>
-        } @else {
-        <p class="text-sm text-slate-500 italic">No aplica o sin datos de planes.</p>
-        }
-      </section>
+            <div>
+              <dt class="text-slate-400 font-medium">Monto Máximo</dt>
+              <dd class="text-slate-800 font-bold mt-0.5">{{ w.planAmount != null ? (w.planAmount | currency) : '—' }}</dd>
+            </div>
+            <div>
+              <dt class="text-slate-400 font-medium">Motivo</dt>
+              <dd class="text-slate-800 font-medium mt-0.5 whitespace-pre-wrap">{{ w.description || w.descripcion || '—' }}</dd>
+            </div>
+          </dl>
+        </section>
 
-      <!-- 4. Decisión -->
-      <section class="px-6 py-5">
-        <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">4. Decisión</h3>
+        <!-- Lado B: Riesgo -->
+        <section class="bg-slate-50 border border-slate-200 rounded-2xl p-5 flex flex-col">
+          <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Riesgo</h3>
+          <div class="mt-auto">
+            @if (isAptoCredito(w)) {
+              <span class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-100 text-emerald-700 text-sm font-bold">
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                Apto para Crédito
+              </span>
+            } @else {
+              <span class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-100 text-rose-700 text-sm font-bold">
+                <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                No apto para Crédito
+              </span>
+            }
+            @if (w.userProfile) {
+              <p class="text-xs text-slate-500 mt-2">Score: {{ w.userProfile.score }} · {{ w.userProfile.isMoroso ? 'Moroso' : 'Al día' }}</p>
+            }
+          </div>
+        </section>
+      </div>
+
+      <!-- Decisión -->
+      <section class="border-t border-slate-100 pt-5">
+        <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Decisión</h3>
         <div class="flex flex-col gap-3">
           @if (w.status === 'PENDING') {
           <div class="flex gap-3">

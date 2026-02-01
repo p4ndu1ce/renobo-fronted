@@ -1,18 +1,8 @@
 import { Component, inject, OnInit, computed, signal, PLATFORM_ID } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule, CurrencyPipe, DatePipe, isPlatformBrowser } from '@angular/common';
-import { WorkService, type Work } from '../../services/work.service';
+import { WorkService, type Work, type CreditPlanId } from '../../services/work.service';
 import { AuthService } from '../../services/auth.service';
-import { ConfigService } from '../../services/config.service';
-
-/** Partida para el expediente: cantidad, unidad, precio unitario, subtotal */
-interface PartidaExpediente {
-  nombre: string;
-  cantidad: number;
-  unidad: string;
-  precioUnitario: number;
-  subtotal: number;
-}
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -24,7 +14,6 @@ interface PartidaExpediente {
 export class AdminDashboardComponent implements OnInit {
   public workService = inject(WorkService);
   public authService = inject(AuthService);
-  public configService = inject(ConfigService);
   private router = inject(Router);
   private platformId = inject(PLATFORM_ID);
 
@@ -37,12 +26,12 @@ export class AdminDashboardComponent implements OnInit {
   // Signal para el filtro de estado
   filterStatus = signal<'all' | 'pending'>('all');
 
-  // Computed signal para obtener las obras con formato adaptado
+  // Computed signal para obtener las obras con formato adaptado (cliente, plan, score)
   works = computed(() => {
     return this.workService.works().map(work => ({
       ...work,
-      totalAmount: work.presupuestoInicial,
-      planId: 'Por definir', // TODO: Obtener del planId cuando esté disponible
+      planIdDisplay: this.getPlanLabel(work.planId),
+      score: work.userProfile?.score ?? '—',
       status: this.mapStatusToTemplate(work.estado)
     }));
   });
@@ -64,13 +53,11 @@ export class AdminDashboardComponent implements OnInit {
     }
 
     return allWorks.filter(work => {
-      // Buscar en el ID de la obra
       const idMatch = work.id.toLowerCase().includes(term);
-      
-      // Buscar en el monto total (convertir a string para buscar)
-      const amountMatch = work.totalAmount.toString().includes(term);
-
-      return idMatch || amountMatch;
+      const emailMatch = (work.userEmail ?? '').toLowerCase().includes(term);
+      const planMatch = (work.planIdDisplay ?? '').toLowerCase().includes(term);
+      const scoreMatch = String(work.score).includes(term);
+      return idMatch || emailMatch || planMatch || scoreMatch;
     });
   });
 
@@ -92,14 +79,31 @@ export class AdminDashboardComponent implements OnInit {
   private mapStatusToTemplate(estado: Work['estado']): string {
     switch (estado) {
       case 'OPEN':
+      case 'PENDING_CREDIT':
         return 'PENDING';
       case 'APPROVED':
+      case 'CREDIT_APPROVED':
         return 'APPROVED';
       case 'REJECTED':
+      case 'CREDIT_REJECTED':
         return 'REJECTED';
       default:
         return estado;
     }
+  }
+
+  /** Etiqueta del plan para mostrar (Bronce / Plata / Oro). */
+  getPlanLabel(planId?: CreditPlanId | null): string {
+    if (!planId) return '—';
+    const labels: Record<CreditPlanId, string> = { BRONCE: 'Bronce', PLATA: 'Plata', ORO: 'Oro' };
+    return labels[planId] ?? planId;
+  }
+
+  /** Indica si el perfil del cliente es apto para crédito (score >= 60 y no moroso). */
+  isAptoCredito(work: Work): boolean {
+    const p = work.userProfile;
+    if (!p) return false;
+    return p.score >= 60 && !p.isMoroso;
   }
 
   /**
@@ -119,20 +123,20 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   /**
-   * Aprueba una obra
+   * Aprueba la solicitud de crédito (estado CREDIT_APPROVED).
    */
   approve(workId: string): void {
     if (confirm(`¿Estás seguro de aprobar la solicitud #${workId.slice(0, 8)}?`)) {
-      this.workService.updateWorkStatus(workId, 'APPROVED');
+      this.workService.updateWorkStatus(workId, 'CREDIT_APPROVED');
     }
   }
 
   /**
-   * Rechaza una obra
+   * Rechaza la solicitud de crédito (estado CREDIT_REJECTED).
    */
   reject(workId: string): void {
     if (confirm(`¿Estás seguro de rechazar la solicitud #${workId.slice(0, 8)}?`)) {
-      this.workService.updateWorkStatus(workId, 'REJECTED');
+      this.workService.updateWorkStatus(workId, 'CREDIT_REJECTED');
     }
   }
 
@@ -144,33 +148,6 @@ export class AdminDashboardComponent implements OnInit {
   /** Cierra el panel de auditoría. */
   closeDrawer(): void {
     this.selectedWork.set(null);
-  }
-
-  /**
-   * Partidas para el expediente. Por ahora: una línea de resumen con el presupuesto total.
-   * Cuando el backend envíe partidas, se podrán mapear aquí.
-   */
-  partidasParaExpediente(work: { presupuestoInicial: number }): PartidaExpediente[] {
-    return [{
-      nombre: 'Presupuesto total',
-      cantidad: 1,
-      unidad: '—',
-      precioUnitario: work.presupuestoInicial,
-      subtotal: work.presupuestoInicial
-    }];
-  }
-
-  /**
-   * Plan de crédito recomendado según el presupuesto, usando la misma lógica que la calculadora.
-   */
-  planRecomendadoParaExpediente(work: { presupuestoInicial: number }): { name: string; maxAmount: number; exceeded?: boolean } | null {
-    const plans = [...(this.configService.catalog()?.creditPlans || [])]
-      .sort((a, b) => a.maxAmount - b.maxAmount);
-    const total = work.presupuestoInicial;
-    if (total === 0 || plans.length === 0) return null;
-    const match = plans.find(p => total <= p.maxAmount);
-    if (match) return { name: match.name, maxAmount: match.maxAmount };
-    return { ...plans[plans.length - 1], exceeded: true };
   }
 
   /**

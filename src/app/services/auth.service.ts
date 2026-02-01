@@ -8,6 +8,22 @@ export interface CurrentUser {
   role?: string;
 }
 
+/** Perfil financiero del usuario (para revisión del Supervisor). */
+export interface UserFinancialProfile {
+  paymentStatus: 'al_dia' | 'atrasado' | 'sin_historial';
+  creditsRequested: number;
+  isMoroso: boolean;
+  creditScore: number | null;
+}
+
+/** Perfil de pago / crédito enviado con la solicitud para que el Supervisor apruebe o rechace. */
+export interface UserProfile {
+  status: 'AL DÍA' | 'ATRASADO' | 'SIN HISTORIAL';
+  score: number;
+  previousCredits: number;
+  isMoroso: boolean;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private platformId = inject(PLATFORM_ID);
@@ -16,6 +32,22 @@ export class AuthService {
   public currentUser = signal<CurrentUser | null>(this.loadCurrentUser());
   private _token = signal<string | null>(this.loadToken());
   public userRole = signal<string | null>(this.loadUserRole());
+
+  /** Perfil financiero: historial de pagos, score, morosidad. Por defecto hasta que el backend lo provea. */
+  public userFinancialProfile = signal<UserFinancialProfile>({
+    paymentStatus: 'sin_historial',
+    creditsRequested: 0,
+    isMoroso: false,
+    creditScore: null,
+  });
+
+  /** Perfil de crédito simulado: se envía con la solicitud de plan para que el Supervisor decida. */
+  public userProfile = signal<UserProfile>({
+    status: 'AL DÍA',
+    score: 850,
+    previousCredits: 2,
+    isMoroso: false,
+  });
 
   public isSupervisor = computed(() => this.userRole() === 'SUPERVISOR');
 
@@ -171,10 +203,22 @@ export class AuthService {
     });
   }
   
-  logout() { 
+  logout() {
     this.isLoggedIn.set(false);
     this.currentUser.set(null);
     this._token.set(null);
     this.userRole.set(null);
+    this.userFinancialProfile.set({
+      paymentStatus: 'sin_historial',
+      creditsRequested: 0,
+      isMoroso: false,
+      creditScore: null,
+    });
+    this.userProfile.set({
+      status: 'AL DÍA',
+      score: 850,
+      previousCredits: 2,
+      isMoroso: false,
+    });
   }
 }
