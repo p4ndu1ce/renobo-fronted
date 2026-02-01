@@ -1,14 +1,16 @@
 import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet } from '@angular/router';
+import { RouterOutlet, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { BottomNavbarComponent } from '../bottom-navbar/bottom-navbar.component';
+import { NotificationBellComponent } from '../notification-bell/notification-bell.component';
+import { DebugFabComponent } from '../../shared/components/debug-fab/debug-fab.component';
 
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, BottomNavbarComponent],
+  imports: [CommonModule, RouterOutlet, RouterLink, BottomNavbarComponent, NotificationBellComponent, DebugFabComponent],
   templateUrl: './main-layout.component.html',
   styleUrl: './main-layout.component.css',
 })

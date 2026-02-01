@@ -1,0 +1,36 @@
+.debug-fab-container {
+  position: fixed;
+  bottom: 5.5rem;
+  right: 1rem;
+  z-index: 45;
+}
+
+.debug-fab-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0;
+}
+
+.debug-menu {
+  min-width: 260px;
+  max-width: 90vw;
+  animation: debug-menu-in 0.15s ease-out;
+}
+
+@keyframes debug-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.debug-fab {
+  width: 3.5rem;
+  height: 3.5rem;
+}

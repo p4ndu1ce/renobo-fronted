@@ -15,7 +15,7 @@
       <div class="rounded-[2.5rem] bg-white border border-slate-200 shadow-sm p-8 sm:p-10 text-center">
         <p class="text-4xl mb-4">📋</p>
         <h2 class="text-lg font-bold text-slate-800 mb-2">Sin asignaciones</h2>
-        <p class="text-sm text-slate-500">No tienes visitas técnicas pendientes.</p>
+        <p class="text-sm text-slate-500">No tienes visitas técnicas programadas por ahora.</p>
       </div>
     } @else {
       <ul class="space-y-4 sm:space-y-5">
@@ -31,9 +31,19 @@
                   <span class="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-full text-xs font-bold">
                     Plan {{ work.planLabel }}
                   </span>
+                  @if (work.status === 'TECHNICAL_VISIT_PENDING') {
+                    <span class="px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-xs font-bold">
+                      Visita pendiente
+                    </span>
+                  }
                   @if (work.status === 'WAITING_PARTNERS') {
                     <span class="px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-xs font-bold">
                       Esperando Proveedores
+                    </span>
+                  }
+                  @if (work.status === 'IN_PROGRESS') {
+                    <span class="px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full text-xs font-bold">
+                      En curso
                     </span>
                   }
                   @if (work.planAmount != null) {
@@ -60,7 +70,7 @@
                     </div>
                   </div>
                 }
-                @if (work.status === 'CREDIT_APPROVED') {
+                @if (work.status === 'TECHNICAL_VISIT_PENDING' || work.status === 'CREDIT_APPROVED') {
                   <button
                     type="button"
                     (click)="startTechnicalVisit(work)"
@@ -75,6 +85,14 @@
                     class="w-full py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm transition-colors border border-slate-200"
                   >
                     Ver detalle de visita
+                  </button>
+                } @else if (work.status === 'IN_PROGRESS') {
+                  <button
+                    type="button"
+                    (click)="startTechnicalVisit(work)"
+                    class="w-full py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm transition-colors border border-slate-200"
+                  >
+                    Ver obra en curso
                   </button>
                 }
               </div>

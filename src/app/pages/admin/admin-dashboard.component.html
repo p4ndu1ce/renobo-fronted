@@ -93,9 +93,14 @@
               </td>
               <td class="p-5 font-black text-slate-900 tabular-nums">{{ work.score }}</td>
               <td class="p-5">
-                <span [class]="getStatusClass(work.status)" class="px-3 py-1 rounded-full text-[10px] font-bold uppercase">
-                  {{ work.status }}
-                </span>
+                <div class="flex flex-wrap items-center gap-1.5">
+                  <span [class]="getStatusClass(work.status)" class="px-3 py-1 rounded-full text-[10px] font-bold uppercase">
+                    {{ work.status }}
+                  </span>
+                  @if (work.status === 'APPROVED' && !work.engineerId) {
+                    <span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-rose-100 text-rose-700">Sin Asignar</span>
+                  }
+                </div>
               </td>
               <td class="p-5 text-right" (click)="$event.stopPropagation()">
                 @if (work.status === 'PENDING') {
@@ -182,7 +187,33 @@
         </section>
       </div>
 
-      <!-- Decisión -->
+      <!-- Asignar ingeniero: tras aprobar (CREDIT_APPROVED sin engineerId) -->
+      @if (w.status === 'APPROVED' && !w.engineerId) {
+      <section class="border-t border-slate-100 pt-5 mb-5">
+        <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Asignar responsable técnico</h3>
+        <p class="text-xs text-slate-500 mb-3">Selecciona un ingeniero y confirma la asignación.</p>
+        <select
+          [value]="selectedEngineerId() ?? ''"
+          (change)="selectEngineer($any($event.target).value || null)"
+          class="w-full text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-xl py-3 px-4 mb-3"
+        >
+          <option value="">— Elige un ingeniero —</option>
+          @for (eng of engineers(); track eng.id) {
+            <option [value]="eng.id">{{ eng.name }} · {{ eng.especialidad }} ({{ eng.zona }})</option>
+          }
+        </select>
+        <button
+          type="button"
+          (click)="confirmAndAssignEngineer(w.id)"
+          [disabled]="!selectedEngineerId()"
+          class="w-full py-3 bg-[#fa5404] hover:bg-[#e04a03] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors"
+        >
+          Confirmar y Asignar Ingeniero
+        </button>
+      </section>
+      }
+
+      <!-- Decisión: aprobar / rechazar (solo si sigue PENDING) -->
       <section class="border-t border-slate-100 pt-5">
         <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Decisión</h3>
         <div class="flex flex-col gap-3">
@@ -191,6 +222,8 @@
             <button (click)="approve(w.id)" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-colors">Aprobar</button>
             <button (click)="reject(w.id)" class="flex-1 py-3 bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold rounded-xl transition-colors">Rechazar</button>
           </div>
+          } @else if (w.status === 'APPROVED' && w.engineerId) {
+          <p class="text-sm text-slate-500 italic">Obra aprobada y con ingeniero asignado.</p>
           } @else {
           <p class="text-sm text-slate-500 italic">Esta solicitud ya fue procesada.</p>
           }

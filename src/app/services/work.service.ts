@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { map, tap, catchError } from 'rxjs/operators';
 import { PartnerService } from './partner.service';
+import { NotificationService } from './notification.service';
 
 /** Objeto "Pedido" por partner para simulación de envío de correo. */
 export interface PedidoParaPartner {
@@ -23,9 +24,13 @@ export interface CreditRequestUserProfile {
 export type WorkStatus =
   | 'CREDIT_PENDING'
   | 'CREDIT_APPROVED'
+  | 'TECHNICAL_VISIT_PENDING'
   | 'TECHNICAL_VISIT'
   | 'WAITING_PARTNERS'
   | 'IN_PROGRESS';
+
+/** Estado de respuesta de un partner a la solicitud de disponibilidad. */
+export type PartnerResponseStatus = 'PENDING' | 'CONFIRMED' | 'UNAVAILABLE';
 
 export type CreditPlanId = 'BRONZE' | 'SILVER' | 'GOLD';
 
@@ -59,6 +64,8 @@ export interface Work {
   partnerConfirmationDeadline?: string;
   /** Fecha límite para respuesta de partners (ej. ahora + 48h). */
   partnerResponseDeadline?: string;
+  /** Checklist de disponibilidad: partnerId -> PENDING | CONFIRMED | UNAVAILABLE. */
+  partnerResponses?: Record<string, PartnerResponseStatus>;
   PK?: string;
   SK?: string;
 }
@@ -93,9 +100,13 @@ export interface PartnerEmailResult {
 export class WorkService {
   private http = inject(HttpClient);
   private partnerService = inject(PartnerService);
+  private notificationService = inject(NotificationService);
   private readonly API_URL = 'https://s6txacomrf.execute-api.us-east-1.amazonaws.com/dev/works';
 
   private readonly HORAS_PLAZO_PARTNERS = 48;
+
+  /** IDs de obras IN_PROGRESS ya notificadas al cliente (evitar duplicados). */
+  private readonly notifiedInProgressIds = new Set<string>();
 
   // Signal para almacenar la lista de obras (admin / todas)
   private _works = signal<Work[]>([]);
@@ -107,8 +118,8 @@ export class WorkService {
 
   /**
    * Obtiene las obras del usuario desde el backend.
-   * El backend puede usar userId por query param o extraerlo del token en la Lambda.
-   * Devuelve un Observable para que el caller pueda subscribe() y disparar la petición.
+   * Se envía GET /works?userId=<valor>. El backend asocia las obras por email, por eso
+   * los callers pasan user?.email ?? user?.id (p. ej. works?userId=cliente@gmail.com).
    */
   getUserWorks(userId: string): Observable<Work[]> {
     return this.http.get<Work[]>(this.API_URL, { params: { userId } }).pipe(
@@ -119,6 +130,17 @@ export class WorkService {
         const serverIds = new Set(transformed.map((w) => w.id));
         const onlyLocal = existing.filter((w) => !serverIds.has(w.id));
         this._myWorks.set([...onlyLocal, ...transformed]);
+        // Notificación al cliente: obras que pasaron a IN_PROGRESS (inicio de obra)
+        transformed.forEach((w) => {
+          if (w.status === 'IN_PROGRESS' && !this.notifiedInProgressIds.has(w.id)) {
+            this.notificationService.add({
+              title: '🚀 ¡Obra Iniciada!',
+              message: 'El ingeniero ha confirmado los materiales. La cuadrilla empezará pronto.',
+              type: 'success',
+            });
+            this.notifiedInProgressIds.add(w.id);
+          }
+        });
       }),
       catchError((err) => {
         console.error('Error al obtener obras del usuario:', err);
@@ -196,6 +218,49 @@ export class WorkService {
   }
 
   /**
+   * Asigna un ingeniero a la obra y pasa el estado a TECHNICAL_VISIT_PENDING.
+   * Lo usa el supervisor tras aprobar el crédito.
+   */
+  assignEngineer(workId: string, engineerId: string): void {
+    this.http.patch<{ message: string; work: Work }>(
+      `${this.API_URL}/${workId}`,
+      { status: 'TECHNICAL_VISIT_PENDING' as WorkStatus, engineerId }
+    ).subscribe({
+      next: (res) => {
+        if (res?.work) {
+          const updated = this.transformWork(res.work);
+          const currentWorks = this._works();
+          this._works.set(currentWorks.map(w => (w.id === workId ? updated : w)));
+        }
+      },
+      error: (err) => {
+        console.error('Error al asignar ingeniero:', err);
+        throw err;
+      }
+    });
+  }
+
+  /**
+   * Obtiene las obras asignadas al ingeniero (GET /works?engineerId=xxx).
+   * El dashboard del ingeniero debe usar este método para ver solo sus obras.
+   */
+  getWorksByEngineerId(engineerId: string): Observable<Work[]> {
+    return this.http.get<Work[]>(this.API_URL, { params: { engineerId } }).pipe(
+      map((works) => (works ?? []).map((work) => this.transformWork(work))),
+      tap((transformed) => {
+        const currentWorks = this._works();
+        const byId = new Map(currentWorks.map((w) => [w.id, w]));
+        transformed.forEach((w) => byId.set(w.id, w));
+        this._works.set(Array.from(byId.values()));
+      }),
+      catchError((err) => {
+        console.error('Error al cargar obras del ingeniero:', err);
+        return of([]);
+      })
+    );
+  }
+
+  /**
    * Actualiza el estado de una obra.
    */
   updateWorkStatus(id: string, status: WorkStatus): void {
@@ -208,6 +273,13 @@ export class WorkService {
         this._works.set(currentWorks.map(work =>
           work.id === id ? { ...work, status } : work
         ));
+        if (status === 'CREDIT_APPROVED') {
+          this.notificationService.add({
+            title: '¡Crédito Aprobado!',
+            message: 'Tu plan ha sido validado por supervisión.',
+            type: 'success',
+          });
+        }
       },
       error: (err) => {
         console.error('Error al actualizar estado de la obra:', err);
@@ -374,6 +446,7 @@ Equipo de Logística Renobo [Logo Naranja #fa5404]`;
     const rawPlanId = work.planId ?? 'BRONZE';
     const planId = this.mapLegacyPlanId(rawPlanId) as CreditPlanId;
 
+    const partnerResponses = work.partnerResponses ?? {};
     return {
       ...work,
       id,
@@ -381,10 +454,140 @@ Equipo de Logística Renobo [Logo Naranja #fa5404]`;
       planId,
       engineerId,
       items,
+      partnerResponses,
       createdAt: work.createdAt ?? new Date().toISOString(),
       PK: undefined,
       SK: undefined,
     } as Work;
+  }
+
+  /**
+   * Actualiza las respuestas de partners (checklist de disponibilidad). ENGINEER only.
+   */
+  updatePartnerResponse(workId: string, partnerResponses: Record<string, PartnerResponseStatus>): Observable<{ message: string; work: Work }> {
+    return this.http.patch<{ message: string; work: Work }>(`${this.API_URL}/${workId}`, { partnerResponses }).pipe(
+      tap((res) => {
+        if (res?.work) {
+          const w = this.transformWork(res.work);
+          const currentWorks = this._works();
+          this._works.set(currentWorks.map((x) => (x.id === workId ? w : x)));
+        }
+      }),
+      map((res) => ({ message: res?.message ?? 'OK', work: this.transformWork(res?.work!) })),
+      catchError((err) => {
+        console.error('Error en updatePartnerResponse:', err);
+        throw err;
+      })
+    );
+  }
+
+  /**
+   * Pasa la obra a IN_PROGRESS (iniciar obra). Solo cuando todos los partners estén CONFIRMED.
+   * El ingeniero ve una notificación de confirmación; el cliente la verá al cargar su pantalla de inicio (getUserWorks).
+   */
+  confirmStartWork(workId: string): Observable<{ message: string; work: Work }> {
+    return this.http.patch<{ message: string; work: Work }>(`${this.API_URL}/${workId}`, { status: 'IN_PROGRESS' as WorkStatus }).pipe(
+      tap((res) => {
+        if (res?.work) {
+          const w = this.transformWork(res.work);
+          const currentWorks = this._works();
+          this._works.set(currentWorks.map((x) => (x.id === workId ? w : x)));
+        }
+        this.notificationService.add({
+          title: '🚀 Obra en marcha',
+          message: 'El ingeniero ha iniciado el servicio.',
+          type: 'success',
+        });
+      }),
+      map((res) => ({ message: res?.message ?? 'OK', work: this.transformWork(res?.work!) })),
+      catchError((err) => {
+        console.error('Error en confirmStartWork:', err);
+        throw err;
+      })
+    );
+  }
+
+  /** Alias para compatibilidad. */
+  startWork(workId: string): Observable<{ message: string; work: Work }> {
+    return this.confirmStartWork(workId);
+  }
+
+  /**
+   * Actualiza el estado de una obra solo en memoria (signals). No llama al API.
+   * Útil para debug / modo dios: ver cambios de vista al instante sin esperar AWS.
+   */
+  forceStatusUpdate(workId: string, newStatus: WorkStatus): void {
+    const currentWorks = this._works();
+    const work = currentWorks.find((w) => w.id === workId);
+    if (work) {
+      const updated = { ...work, status: newStatus };
+      this._works.set(currentWorks.map((w) => (w.id === workId ? updated : w)));
+      const myWorks = this._myWorks();
+      if (myWorks.some((w) => w.id === workId)) {
+        this._myWorks.set(myWorks.map((w) => (w.id === workId ? updated : w)));
+      }
+      console.log('DEBUG: Estado cambiado a', newStatus);
+    }
+  }
+
+  /**
+   * Cambia el estado de una obra (PATCH solo status). Útil para debug / modo dios.
+   * No dispara notificaciones (para pruebas usar confirmStartWork si quieres notificación IN_PROGRESS).
+   */
+  setWorkStatus(workId: string, status: WorkStatus): Observable<{ message: string; work: Work }> {
+    return this.http.patch<{ message: string; work: Work }>(`${this.API_URL}/${workId}`, { status }).pipe(
+      tap((res) => {
+        if (res?.work) {
+          const w = this.transformWork(res.work);
+          const currentWorks = this._works();
+          this._works.set(currentWorks.map((x) => (x.id === workId ? w : x)));
+          const myWorks = this._myWorks();
+          if (myWorks.some((x) => x.id === workId)) {
+            this._myWorks.set(myWorks.map((x) => (x.id === workId ? w : x)));
+          }
+        }
+        if (status === 'CREDIT_APPROVED') {
+          this.notificationService.add({
+            title: '¡Crédito Aprobado!',
+            message: 'Tu plan ha sido validado por supervisión.',
+            type: 'success',
+          });
+        }
+      }),
+      map((res) => ({ message: res?.message ?? 'OK', work: this.transformWork(res?.work!) })),
+      catchError((err) => {
+        console.error('Error en setWorkStatus:', err);
+        throw err;
+      })
+    );
+  }
+
+  /**
+   * Pasa la obra a WAITING_PARTNERS con deadline 48h. Útil para debug / modo dios.
+   */
+  setWorkToWaitingPartners(workId: string, partnerResponseDeadline?: string): Observable<{ message: string; work: Work }> {
+    const deadline = partnerResponseDeadline ?? new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
+    return this.http.patch<{ message: string; work: Work }>(`${this.API_URL}/${workId}`, {
+      status: 'WAITING_PARTNERS' as WorkStatus,
+      partnerResponseDeadline: deadline,
+    }).pipe(
+      tap((res) => {
+        if (res?.work) {
+          const w = this.transformWork(res.work);
+          const currentWorks = this._works();
+          this._works.set(currentWorks.map((x) => (x.id === workId ? w : x)));
+          const myWorks = this._myWorks();
+          if (myWorks.some((x) => x.id === workId)) {
+            this._myWorks.set(myWorks.map((x) => (x.id === workId ? w : x)));
+          }
+        }
+      }),
+      map((res) => ({ message: res?.message ?? 'OK', work: this.transformWork(res?.work!) })),
+      catchError((err) => {
+        console.error('Error en setWorkToWaitingPartners:', err);
+        throw err;
+      })
+    );
   }
 
   private mapLegacyPlanId(planId: string): CreditPlanId {
@@ -397,6 +600,7 @@ Equipo de Logística Renobo [Logo Naranja #fa5404]`;
       case 'PENDING_CREDIT': return 'CREDIT_PENDING';
       case 'CREDIT_APPROVED': return 'CREDIT_APPROVED';
       case 'CREDIT_REJECTED': return 'CREDIT_PENDING';
+      case 'TECHNICAL_VISIT_PENDING': return 'TECHNICAL_VISIT_PENDING';
       case 'OPEN':
       case 'ASSIGNED': return 'TECHNICAL_VISIT';
       default: return (estado as WorkStatus) ?? 'CREDIT_PENDING';

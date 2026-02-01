@@ -11,7 +11,7 @@ import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { ConfigService, type Service } from '../../services/config.service';
-import { WorkService, type WorkItem } from '../../services/work.service';
+import { WorkService, type WorkItem, type PartnerResponseStatus } from '../../services/work.service';
 import { PartnerService } from '../../services/partner.service';
 import { AuthService } from '../../services/auth.service';
 
@@ -57,6 +57,7 @@ export class TechnicalCalculatorComponent implements OnInit {
   isCartOpen = signal(false);
   isSending = signal(false);
   sendError = signal<string | null>(null);
+  isStartingWork = signal(false);
 
   /** Partner seleccionado por material (para el dropdown "Suministrado por"). */
   selectedPartnerForMaterial = signal<Record<string, { partnerId: string; partnerName: string }>>({});
@@ -66,6 +67,25 @@ export class TechnicalCalculatorComponent implements OnInit {
     const id = this.workId();
     if (!id) return null;
     return this.workService.works().find(w => w.id === id) ?? null;
+  });
+
+  /** Cuando la obra está WAITING_PARTNERS: partners involucrados (desde work.items). */
+  partnersInvolvedInWork = computed(() => {
+    const work = this.currentWork();
+    const items = work?.items ?? [];
+    const partnerIds = [...new Set(items.map(i => i.partnerId).filter(Boolean))];
+    return partnerIds.map(pid => {
+      const partner = this.partnerService.getPartnerById(pid);
+      const status: PartnerResponseStatus = work?.partnerResponses?.[pid] ?? 'PENDING';
+      return { partnerId: pid, name: partner?.name ?? pid, status };
+    });
+  });
+
+  /** true cuando todos los partners involucrados están CONFIRMED (habilita INICIAR OBRA). */
+  allPartnersConfirmed = computed(() => {
+    const list = this.partnersInvolvedInWork();
+    if (list.length === 0) return false;
+    return list.every(p => p.status === 'CONFIRMED');
   });
 
   /** Límite del plan aprobado (Bronce/Plata/Oro). */
@@ -277,5 +297,34 @@ export class TechnicalCalculatorComponent implements OnInit {
 
   goBack(): void {
     this.router.navigate(['/engineer']);
+  }
+
+  /** Marca la respuesta del partner (checklist de disponibilidad). */
+  setPartnerResponse(partnerId: string, status: PartnerResponseStatus): void {
+    const id = this.workId();
+    const work = this.currentWork();
+    if (!id || !work) return;
+    const next = { ...(work.partnerResponses ?? {}), [partnerId]: status };
+    this.workService.updatePartnerResponse(id, next).subscribe({
+      error: (err) => this.sendError.set(err?.message ?? 'Error al actualizar.')
+    });
+  }
+
+  /** Pasa la obra a IN_PROGRESS (solo si todos los partners CONFIRMED). */
+  startWork(): void {
+    const id = this.workId();
+    if (!id || !this.allPartnersConfirmed()) return;
+    this.sendError.set(null);
+    this.isStartingWork.set(true);
+    this.workService.startWork(id).subscribe({
+      next: () => {
+        this.isStartingWork.set(false);
+        this.router.navigate(['/engineer'], { queryParams: { success: 'obra-iniciada' } });
+      },
+      error: (err) => {
+        this.isStartingWork.set(false);
+        this.sendError.set(err?.message ?? 'Error al iniciar obra.');
+      }
+    });
   }
 }

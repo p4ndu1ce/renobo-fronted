@@ -36,7 +36,7 @@
         <div class="bg-white p-4 rounded-[2rem] border border-orange-100/50 shadow-sm flex justify-between items-center animate-fade-in">
           <div class="flex items-center gap-4">
             <div class="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center text-xl">
-              {{ getIconForCategory(work.descripcion) }}
+              {{ getIconForCategory(work.descripcion ?? '') }}
             </div>
             <div>
               <p class="font-bold text-slate-800 text-sm italic line-clamp-1">{{ work.descripcion || 'Solicitud de Obra' }}</p>

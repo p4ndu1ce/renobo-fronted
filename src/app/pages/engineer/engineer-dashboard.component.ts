@@ -38,14 +38,14 @@ export class EngineerDashboardComponent implements OnInit, OnDestroy {
   /** Actualización cada minuto para que el countdown se refresque. */
   now = signal(Date.now());
 
-  /** Obras con crédito aprobado o esperando partners, asignadas al ingeniero actual. */
+  /** Obras asignadas al ingeniero actual: TECHNICAL_VISIT_PENDING, WAITING_PARTNERS, IN_PROGRESS (filtro estricto por engineerId). */
   assignedWorks = computed(() => {
     this.now(); // dependencia para re-evaluar cada minuto
     const works = this.workService.works();
     const myId = this.authService.engineerId();
     if (!myId) return [];
     return works.filter(
-      w => (w.status === 'CREDIT_APPROVED' || w.status === 'WAITING_PARTNERS') && w.engineerId === myId
+      w => (w.status === 'TECHNICAL_VISIT_PENDING' || w.status === 'WAITING_PARTNERS' || w.status === 'IN_PROGRESS') && w.engineerId === myId
     ).map(w => ({
       ...w,
       planLabel: this.getPlanLabel(w.planId),
@@ -55,11 +55,17 @@ export class EngineerDashboardComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
-      this.workService.getAllWorks();
+      const myId = this.authService.engineerId();
+      if (myId) {
+        this.workService.getWorksByEngineerId(myId).subscribe();
+      }
       this.tickInterval = setInterval(() => this.now.set(Date.now()), 60_000);
       const success = this.route.snapshot.queryParamMap.get('success');
       if (success === 'solicitud-enviada') {
         this.successMessage.set('Solicitud de disponibilidad enviada a los proveedores correctamente.');
+        this.router.navigate([], { relativeTo: this.route, queryParams: {}, queryParamsHandling: '', replaceUrl: true });
+      } else if (success === 'obra-iniciada') {
+        this.successMessage.set('Obra iniciada correctamente. Estado: En curso.');
         this.router.navigate([], { relativeTo: this.route, queryParams: {}, queryParamsHandling: '', replaceUrl: true });
       }
     }

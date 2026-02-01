@@ -66,6 +66,7 @@ export class HomeComponent implements OnInit {
         return 'bg-emerald-100 text-emerald-700';
       case 'CREDIT_PENDING':
         return 'bg-amber-100 text-amber-700';
+      case 'TECHNICAL_VISIT_PENDING':
       case 'TECHNICAL_VISIT':
       case 'WAITING_PARTNERS':
       case 'IN_PROGRESS':
@@ -79,6 +80,7 @@ export class HomeComponent implements OnInit {
     const labels: Record<WorkStatus, string> = {
       CREDIT_PENDING: 'Pendiente de crédito',
       CREDIT_APPROVED: 'Crédito aprobado',
+      TECHNICAL_VISIT_PENDING: 'Visita pendiente de asignar',
       TECHNICAL_VISIT: 'Visita técnica',
       WAITING_PARTNERS: 'Esperando proveedores',
       IN_PROGRESS: 'En proceso',

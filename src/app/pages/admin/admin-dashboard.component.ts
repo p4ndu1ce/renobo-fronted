@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { CommonModule, CurrencyPipe, DatePipe, isPlatformBrowser } from '@angular/common';
 import { WorkService, type Work, type CreditPlanId, type WorkStatus } from '../../services/work.service';
 import { AuthService } from '../../services/auth.service';
+import { EngineerService, type Engineer } from '../../services/engineer.service';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -14,11 +15,18 @@ import { AuthService } from '../../services/auth.service';
 export class AdminDashboardComponent implements OnInit {
   public workService = inject(WorkService);
   public authService = inject(AuthService);
+  private engineerService = inject(EngineerService);
   private router = inject(Router);
   private platformId = inject(PLATFORM_ID);
 
   /** Obra seleccionada para el panel de auditoría (drawer). Null cuando el drawer está cerrado. */
   selectedWork = signal<any | null>(null);
+
+  /** Pool de ingenieros disponibles (para asignar al aprobar). */
+  engineers = signal<Engineer[]>([]);
+
+  /** Ingeniero seleccionado para la obra actual (drawer). */
+  selectedEngineerId = signal<string | null>(null);
 
   // Signal para el término de búsqueda
   searchTerm = signal('');
@@ -67,24 +75,26 @@ export class AdminDashboardComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    // Cargar obras solo en el navegador: en SSR no hay token (localStorage) y la petición daría 401
     if (isPlatformBrowser(this.platformId)) {
       this.workService.getAllWorks();
+      this.engineerService.getEngineers().subscribe((list) => this.engineers.set(list));
     }
   }
 
   /**
-   * Mapea el estado del backend al formato del template (PENDING / APPROVED / REJECTED).
+   * Mapea el estado del backend al formato del template (PENDING / APPROVED / REJECTED / etc.).
    */
   private mapStatusToTemplate(status: WorkStatus): string {
     switch (status) {
       case 'CREDIT_PENDING':
+        return 'PENDING';
+      case 'CREDIT_APPROVED':
+        return 'APPROVED';
+      case 'TECHNICAL_VISIT_PENDING':
       case 'TECHNICAL_VISIT':
       case 'WAITING_PARTNERS':
       case 'IN_PROGRESS':
-        return status === 'CREDIT_PENDING' ? 'PENDING' : status;
-      case 'CREDIT_APPROVED':
-        return 'APPROVED';
+        return status;
       default:
         return 'REJECTED';
     }
@@ -115,6 +125,7 @@ export class AdminDashboardComponent implements OnInit {
       case 'REJECTED':
         return 'bg-rose-100 text-rose-700';
       case 'PENDING':
+      case 'TECHNICAL_VISIT_PENDING':
       case 'TECHNICAL_VISIT':
       case 'WAITING_PARTNERS':
       case 'IN_PROGRESS':
@@ -142,11 +153,31 @@ export class AdminDashboardComponent implements OnInit {
   /** Asigna la obra al drawer y lo abre. */
   selectWork(work: unknown): void {
     this.selectedWork.set(work);
+    this.selectedEngineerId.set(null);
   }
 
   /** Cierra el panel de auditoría. */
   closeDrawer(): void {
     this.selectedWork.set(null);
+    this.selectedEngineerId.set(null);
+  }
+
+  /** Selecciona un ingeniero para asignar a la obra. */
+  selectEngineer(engineerId: string | null): void {
+    this.selectedEngineerId.set(engineerId);
+  }
+
+  /** Confirma la asignación del ingeniero seleccionado (status TECHNICAL_VISIT_PENDING). */
+  confirmAndAssignEngineer(workId: string): void {
+    const engineerId = this.selectedEngineerId();
+    if (!engineerId) {
+      alert('Selecciona un ingeniero antes de confirmar.');
+      return;
+    }
+    if (confirm('¿Asignar esta obra al ingeniero seleccionado?')) {
+      this.workService.assignEngineer(workId, engineerId);
+      this.closeDrawer();
+    }
   }
 
   /**

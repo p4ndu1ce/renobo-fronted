@@ -1,0 +1,104 @@
+<div class="relative">
+  @if (isPanelOpen()) {
+    <button
+      type="button"
+      (click)="closePanel()"
+      class="fixed inset-0 z-40 cursor-default bg-black/20"
+      aria-label="Cerrar notificaciones"
+    ></button>
+  }
+  <button
+    type="button"
+    (click)="togglePanel()"
+    class="relative flex items-center justify-center w-10 h-10 rounded-full bg-slate-100/80 border border-slate-200/60 text-slate-600 hover:bg-slate-200/80 hover:text-slate-800 transition-colors shadow-sm"
+    aria-label="Notificaciones"
+    [attr.aria-expanded]="isPanelOpen()"
+  >
+    <span class="text-xl leading-none" aria-hidden="true">🔔</span>
+    @if (unreadCount() > 0) {
+      <span
+        class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full text-white text-[10px] font-black leading-none px-1 shadow-sm"
+        style="background-color: #fa5404"
+        aria-hidden="true"
+      >
+        {{ unreadCount() > 9 ? '+9' : unreadCount() }}
+      </span>
+    }
+  </button>
+
+  @if (isPanelOpen()) {
+    <div
+      class="notification-panel absolute right-0 top-full mt-2 w-[min(100vw-2rem,320px)] max-h-[70vh] overflow-hidden rounded-2xl border border-slate-200/80 shadow-xl z-50 flex flex-col max-sm:fixed max-sm:bottom-0 max-sm:left-0 max-sm:right-0 max-sm:top-auto max-sm:mt-0 max-sm:w-full max-sm:max-h-[60vh] max-sm:rounded-t-2xl"
+      style="background-color: #fff9f3"
+      (click)="$event.stopPropagation()"
+      role="dialog"
+      aria-label="Centro de notificaciones"
+    >
+      <div class="flex items-center justify-between px-4 py-3 border-b border-slate-200/60 shrink-0">
+        <h2 class="text-sm font-bold text-slate-800">Notificaciones</h2>
+        @if (unreadCount() > 0) {
+          <button
+            type="button"
+            (click)="markAllAsRead()"
+            class="text-xs font-medium text-slate-500 hover:text-slate-700"
+          >
+            Marcar todas leídas
+          </button>
+        }
+      </div>
+      <div class="overflow-y-auto flex-1 min-h-0">
+        @if (lastFive().length === 0) {
+          <div class="px-4 py-8 text-center text-slate-500 text-sm">
+            <span class="text-3xl block mb-2">🔔</span>
+            No hay notificaciones
+          </div>
+        } @else {
+          <ul>
+            @for (n of lastFive(); track n.id) {
+              <li
+                class="p-4 border-b border-orange-100/50 last:border-0 flex gap-3 items-start bg-white hover:bg-orange-50/30 transition-colors"
+              >
+                @if (!n.isRead) {
+                  <div class="w-2 h-2 mt-1.5 rounded-full shrink-0" style="background-color: #fa5404"></div>
+                } @else {
+                  <div class="w-2 h-2 mt-1.5 shrink-0" aria-hidden="true"></div>
+                }
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-bold text-slate-900">{{ n.title || 'Notificación' }}</p>
+                  <p class="text-xs text-slate-500 leading-tight">{{ n.message }}</p>
+                  <p class="text-[9px] text-slate-300 mt-1 uppercase font-bold">{{ n.timestamp | date:'shortTime' }}</p>
+                </div>
+                <div class="flex items-center gap-0.5 shrink-0">
+                  @if (!n.isRead) {
+                    <button
+                      type="button"
+                      (click)="markAsRead(n.id)"
+                      class="text-slate-400 hover:text-slate-600 p-1 text-xs rounded"
+                      title="Marcar como leída"
+                      aria-label="Marcar como leída"
+                    >
+                      ✓
+                    </button>
+                  }
+                  <button
+                    type="button"
+                    (click)="remove(n.id)"
+                    class="text-slate-400 hover:opacity-80 p-1 text-xs rounded"
+                    style="color: #fa5404"
+                    title="Eliminar"
+                    aria-label="Eliminar notificación"
+                  >
+                    ×
+                  </button>
+                </div>
+              </li>
+            }
+          </ul>
+          @if (notifications().length > 5) {
+            <p class="px-4 py-2 text-[10px] text-slate-400 text-center">Mostrando las 5 más recientes</p>
+          }
+        }
+      </div>
+    </div>
+  }
+</div>
