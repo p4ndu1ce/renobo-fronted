@@ -1,4 +1,4 @@
-<div class="min-h-screen pb-40 bg-[#fff9f3]">
+<div class="min-h-screen pb-32 bg-[#fff9f3]">
   <!-- Sticky header: proyecto actual (ultra limpio para uso en obra / bajo el sol) -->
   <app-work-context-summary [work]="currentWork()" />
 
@@ -69,6 +69,23 @@
       @if (sendError()) {
         <p class="text-sm text-rose-600 font-medium mt-3">{{ sendError() }}</p>
       }
+
+      <!-- DebugPanel: Partner Simulator (solo para ingenieros) -->
+      @if (isEngineer()) {
+        <section class="max-w-5xl mx-auto mt-8 rounded-2xl border-2 border-amber-200 bg-amber-50/80 p-4 sm:p-6">
+          <h2 class="text-sm font-black text-amber-800 uppercase tracking-widest mb-2">DebugPanel</h2>
+          <h3 class="text-base font-bold text-slate-800 mb-2">Partner Simulator</h3>
+          <p class="text-slate-600 text-sm mb-4">Sin portal de partners: simula que todos confirmaron disponibilidad. La obra pasará a <strong>En curso</strong> y podrás probar «Finalizar obra» y el resumen del cliente.</p>
+          <button
+            type="button"
+            [disabled]="isSimulatingPartnerOk()"
+            (click)="simulatePartnerOk()"
+            class="px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {{ isSimulatingPartnerOk() ? 'Simulando...' : 'Simular OK de Partners' }}
+          </button>
+        </section>
+      }
     </section>
   } @else {
   <!-- Barra de validación de crédito: Total Materiales vs Límite del Plan -->
@@ -121,7 +138,7 @@
     </div>
   </div>
 
-  <main class="max-w-5xl mx-auto px-4 sm:px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+  <main class="max-w-5xl mx-auto px-4 sm:px-6 pb-24 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
     @if (configService.catalog() === null) {
       <div class="col-span-full flex flex-col items-center justify-center py-16 text-slate-500">
         <span class="text-4xl mb-4">⏳</span>
@@ -180,7 +197,7 @@
   </main>
 
   <!-- Resumen logístico por proveedor (sección al final) -->
-  @if (orderLines().length > 0) {
+  @if (cartItemCount() > 0) {
     <section class="max-w-5xl mx-auto px-4 sm:px-6 py-6">
       <h2 class="text-lg font-black text-slate-900 tracking-tight mb-4">Resumen por Proveedor</h2>
       <div class="space-y-4">
@@ -194,7 +211,7 @@
     </section>
   }
 
-  <footer class="technical-calc-footer fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 p-4 sm:p-6 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] z-20">
+  <footer class="technical-calc-footer fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 p-4 sm:p-6 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] z-30">
     <div class="max-w-5xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
       <div class="text-center sm:text-left">
         <p class="text-xs font-bold text-slate-400 uppercase">Materiales en pedido</p>
@@ -209,12 +226,19 @@
       </button>
       <button
         type="button"
-        [disabled]="orderLines().length === 0 || isSending()"
+        [disabled]="cartItemCount() === 0 || isSubmitting()"
         (click)="sendToSuppliers()"
-        class="w-full sm:w-auto px-8 py-4 text-white font-black rounded-2xl transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none hover:opacity-95"
+        class="w-full sm:w-auto px-8 py-4 text-white font-black rounded-2xl transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none hover:opacity-95 relative"
         style="background-color: #fa5404"
       >
-        {{ isSending() ? 'Enviando...' : 'Solicitar Disponibilidad a Partners' }}
+        @if (isSubmitting()) {
+          <span class="inline-flex items-center justify-center gap-2">
+            <span class="spinner-ring"></span>
+            Enviando...
+          </span>
+        } @else {
+          Solicitar Disponibilidad a Partners
+        }
       </button>
     </div>
     @if (sendError()) {
@@ -222,15 +246,15 @@
     }
   </footer>
 
-  <!-- Botón flotante para abrir resumen -->
-  @if (orderLines().length > 0) {
+  <!-- Botón flotante para abrir resumen (misma fuente: orderLines → cartItemCount) -->
+  @if (cartItemCount() > 0) {
     <button
       (click)="isCartOpen.set(true)"
       class="fixed top-24 right-4 sm:right-6 z-30 bg-white border border-slate-200 p-3 rounded-2xl shadow-xl hover:scale-105 transition-all flex items-center gap-2"
     >
       <span class="text-xl">📋</span>
       <span class="bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-        {{ orderLines().length }}
+        {{ cartItemCount() }}
       </span>
     </button>
   }
@@ -255,7 +279,7 @@
 
     <div class="flex-1 overflow-y-auto p-6 space-y-6">
       <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest sticky top-0 bg-white py-1">Resumen por Proveedor</h3>
-      @for (group of summaryByPartner(); track group.partnerId) {
+      @for (group of summaryByPartner(); track group.partnerId + group.count) {
         <section class="rounded-2xl border border-slate-200 bg-slate-50/50 p-4">
           <div class="flex justify-between items-baseline mb-3">
             <h4 class="text-sm font-bold text-slate-700">{{ group.name }}</h4>
@@ -281,12 +305,18 @@
 
     <div class="p-6 bg-slate-50 border-t border-slate-100">
       <button
+        type="button"
         (click)="isCartOpen.set(false); sendToSuppliers()"
-        [disabled]="orderLines().length === 0 || isSending()"
-        class="w-full py-4 text-white font-black rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-95"
+        [disabled]="cartItemCount() === 0 || isSubmitting()"
+        class="w-full py-4 text-white font-black rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-95 flex items-center justify-center gap-2"
         style="background-color: #fa5404"
       >
-        Solicitar Disponibilidad a Partners
+        @if (isSubmitting()) {
+          <span class="spinner-ring"></span>
+          Enviando...
+        } @else {
+          Solicitar Disponibilidad a Partners
+        }
       </button>
     </div>
   </aside>

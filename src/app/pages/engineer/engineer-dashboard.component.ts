@@ -3,6 +3,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { WorkService, type Work, type CreditPlanId } from '../../services/work.service';
 import { AuthService } from '../../services/auth.service';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-engineer-dashboard',
@@ -17,17 +18,21 @@ export class EngineerDashboardComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private platformId = inject(PLATFORM_ID);
+  private toastService = inject(ToastService);
 
   /** Mensaje de éxito tras redirección (ej. "Solicitud enviada a proveedores"). */
   successMessage = signal<string | null>(null);
 
-  /** Obras pendientes de visita técnica (TECHNICAL_VISIT_PENDING) asignadas al ingeniero actual. */
+  /** Obras asignadas al ingeniero: pendientes de visita, esperando partners o en curso (misma fuente que Home "visitas programadas"). */
   assignedWorks = computed(() => {
     const works = this.workService.works();
     const myId = this.authService.engineerId();
     if (!myId) return [];
     return works
-      .filter(w => w.engineerId === myId && w.status === 'TECHNICAL_VISIT_PENDING')
+      .filter(w =>
+        w.engineerId === myId &&
+        (w.status === 'TECHNICAL_VISIT_PENDING' || w.status === 'WAITING_PARTNERS' || w.status === 'IN_PROGRESS')
+      )
       .map(w => ({ ...w, planLabel: this.getPlanLabel(w.planId) }));
   });
 
@@ -64,6 +69,16 @@ export class EngineerDashboardComponent implements OnInit, OnDestroy {
     return labels[planId] ?? planId;
   }
 
+  /** Etiqueta de estado para el ingeniero (visita pendiente, esperando proveedores, en curso). */
+  getStatusLabel(status: Work['status']): string {
+    const labels: Record<string, string> = {
+      TECHNICAL_VISIT_PENDING: 'Visita pendiente',
+      WAITING_PARTNERS: 'Esperando proveedores',
+      IN_PROGRESS: 'En curso',
+    };
+    return labels[status] ?? status;
+  }
+
   /** Descripción de la obra (description o descripcion legacy). */
   getWorkDescription(work: Work): string {
     const d = work.description ?? (work as { descripcion?: string }).descripcion;
@@ -74,8 +89,22 @@ export class EngineerDashboardComponent implements OnInit, OnDestroy {
     this.selectedWorkId.update(current => (current === work.id ? null : work.id));
   }
 
-  /** Navega a la calculadora técnica para esta obra (relevamiento). */
+  /** Navega a la calculadora técnica para esta obra (relevamiento o checklist). */
   startRelevamiento(work: Work): void {
     this.router.navigate(['/engineer/visit', work.id]);
+  }
+
+  /** Marca la obra como finalizada (IN_PROGRESS → FINISHED). */
+  finishWork(work: Work): void {
+    if (work.status !== 'IN_PROGRESS') return;
+    this.workService.finishWork(work.id).subscribe({
+      next: () => {
+        this.successMessage.set('Obra finalizada correctamente.');
+        this.router.navigate([], { relativeTo: this.route, queryParams: {}, queryParamsHandling: '', replaceUrl: true });
+      },
+      error: (err) => {
+        this.toastService.show(err?.message ?? 'Error al finalizar la obra.', 'error');
+      }
+    });
   }
 }

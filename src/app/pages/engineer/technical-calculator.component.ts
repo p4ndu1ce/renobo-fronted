@@ -14,6 +14,7 @@ import { ConfigService, type Service } from '../../services/config.service';
 import { WorkService, type WorkItem, type PartnerResponseStatus } from '../../services/work.service';
 import { PartnerService } from '../../services/partner.service';
 import { AuthService } from '../../services/auth.service';
+import { ToastService } from '../../services/toast.service';
 import { WorkContextSummaryComponent } from './work-context-summary/work-context-summary.component';
 
 export interface OrderLine {
@@ -52,13 +53,19 @@ export class TechnicalCalculatorComponent implements OnInit {
   public workService = inject(WorkService);
   public partnerService = inject(PartnerService);
   private authService = inject(AuthService);
+  private toastService = inject(ToastService);
 
   workId = signal<string | null>(null);
   searchTerm = signal('');
   isCartOpen = signal(false);
-  isSending = signal(false);
+  /** true mientras la petición "Solicitar Disponibilidad" está en curso. */
+  isSubmitting = signal(false);
   sendError = signal<string | null>(null);
   isStartingWork = signal(false);
+  /** true mientras se ejecuta "Simular OK de Partners" (DebugPanel). */
+  isSimulatingPartnerOk = signal(false);
+  /** Solo ingenieros ven el DebugPanel. */
+  isEngineer = computed(() => this.authService.userRole() === 'ENGINEER');
 
   /** Partner seleccionado por material (para el dropdown "Suministrado por"). */
   selectedPartnerForMaterial = signal<Record<string, { partnerId: string; partnerName: string }>>({});
@@ -173,9 +180,13 @@ export class TechnicalCalculatorComponent implements OnInit {
   /** True si el total de materiales supera el límite del plan. */
   isOverPlanLimit = computed(() => this.totalMaterialsCost() > this.planLimit());
 
+  /** Número total de unidades en el pedido (para footer "X ítems"). */
   totalItemsCount = computed(() =>
     this.orderLines().reduce((acc, l) => acc + l.quantity, 0)
   );
+
+  /** Cantidad de líneas en el carrito (badge). Misma fuente que summaryByPartner. */
+  cartItemCount = computed(() => this.orderLines().length);
 
   /** Cuando cargan los partners, asigna el primer partner por defecto a líneas que tenían partnerId vacío. */
   private syncLinesWithDefaultPartners = effect(() => {
@@ -299,25 +310,8 @@ export class TechnicalCalculatorComponent implements OnInit {
       ?? 'Ingeniero Renobo';
     const summary = this.summaryByPartner();
 
-    summary.forEach(group => {
-      if (group.partnerId === '_sin_asignar') return;
-      const partner = this.partnerService.getPartnerById(group.partnerId);
-      if (!partner) return;
-      const itemsWithLabels = group.items.map(i => ({
-        name: i.name,
-        quantity: i.quantity,
-        unit: i.unit
-      }));
-      const email = this.workService.generatePartnerEmail(
-        { id: partner.id, name: partner.name, email: partner.email },
-        work,
-        { engineerName, itemsWithLabels }
-      );
-      console.log(`[Correo a ${partner.name}]`, email.subject, '\n', email.body);
-    });
-    alert('Mensajes generados. Revisa la consola (F12) para validar asunto y cuerpo por proveedor.');
-
-    this.isSending.set(true);
+    this.isSubmitting.set(true);
+    this.sendError.set(null);
     const services = this.configService.catalog()?.services ?? [];
     const items: WorkItem[] = lines.map(l => {
       const service = services.find(s => s.id === l.id);
@@ -326,11 +320,12 @@ export class TechnicalCalculatorComponent implements OnInit {
     });
     this.workService.confirmTechnicalVisit(id, items).subscribe({
       next: () => {
-        this.isSending.set(false);
-        this.router.navigate(['/engineer'], { queryParams: { success: 'solicitud-enviada' } });
+        this.isSubmitting.set(false);
+        this.toastService.show('Solicitud de disponibilidad enviada a los proveedores correctamente.', 'success');
+        this.router.navigate(['/engineer']);
       },
       error: (err) => {
-        this.isSending.set(false);
+        this.isSubmitting.set(false);
         this.sendError.set(err?.message ?? 'Error al enviar la solicitud.');
       }
     });
@@ -338,6 +333,27 @@ export class TechnicalCalculatorComponent implements OnInit {
 
   goBack(): void {
     this.router.navigate(['/engineer']);
+  }
+
+  /**
+   * Simula que todos los partners confirmaron (solo ENGINEER, obra en WAITING_PARTNERS).
+   * Backend pone items[].confirmed = true y status → IN_PROGRESS. Para probar flujo sin portal de partners.
+   */
+  simulatePartnerOk(): void {
+    const id = this.workId();
+    if (!id || this.currentWork()?.status !== 'WAITING_PARTNERS') return;
+    this.sendError.set(null);
+    this.isSimulatingPartnerOk.set(true);
+    this.workService.simulatePartnerOk(id).subscribe({
+      next: () => {
+        this.isSimulatingPartnerOk.set(false);
+        this.toastService.show('Partners simulados: todos los ítems confirmados. La obra pasó a En curso.', 'success');
+      },
+      error: (err) => {
+        this.isSimulatingPartnerOk.set(false);
+        this.sendError.set(err?.message ?? 'Error al simular OK de partners.');
+      }
+    });
   }
 
   /** Marca la respuesta del partner (checklist de disponibilidad). */

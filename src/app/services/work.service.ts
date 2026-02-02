@@ -550,6 +550,39 @@ Equipo de Logística Renobo [Logo Naranja #fa5404]`;
   }
 
   /**
+   * Marca la obra como finalizada (IN_PROGRESS → FINISHED). El ingeniero la usa desde Mis Obras.
+   */
+  finishWork(workId: string): Observable<{ message: string; work: Work }> {
+    return this.setWorkStatus(workId, 'FINISHED' as WorkStatus);
+  }
+
+  /**
+   * Simula que todos los partners confirmaron (solo ENGINEER, solo obra en WAITING_PARTNERS).
+   * Backend pone items[].confirmed = true, items[].confirmedAt = now y status → IN_PROGRESS.
+   * Útil para probar el flujo sin portal de partners.
+   */
+  simulatePartnerOk(workId: string): Observable<{ message: string; work: Work }> {
+    return this.http.patch<{ message: string; work: Work }>(`${this.API_URL}/${workId}`, { simulatePartnerOk: true }).pipe(
+      tap((res) => {
+        if (res?.work) {
+          const w = this.transformWork(res.work);
+          const currentWorks = this._works();
+          this._works.set(currentWorks.map((x) => (x.id === workId ? w : x)));
+          const myWorks = this._myWorks();
+          if (myWorks.some((x) => x.id === workId)) {
+            this._myWorks.set(myWorks.map((x) => (x.id === workId ? w : x)));
+          }
+        }
+      }),
+      map((res) => ({ message: res?.message ?? 'OK', work: this.transformWork(res?.work!) })),
+      catchError((err) => {
+        console.error('Error en simulatePartnerOk:', err);
+        throw err;
+      })
+    );
+  }
+
+  /**
    * Actualiza el estado de una obra solo en memoria (signals). No llama al API.
    * Útil para debug / modo dios: ver cambios de vista al instante sin esperar AWS.
    */

@@ -82,6 +82,7 @@ export class ServiciosComponent implements OnInit {
       TECHNICAL_VISIT: 'Visita técnica',
       WAITING_PARTNERS: 'Esperando proveedores',
       IN_PROGRESS: 'En curso',
+      FINISHED: 'Finalizado',
     };
     return labels[status] ?? status;
   }
@@ -97,6 +98,8 @@ export class ServiciosComponent implements OnInit {
       case 'WAITING_PARTNERS':
       case 'IN_PROGRESS':
         return 'bg-amber-100 text-amber-700';
+      case 'FINISHED':
+        return 'bg-slate-100 text-slate-700';
       default:
         return 'bg-slate-100 text-slate-700';
     }

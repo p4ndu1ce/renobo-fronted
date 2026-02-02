@@ -26,7 +26,10 @@ export interface WorkItem {
   quantity: number;
   partnerId: string;
   price: number;
-  confirmed?: boolean;
+  /** true = partner confirmó disponibilidad, false = no disponible, null/undefined = pendiente. */
+  confirmed?: boolean | null;
+  /** Fecha ISO en que el partner confirmó (cuando confirmed === true). */
+  confirmedAt?: string;
 }
 
 /** Estados de una obra. */
@@ -37,7 +40,8 @@ export type WorkStatus =
   | 'TECHNICAL_VISIT_PENDING'
   | 'TECHNICAL_VISIT'
   | 'WAITING_PARTNERS'
-  | 'IN_PROGRESS';
+  | 'IN_PROGRESS'
+  | 'FINISHED';
 
 export type PlanId = 'BRONZE' | 'SILVER' | 'GOLD';
 
