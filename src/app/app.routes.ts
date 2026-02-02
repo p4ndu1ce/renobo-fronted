@@ -19,11 +19,14 @@ import { roleGuard } from './guards/role.guard';
 import { guestGuard } from './guards/guest.guard';
 
 export const routes: Routes = [
+  // Layout principal: vacío y todas las rutas internas (home, servicios, etc.)
   {
     path: '',
     component: MainLayoutComponent,
     children: [
+      // Ruta por defecto: redirigir a home
       { path: '', redirectTo: 'home', pathMatch: 'full' },
+      // Home explícito (sin guard para que cargue siempre)
       { path: 'home', component: HomeComponent },
       { path: 'plan-selection', component: PlanSelectionComponent, canActivate: [authGuard] },
       { path: 'servicios', component: ServiciosComponent },
@@ -41,5 +44,6 @@ export const routes: Routes = [
   },
   { path: 'login', component: LoginComponent, canActivate: [guestGuard] },
   { path: 'register', component: RegisterComponent, canActivate: [guestGuard] },
+  // Cualquier ruta no definida → home (evita pantalla en blanco en APK)
   { path: '**', redirectTo: '/home' },
 ];

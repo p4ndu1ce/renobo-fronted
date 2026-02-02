@@ -4,11 +4,12 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { WorkService, type Work, type CreditPlanId } from '../../services/work.service';
 import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
+import { LoadingButtonComponent } from '../../shared/components/loading-button/loading-button.component';
 
 @Component({
   selector: 'app-engineer-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, LoadingButtonComponent],
   templateUrl: './engineer-dashboard.component.html',
   styleUrl: './engineer-dashboard.component.css'
 })
@@ -22,6 +23,8 @@ export class EngineerDashboardComponent implements OnInit, OnDestroy {
 
   /** Mensaje de éxito tras redirección (ej. "Solicitud enviada a proveedores"). */
   successMessage = signal<string | null>(null);
+  /** true mientras se envía "Finalizar obra". */
+  isFinishingWork = signal(false);
 
   /** Obras asignadas al ingeniero: pendientes de visita, esperando partners o en curso (misma fuente que Home "visitas programadas"). */
   assignedWorks = computed(() => {
@@ -97,12 +100,15 @@ export class EngineerDashboardComponent implements OnInit, OnDestroy {
   /** Marca la obra como finalizada (IN_PROGRESS → FINISHED). */
   finishWork(work: Work): void {
     if (work.status !== 'IN_PROGRESS') return;
+    this.isFinishingWork.set(true);
     this.workService.finishWork(work.id).subscribe({
       next: () => {
+        this.isFinishingWork.set(false);
         this.successMessage.set('Obra finalizada correctamente.');
         this.router.navigate([], { relativeTo: this.route, queryParams: {}, queryParamsHandling: '', replaceUrl: true });
       },
       error: (err) => {
+        this.isFinishingWork.set(false);
         this.toastService.show(err?.message ?? 'Error al finalizar la obra.', 'error');
       }
     });

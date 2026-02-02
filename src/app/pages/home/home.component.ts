@@ -8,6 +8,7 @@ import { WorkService } from '../../services/work.service';
 import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
 import { SkeletonCardComponent } from '../../shared/components/skeleton-card/skeleton-card.component';
+import { LoadingButtonComponent } from '../../shared/components/loading-button/loading-button.component';
 import type { WorkStatus, CreditPlanId } from '../../services/work.service';
 
 export interface Categoria {
@@ -29,7 +30,7 @@ export const SERVICE_CATEGORIES = [
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterLink, SkeletonCardComponent],
+  imports: [CommonModule, RouterLink, SkeletonCardComponent, LoadingButtonComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css',
 })
@@ -207,6 +208,9 @@ export class HomeComponent implements OnInit {
     });
   }
 
+  /** Timeout para no quedarse en loading si la API no responde (p. ej. en APK sin red). */
+  private static readonly LOADING_TIMEOUT_MS = 8000;
+
   ngOnInit(): void {
     const user = this.authService.currentUser();
     const role = this.authService.userRole();
@@ -215,13 +219,22 @@ export class HomeComponent implements OnInit {
 
     const done = () => this.isLoading.set(false);
 
+    // Timeout: si la petición no responde (APK / servidor caído), mostrar la página de todos modos
+    const timeoutId = setTimeout(done, HomeComponent.LOADING_TIMEOUT_MS);
+
+    const onComplete = () => {
+      clearTimeout(timeoutId);
+      done();
+    };
+
     if (role === 'SUPERVISOR') {
-      this.workService.getAllWorks().subscribe({ next: () => {}, error: () => {}, complete: done });
+      this.workService.getAllWorks().subscribe({ next: () => {}, error: onComplete, complete: onComplete });
     } else if (role === 'ENGINEER' && engineerId) {
-      this.workService.getWorksByEngineerId(engineerId).subscribe({ next: () => {}, error: () => {}, complete: done });
+      this.workService.getWorksByEngineerId(engineerId).subscribe({ next: () => {}, error: onComplete, complete: onComplete });
     } else if (userId) {
-      this.workService.getUserWorks(userId).subscribe({ next: () => {}, error: () => {}, complete: done });
+      this.workService.getUserWorks(userId).subscribe({ next: () => {}, error: onComplete, complete: onComplete });
     } else {
+      clearTimeout(timeoutId);
       done();
     }
   }

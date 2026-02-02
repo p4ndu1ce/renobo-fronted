@@ -16,6 +16,7 @@ import { PartnerService } from '../../services/partner.service';
 import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
 import { WorkContextSummaryComponent } from './work-context-summary/work-context-summary.component';
+import { LoadingButtonComponent } from '../../shared/components/loading-button/loading-button.component';
 
 export interface OrderLine {
   id: string;
@@ -42,7 +43,7 @@ export interface SummaryByPartner {
 @Component({
   selector: 'app-technical-calculator',
   standalone: true,
-  imports: [CommonModule, CurrencyPipe, WorkContextSummaryComponent],
+  imports: [CommonModule, CurrencyPipe, WorkContextSummaryComponent, LoadingButtonComponent],
   templateUrl: './technical-calculator.component.html',
   styleUrl: './technical-calculator.component.css'
 })

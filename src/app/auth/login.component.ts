@@ -1,14 +1,15 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../services/auth.service';
 import { PartnerService } from '../services/partner.service';
 import { CommonModule } from '@angular/common';
+import { LoadingButtonComponent } from '../shared/components/loading-button/loading-button.component';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, CommonModule, RouterLink],
+  imports: [ReactiveFormsModule, CommonModule, RouterLink, LoadingButtonComponent],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css'
 })
@@ -19,10 +20,11 @@ export class LoginComponent {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private http = inject(HttpClient);
-  
+
   private readonly AUTH_API_URL = 'https://m587zdkcje.execute-api.us-east-1.amazonaws.com/dev/auth/login';
-  
+
   errorMessage = '';
+  isSubmitting = signal(false);
 
   loginForm: FormGroup = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
@@ -32,13 +34,15 @@ export class LoginComponent {
   onSubmit() {
     if (this.loginForm.valid) {
       this.errorMessage = '';
+      this.isSubmitting.set(true);
       const { email, password } = this.loginForm.value;
-      
+
       this.http.post<{ token: string; user: { name: string; email: string; role: string } }>(
         this.AUTH_API_URL,
         { email, password }
       ).subscribe({
         next: (response) => {
+          this.isSubmitting.set(false);
           const user = {
             id: response.user.email ?? `user-${response.user.email}`,
             name: response.user.name,
@@ -66,6 +70,7 @@ export class LoginComponent {
           }
         },
         error: (err) => {
+          this.isSubmitting.set(false);
           this.errorMessage = err.error?.error || 'Error al iniciar sesión. Verifica tus credenciales.';
           console.error('Error en login:', err);
         }

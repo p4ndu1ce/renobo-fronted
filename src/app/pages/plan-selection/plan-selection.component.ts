@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { LoadingButtonComponent } from '../../shared/components/loading-button/loading-button.component';
 import type { CreditPlanId } from '../../services/work.service';
 import { AuthService } from '../../services/auth.service';
 import { WorkService } from '../../services/work.service';
@@ -16,7 +17,7 @@ export interface CreditPlanOption {
 @Component({
   selector: 'app-plan-selection',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, LoadingButtonComponent],
   templateUrl: './plan-selection.component.html',
   styleUrl: './plan-selection.component.css',
 })

@@ -1,0 +1,9 @@
+{
+  "appId": "com.renobo.app",
+  "appName": "Renobo",
+  "webDir": "dist/renobo-frontend/browser",
+  "server": {
+    "androidScheme": "https",
+    "allowNavigation": ["*"]
+  }
+}

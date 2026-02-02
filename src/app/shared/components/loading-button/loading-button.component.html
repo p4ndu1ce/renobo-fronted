@@ -1,0 +1,14 @@
+<button
+  [type]="type()"
+  [disabled]="disabled() || isLoading()"
+  [class]="btnClass()"
+  [attr.style]="btnStyle() || null"
+  (click)="onClick()"
+  class="loading-btn inline-flex items-center justify-center gap-2"
+>
+  @if (isLoading()) {
+    <span class="loading-button-spinner" aria-hidden="true"></span>
+  } @else {
+    <span>{{ label() }}</span>
+  }
+</button>
