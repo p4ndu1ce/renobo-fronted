@@ -59,6 +59,11 @@ body {
     bottom: 4rem;
   }
 
+  /* Calculadora técnica (ingeniero): footer por encima del bottom-nav para que el botón sea clickeable */
+  .main-layout app-technical-calculator .technical-calc-footer {
+    bottom: 4.5rem;
+  }
+
   /* Efecto shimmer para esqueletos de carga */
   @keyframes shimmer {
     0% { background-position: -200% 0; }

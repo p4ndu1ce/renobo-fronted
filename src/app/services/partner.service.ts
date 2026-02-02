@@ -63,6 +63,7 @@ export class PartnerService {
 
   /**
    * Versión síncrona: partners cuya categoría coincide con la del material.
+   * Si ninguno coincide, devuelve todos los partners para que el dropdown siempre tenga opciones.
    */
   getPartnersByMaterialSync(materialId: string): Partner[] {
     const catalog = this.configService.catalog();
@@ -70,7 +71,8 @@ export class PartnerService {
     const material = services.find((s) => s.id === materialId);
     const materialCategory = material?.category ?? 'Construcción';
     const list = this._partners() ?? [];
-    return list.filter((p) => p?.category === materialCategory);
+    const byCategory = list.filter((p) => p?.category === materialCategory);
+    return byCategory.length > 0 ? byCategory : list;
   }
 
   /**

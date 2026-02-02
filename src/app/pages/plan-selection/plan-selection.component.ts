@@ -22,8 +22,14 @@ export interface CreditPlanOption {
 })
 export class PlanSelectionComponent {
   private router = inject(Router);
-  private authService = inject(AuthService);
+  public authService = inject(AuthService);
   private workService = inject(WorkService);
+
+  /** Teléfono del usuario (CurrentUser no tiene phone; se muestra — si no existe). */
+  getCurrentUserPhone(): string {
+    const user = this.authService.currentUser();
+    return (user && (user as { phone?: string }).phone) ? (user as { phone?: string }).phone! : '—';
+  }
 
   readonly plans: CreditPlanOption[] = [
     { id: 'BRONZE', name: 'Bronce', amount: 1_000, shortLabel: '$1k' },
@@ -53,8 +59,16 @@ export class PlanSelectionComponent {
     this.errorMessage.set('');
 
     const userProfile = this.authService.userProfile();
+    const user = this.authService.currentUser();
+    const userContact = user
+      ? {
+          userName: user.name ?? undefined,
+          userEmail: user.email ?? user.id ?? undefined,
+          userPhone: (user as { phone?: string }).phone ?? undefined,
+        }
+      : undefined;
     const title = `Solicitud Plan ${plan.name}`;
-    this.workService.createCreditRequest(planId, plan.amount, title, desc || 'Sin descripción', userProfile).subscribe({
+    this.workService.createCreditRequest(planId, plan.amount, title, desc || 'Sin descripción', userProfile, userContact).subscribe({
       next: () => {
         this.isSubmitting.set(false);
         this.router.navigate(['/home']);

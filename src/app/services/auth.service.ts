@@ -155,14 +155,21 @@ export class AuthService {
   private loadCurrentUser(): CurrentUser | null {
     if (!isPlatformBrowser(this.platformId)) return null;
     const token = localStorage.getItem('authToken');
+    const userJson = localStorage.getItem('currentUser');
+    const stored = userJson ? (JSON.parse(userJson) as CurrentUser) : null;
     if (token) {
       const payload = this.decodeJwtPayload(token);
       if (payload) {
-        return this.buildUserFromPayload(payload, null);
+        const built = this.buildUserFromPayload(payload, stored ?? null);
+        // Preferir nombre/email guardados en localStorage (el JWT suele no incluir name y devuelve prefijo del email)
+        return {
+          ...built,
+          name: stored?.name ?? built.name,
+          email: stored?.email ?? built.email,
+        };
       }
     }
-    const userJson = localStorage.getItem('currentUser');
-    return userJson ? JSON.parse(userJson) : null;
+    return stored;
   }
 
   /**

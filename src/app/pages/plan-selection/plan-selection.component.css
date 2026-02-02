@@ -1,4 +1,4 @@
-/* Plan selection: mobile-first, fondo #fff9f3 viene del layout .app-bg */
+/* Plan selection: contenedor con bg-white; cards y formulario con Tailwind en el template */
 :host {
   display: block;
   min-height: 0;

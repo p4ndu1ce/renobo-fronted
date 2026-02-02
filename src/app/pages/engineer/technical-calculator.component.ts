@@ -7,7 +7,7 @@
  * 4. Cierre: Presiona "Solicitar Disponibilidad a Partners".
  * 5. Backend: Se envía un correo automático a cada ferretería con su lista correspondiente (items agrupados por partnerId).
  */
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, effect } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { ConfigService, type Service } from '../../services/config.service';
@@ -104,9 +104,11 @@ export class TechnicalCalculatorComponent implements OnInit {
     return services.map(s => {
       const partners = this.partnerService.getPartnersByMaterialSync(s.id);
       const sel = selected[s.id];
-      const partner = sel ? partners.find(p => p.id === sel.partnerId) ?? partners[0] : partners[0];
-      const partnerId = partner?.id ?? '';
-      const partnerName = partner?.name ?? '—';
+      const partner = sel?.partnerId
+        ? (partners.find(p => p.id === sel.partnerId) ?? partners[0])
+        : partners[0];
+      const partnerId = (sel && sel.partnerId === '') ? '' : (partner?.id ?? '');
+      const partnerName = partnerId ? (partner?.name ?? '—') : 'Por asignar';
       return { ...s, partnerId, partnerName, partners };
     });
   });
@@ -136,18 +138,23 @@ export class TechnicalCalculatorComponent implements OnInit {
     });
   });
 
-  /** Agrupamos los items seleccionados por el ID del Partner (Angular computed, instantáneo). */
+  /** Agrupamos los items seleccionados por partnerId (desde el pedido, no depende de partners cargados). */
   summaryByPartner = computed(() => {
     const items = this.selectedItems();
-    const partners = this.partnerService.partners();
-
-    return partners.map(p => ({
-      partnerId: p.id,
-      name: p.name,
-      total: items.filter(i => i.partnerId === p.id).reduce((acc, i) => acc + (i.price * i.quantity), 0),
-      count: items.filter(i => i.partnerId === p.id).length,
-      items: items.filter(i => i.partnerId === p.id).map(i => ({ id: i.id, name: i.name, quantity: i.quantity, unit: i.unit, price: i.price }))
-    })).filter(p => p.count > 0);
+    const partnerIds = [...new Set(items.map(i => i.partnerId ?? ''))];
+    return partnerIds.map(pid => {
+      const partner = pid ? this.partnerService.getPartnerById(pid) : undefined;
+      const name = partner?.name ?? (pid || 'Proveedor por asignar');
+      const groupItems = items.filter(i => (i.partnerId ?? '') === pid);
+      const total = groupItems.reduce((acc, i) => acc + i.price * i.quantity, 0);
+      return {
+        partnerId: pid || '_sin_asignar',
+        name,
+        total,
+        count: groupItems.length,
+        items: groupItems.map(i => ({ id: i.id, name: i.name, quantity: i.quantity, unit: i.unit, price: i.price }))
+      };
+    });
   });
 
   /** Total en $ de materiales del pedido (para barra de crédito). */
@@ -170,8 +177,27 @@ export class TechnicalCalculatorComponent implements OnInit {
     this.orderLines().reduce((acc, l) => acc + l.quantity, 0)
   );
 
+  /** Cuando cargan los partners, asigna el primer partner por defecto a líneas que tenían partnerId vacío. */
+  private syncLinesWithDefaultPartners = effect(() => {
+    const partners = this.partnerService.partners();
+    const lines = this.orderLines();
+    if (partners.length === 0 || lines.length === 0) return;
+    const needsSync = lines.some(l => !l.partnerId?.trim());
+    if (!needsSync) return;
+    const services = this.configService.catalog()?.services ?? [];
+    const next = lines.map(l => {
+      if (l.partnerId?.trim()) return l;
+      const partnersForMaterial = this.partnerService.getPartnersByMaterialSync(l.id);
+      const partner = partnersForMaterial[0];
+      if (!partner) return l;
+      return { ...l, partnerId: partner.id, partnerName: partner.name };
+    });
+    this.orderLines.set(next);
+  });
+
   ngOnInit(): void {
     this.configService.loadConfig();
+    this.partnerService.loadPartners();
     const id = this.route.snapshot.paramMap.get('workId');
     this.workId.set(id);
   }
@@ -182,6 +208,14 @@ export class TechnicalCalculatorComponent implements OnInit {
       ...prev,
       [materialId]: { partnerId, partnerName: partner?.name ?? '' }
     }));
+    // Actualizar la línea del pedido si ese material ya está en el carrito
+    const lines = this.orderLines();
+    const idx = lines.findIndex(l => l.id === materialId);
+    if (idx >= 0) {
+      const next = lines.slice();
+      next[idx] = { ...next[idx], partnerId, partnerName: partner?.name ?? '' };
+      this.orderLines.set(next);
+    }
   }
 
   addMaterial(
@@ -238,6 +272,7 @@ export class TechnicalCalculatorComponent implements OnInit {
    * Genera y muestra el mensaje de correo por partner (validación) y luego llama al backend.
    */
   sendToSuppliers(): void {
+    this.sendError.set(null);
     const id = this.workId();
     if (!id) {
       this.sendError.set('No hay obra seleccionada.');
@@ -248,12 +283,16 @@ export class TechnicalCalculatorComponent implements OnInit {
       this.sendError.set('Agrega al menos un material.');
       return;
     }
+    const missingPartner = lines.find(l => !l.partnerId?.trim());
+    if (missingPartner) {
+      this.sendError.set('Cada material debe tener un proveedor en «Suministrado por». Si el desplegable está vacío, recarga la página.');
+      return;
+    }
     const work = this.currentWork();
     if (!work) {
       this.sendError.set('Obra no encontrada.');
       return;
     }
-    this.sendError.set(null);
 
     const engineerName = this.authService.currentUser()?.name
       ?? this.authService.currentUser()?.email?.split('@')[0]
@@ -261,6 +300,7 @@ export class TechnicalCalculatorComponent implements OnInit {
     const summary = this.summaryByPartner();
 
     summary.forEach(group => {
+      if (group.partnerId === '_sin_asignar') return;
       const partner = this.partnerService.getPartnerById(group.partnerId);
       if (!partner) return;
       const itemsWithLabels = group.items.map(i => ({

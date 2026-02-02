@@ -61,19 +61,23 @@
 
     <section class="flex flex-col gap-4 mb-6">
       @for (plan of clientPlans(); track plan.id) {
+        <!-- Contenedor: SIEMPRE fondo blanco; borde naranja solo si está seleccionada -->
         <div
-          class="plan-card rounded-[2.5rem] border-2 overflow-hidden flex flex-col transition-all duration-300"
-          [class.bg-[#fff9f3]]="selectedPlan()?.id !== plan.id"
-          [class.border-orange-100/80]="selectedPlan()?.id !== plan.id"
-          [class.bg-[#fa5404]]="selectedPlan()?.id === plan.id"
+          class="plan-card rounded-[2.5rem] overflow-hidden flex flex-col transition-all duration-300 bg-white"
+          [class.border-2]="selectedPlan()?.id === plan.id"
           [class.border-[#fa5404]]="selectedPlan()?.id === plan.id"
+          [class.border]="selectedPlan()?.id !== plan.id"
+          [class.border-slate-200]="selectedPlan()?.id !== plan.id"
           [class.min-h-[100px]]="selectedPlan()?.id !== plan.id"
         >
+          <!-- Cabecera (solo aquí el naranja cuando está seleccionada) -->
           <button
             type="button"
             (click)="selectPlan(plan)"
             class="w-full text-left p-5 flex items-start gap-4 transition-colors"
+            [class.bg-[#f2f0eb]]="selectedPlan()?.id !== plan.id"
             [class.text-slate-800]="selectedPlan()?.id !== plan.id"
+            [class.bg-[#fa5404]]="selectedPlan()?.id === plan.id"
             [class.text-white]="selectedPlan()?.id === plan.id"
           >
             <div class="flex-1 min-w-0">
@@ -88,32 +92,33 @@
             </span>
           </button>
 
+          <!-- Cuerpo del formulario: SIEMPRE fondo blanco; solo visible cuando está seleccionada -->
           @if (selectedPlan()?.id === plan.id) {
-            <div class="px-5 pb-5 pt-0 transition-all duration-300 border-t border-white/20 text-white">
+            <div class="px-5 pb-5 pt-0 transition-all duration-300 bg-white border-t border-slate-100">
               <!-- Campos read-only: Nombre, Correo, Teléfono -->
               <dl class="space-y-2 text-sm mb-5">
                 <div>
-                  <dt class="text-[10px] font-bold uppercase tracking-wider opacity-80">Nombre completo</dt>
-                  <dd class="rounded-lg px-3 py-2 bg-slate-500/20 text-slate-100 text-sm">{{ authService.currentUser()?.name ?? '—' }}</dd>
+                  <dt class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Nombre completo</dt>
+                  <dd class="rounded-lg px-3 py-2.5 bg-slate-50 border border-slate-200 text-slate-500 text-sm">{{ authService.currentUser()?.name ?? '—' }}</dd>
                 </div>
                 <div>
-                  <dt class="text-[10px] font-bold uppercase tracking-wider opacity-80">Correo</dt>
-                  <dd class="rounded-lg px-3 py-2 bg-slate-500/20 text-slate-100 text-sm">{{ authService.currentUser()?.email ?? '—' }}</dd>
+                  <dt class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Correo</dt>
+                  <dd class="rounded-lg px-3 py-2.5 bg-slate-50 border border-slate-200 text-slate-500 text-sm">{{ authService.currentUser()?.email ?? '—' }}</dd>
                 </div>
                 <div>
-                  <dt class="text-[10px] font-bold uppercase tracking-wider opacity-80">Teléfono</dt>
-                  <dd class="rounded-lg px-3 py-2 bg-slate-500/20 text-slate-100 text-sm">{{ getCurrentUserPhone() }}</dd>
+                  <dt class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Teléfono</dt>
+                  <dd class="rounded-lg px-3 py-2.5 bg-slate-50 border border-slate-200 text-slate-500 text-sm">{{ getCurrentUserPhone() }}</dd>
                 </div>
               </dl>
 
               <div class="space-y-4">
                 <div>
-                  <label for="category-{{ plan.id }}" class="block text-[10px] font-bold uppercase tracking-wider opacity-80 mb-1.5">Categoría de Servicio</label>
+                  <label for="category-{{ plan.id }}" class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1.5">Categoría de Servicio</label>
                   <select
                     id="category-{{ plan.id }}"
                     [value]="serviceCategory()"
                     (change)="serviceCategory.set($any($event.target).value)"
-                    class="w-full px-4 py-3 rounded-xl border-2 border-white/30 bg-white/10 text-white focus:border-white focus:outline-none focus:ring-2 focus:ring-white/30"
+                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-800 focus:ring-2 focus:ring-orange-500/20 focus:border-[#fa5404] outline-none transition-all"
                   >
                     @for (opt of SERVICE_CATEGORIES; track opt.value) {
                       <option [value]="opt.value" class="text-slate-800">{{ opt.label }}</option>
@@ -121,20 +126,20 @@
                   </select>
                 </div>
                 <div>
-                  <label for="work-desc-{{ plan.id }}" class="block text-[10px] font-bold uppercase tracking-wider opacity-80 mb-1.5">Descripción del Trabajo</label>
+                  <label for="work-desc-{{ plan.id }}" class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1.5">Descripción del Trabajo</label>
                   <textarea
                     id="work-desc-{{ plan.id }}"
                     [value]="workDescription()"
                     (input)="workDescription.set($any($event.target).value)"
                     placeholder="Cuéntanos qué quieres construir..."
                     rows="3"
-                    class="w-full px-4 py-3 rounded-xl border-2 border-white/30 bg-white/10 text-white placeholder-white/50 focus:border-white focus:outline-none focus:ring-2 focus:ring-white/30 resize-y min-h-[80px]"
+                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-orange-500/20 focus:border-[#fa5404] outline-none transition-all resize-y min-h-[80px]"
                   ></textarea>
                 </div>
                 <div>
                   <div class="flex items-center gap-2 mb-1.5">
-                    <label for="budget-{{ plan.id }}" class="text-[10px] font-bold uppercase tracking-wider opacity-80">Presupuesto Estimado</label>
-                    <span class="w-5 h-5 rounded-full bg-white/30 flex items-center justify-center text-xs font-bold text-slate-600" aria-hidden="true" title="Ayuda">?</span>
+                    <label for="budget-{{ plan.id }}" class="text-[10px] font-bold uppercase tracking-wider text-slate-600">Presupuesto Estimado</label>
+                    <span class="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-500" aria-hidden="true" title="Ayuda">?</span>
                   </div>
                   <input
                     id="budget-{{ plan.id }}"
@@ -144,12 +149,12 @@
                     min="0"
                     step="1"
                     placeholder="0"
-                    class="w-full px-4 py-3 rounded-xl border-2 border-white/30 bg-white/10 text-white placeholder-white/50 focus:border-white focus:outline-none focus:ring-2 focus:ring-white/30"
+                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-orange-500/20 focus:border-[#fa5404] outline-none transition-all"
                   />
-                  <p class="text-xs opacity-95 mt-2 text-white/90">¿No estás seguro? Usa nuestra <a routerLink="/calculadora" class="underline font-bold hover:text-white">Calculadora</a> para estimar tu presupuesto.</p>
+                  <p class="text-xs text-slate-500 mt-2">¿No estás seguro? Usa nuestra <a routerLink="/calculadora" class="underline font-bold text-[#fa5404] hover:opacity-80">Calculadora</a> para estimar tu presupuesto.</p>
                 </div>
                 <div>
-                  <button type="button" (click)="onAttachmentsClick()" class="flex items-center gap-2 px-4 py-3 rounded-xl border-2 border-white/30 bg-white/10 text-white hover:bg-white/20 transition-colors">
+                  <button type="button" (click)="onAttachmentsClick()" class="flex items-center gap-2 px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors">
                     <span aria-hidden="true">📎</span>
                     <span>Adjuntos</span>
                   </button>
@@ -157,7 +162,7 @@
               </div>
 
               <!-- Nota destacada -->
-              <div class="mt-5 p-4 rounded-xl border-2 border-[#fa5404]/80 bg-[#fa5404]/10 text-slate-800 text-sm">
+              <div class="mt-5 p-4 rounded-xl border-2 border-[#fa5404]/40 bg-[#fa5404]/5 text-slate-700 text-sm">
                 Nota: Los pagos están sujetos a cambios según la tasa del Banco Central de Venezuela, según día de pago.
               </div>
 
@@ -165,7 +170,7 @@
                 type="button"
                 (click)="requestPlan(plan)"
                 [disabled]="isSubmitting() || !workDescription().trim()"
-                class="mt-5 w-full py-4 px-6 bg-white text-[#fa5404] font-bold rounded-2xl shadow-lg hover:bg-slate-50 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-300"
+                class="mt-5 w-full py-4 px-6 bg-[#fa5404] text-white font-bold rounded-2xl shadow-lg hover:opacity-95 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-300"
               >
                 {{ isSubmitting() ? 'Enviando…' : 'Solicitar este Plan' }}
               </button>
