@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../services/auth.service';
+import { PartnerService } from '../services/partner.service';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -14,6 +15,7 @@ import { CommonModule } from '@angular/common';
 export class LoginComponent {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
+  private partnerService = inject(PartnerService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private http = inject(HttpClient);
@@ -37,30 +39,31 @@ export class LoginComponent {
         { email, password }
       ).subscribe({
         next: (response) => {
-          console.log('Login response:', response);
-          
-          // Guardar token y usuario
-          this.authService.setAuth(response.token, {
-            id: `user-${response.user.email}`,
+          const user = {
+            id: response.user.email ?? `user-${response.user.email}`,
             name: response.user.name,
             email: response.user.email,
             role: response.user.role,
-          });
-          
-          // Verificar que se estableció correctamente
-          console.log('Después de setAuth:', {
-            isLoggedIn: this.authService.isLoggedIn(),
-            userRole: this.authService.userRole(),
-            currentUser: this.authService.currentUser()
-          });
-          
-          // Pequeño delay para asegurar que los signals se actualicen
-          setTimeout(() => {
-            // Redirigir a la URL de retorno o a la home
+          };
+          this.authService.setAuth(response.token, user);
+          this.partnerService.loadPartners();
+          const userId = user.id ?? user.email ?? '';
+          if (userId) {
+            this.authService.loadUserProfile(userId).subscribe({
+              next: () => {},
+              complete: () => {
+                const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/home';
+                this.router.navigate([returnUrl]);
+              },
+              error: () => {
+                const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/home';
+                this.router.navigate([returnUrl]);
+              },
+            });
+          } else {
             const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/home';
-            console.log('Navegando a:', returnUrl);
             this.router.navigate([returnUrl]);
-          }, 0);
+          }
         },
         error: (err) => {
           this.errorMessage = err.error?.error || 'Error al iniciar sesión. Verifica tus credenciales.';

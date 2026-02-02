@@ -2,3 +2,8 @@
 .safe-area-pb {
   padding-bottom: env(safe-area-inset-bottom, 0);
 }
+
+/* Ícono activo: naranja de la marca (#fa5404) */
+.nav-item-active {
+  color: #fa5404 !important;
+}

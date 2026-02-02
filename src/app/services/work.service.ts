@@ -1,9 +1,14 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
-import { map, tap, catchError } from 'rxjs/operators';
+import { Observable, of, throwError } from 'rxjs';
+import { map, tap, catchError, finalize } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 import { PartnerService } from './partner.service';
 import { NotificationService } from './notification.service';
+import type { Work, WorkItem, WorkStatus, PlanId, FinancialProfile } from '../models/types';
+
+export type { Work, WorkItem, WorkStatus, FinancialProfile };
+export type CreditPlanId = PlanId;
 
 /** Objeto "Pedido" por partner para simulación de envío de correo. */
 export interface PedidoParaPartner {
@@ -12,7 +17,7 @@ export interface PedidoParaPartner {
   materials: { materialId: string; quantity: number; materialName?: string }[];
 }
 
-/** Perfil de crédito enviado con la solicitud para que el Supervisor lo revise. */
+/** Perfil de crédito enviado con la solicitud (compat con backend: previousCredits, isMoroso). */
 export interface CreditRequestUserProfile {
   status: string;
   score: number;
@@ -20,55 +25,8 @@ export interface CreditRequestUserProfile {
   isMoroso: boolean;
 }
 
-/** Estados de una obra (flujo crédito → visita técnica → partners → en curso). */
-export type WorkStatus =
-  | 'CREDIT_PENDING'
-  | 'CREDIT_APPROVED'
-  | 'TECHNICAL_VISIT_PENDING'
-  | 'TECHNICAL_VISIT'
-  | 'WAITING_PARTNERS'
-  | 'IN_PROGRESS';
-
 /** Estado de respuesta de un partner a la solicitud de disponibilidad. */
 export type PartnerResponseStatus = 'PENDING' | 'CONFIRMED' | 'UNAVAILABLE';
-
-export type CreditPlanId = 'BRONZE' | 'SILVER' | 'GOLD';
-
-/** Ítem de la orden de materiales: incluye partnerId por material para logística de proveedores. */
-export interface WorkItem {
-  materialId: string;
-  quantity: number;
-  partnerId: string;
-  price: number;
-}
-
-export interface Work {
-  id: string;
-  status: WorkStatus;
-  planId: CreditPlanId;
-  engineerId: string;
-  items: WorkItem[];
-  createdAt: string;
-  // ---- Resto de campos ----
-  descripcion?: string;
-  ubicacion?: string;
-  presupuestoInicial?: number;
-  userEmail?: string;
-  planAmount?: number;
-  description?: string;
-  userProfile?: CreditRequestUserProfile;
-  reviewedAt?: string;
-  reviewedBy?: string;
-  rejectionReason?: string;
-  assignedAt?: string;
-  partnerConfirmationDeadline?: string;
-  /** Fecha límite para respuesta de partners (ej. ahora + 48h). */
-  partnerResponseDeadline?: string;
-  /** Checklist de disponibilidad: partnerId -> PENDING | CONFIRMED | UNAVAILABLE. */
-  partnerResponses?: Record<string, PartnerResponseStatus>;
-  PK?: string;
-  SK?: string;
-}
 
 /** Partner mínimo para generar el correo (id, name, email). */
 export interface PartnerForEmail {
@@ -101,12 +59,24 @@ export class WorkService {
   private http = inject(HttpClient);
   private partnerService = inject(PartnerService);
   private notificationService = inject(NotificationService);
-  private readonly API_URL = 'https://s6txacomrf.execute-api.us-east-1.amazonaws.com/dev/works';
+  private readonly API_URL = `${environment.apiUrl}/works`;
 
   private readonly HORAS_PLAZO_PARTNERS = 48;
 
   /** IDs de obras IN_PROGRESS ya notificadas al cliente (evitar duplicados). */
   private readonly notifiedInProgressIds = new Set<string>();
+
+  /** Estados considerados finalizados: con una obra en estos estados se permite crear otra. */
+  private static readonly TERMINAL_STATUSES = new Set<string>(['REJECTED', 'FINISHED']);
+
+  /** true mientras hay una petición HTTP en curso (para Skeleton Loaders). */
+  private _isLoading = signal(false);
+  public readonly isLoading = this._isLoading.asReadonly();
+
+  /** true si el usuario ya tiene al menos una obra activa (no finalizada). Doble capa de seguridad para bloquear solicitudes duplicadas. */
+  private hasActiveWork(): boolean {
+    return this._myWorks().some((w) => !WorkService.TERMINAL_STATUSES.has(w.status));
+  }
 
   // Signal para almacenar la lista de obras (admin / todas)
   private _works = signal<Work[]>([]);
@@ -122,6 +92,7 @@ export class WorkService {
    * los callers pasan user?.email ?? user?.id (p. ej. works?userId=cliente@gmail.com).
    */
   getUserWorks(userId: string): Observable<Work[]> {
+    this._isLoading.set(true);
     return this.http.get<Work[]>(this.API_URL, { params: { userId } }).pipe(
       map((works) => (works ?? []).map((work) => this.transformWork(work))),
       tap((transformed) => {
@@ -142,6 +113,7 @@ export class WorkService {
           }
         });
       }),
+      finalize(() => this._isLoading.set(false)),
       catchError((err) => {
         console.error('Error al obtener obras del usuario:', err);
         this._myWorks.set([]);
@@ -151,38 +123,47 @@ export class WorkService {
   }
 
   /**
-   * Crea una solicitud de crédito (Paso 1). Incluye el perfil financiero del usuario
+   * Crea una solicitud de crédito (Paso 1). Incluye título, descripción y perfil financiero
    * para que el Supervisor reciba la solicitud con el perfil adjunto.
+   * No permite la petición si ya existe una obra activa (doble capa de seguridad).
    */
   createCreditRequest(
     planId: CreditPlanId,
     planAmount: number,
+    title: string,
     description: string,
-    userProfile: CreditRequestUserProfile
+    userProfile: CreditRequestUserProfile,
+    userContact?: { userName?: string; userEmail?: string; userPhone?: string }
   ): Observable<{ message: string; work: Work }> {
+    if (this.hasActiveWork()) {
+      const msg = 'Ya tienes una solicitud en curso. No se puede crear otra hasta que finalice.';
+      console.error('[WorkService] createCreditRequest bloqueado:', msg);
+      return throwError(() => new Error(msg));
+    }
     const body = {
       planId,
       planAmount,
+      title,
       description,
       userProfile,
+      ...(userContact?.userName != null && userContact.userName !== '' && { userName: userContact.userName }),
+      ...(userContact?.userEmail != null && userContact.userEmail !== '' && { userEmail: userContact.userEmail }),
+      ...(userContact?.userPhone != null && userContact.userPhone !== '' && { userPhone: userContact.userPhone }),
     };
+    this._isLoading.set(true);
     return this.http.post<{ message: string; work: Work }>(this.API_URL, body).pipe(
       tap((res) => {
         if (res?.work) {
-          const w: Work = {
-            id: res.work.id,
-            status: 'CREDIT_PENDING',
-            planId,
-            engineerId: res.work.engineerId ?? '',
-            items: res.work.items ?? [],
-            createdAt: res.work.createdAt ?? new Date().toISOString(),
-            descripcion: description,
-            description,
+          const w = this.transformWork({
+            ...res.work,
+            description: res.work.description ?? description,
+            userId: (res.work as { userId?: string }).userId ?? (res.work as { userEmail?: string }).userEmail ?? '',
             planAmount,
-          };
+          });
           this.prependToMyWorks(w);
         }
       }),
+      finalize(() => this._isLoading.set(false)),
       catchError((err) => {
         console.error('Error al crear solicitud de crédito:', err);
         throw err;
@@ -201,20 +182,21 @@ export class WorkService {
   }
 
   /**
-   * Obtiene todas las obras desde el backend (admin)
+   * Obtiene todas las obras desde el backend (admin / supervisor).
+   * Retorna Observable para poder encadenar (p. ej. cerrar loading al terminar).
    */
-  getAllWorks(): void {
-    this.http.get<Work[]>(this.API_URL).subscribe({
-      next: (works) => {
-        // Transformar las obras del formato DynamoDB al formato del frontend
-        const transformedWorks = works.map(work => this.transformWork(work));
-        this._works.set(transformedWorks);
-      },
-      error: (err) => {
+  getAllWorks(): Observable<Work[]> {
+    this._isLoading.set(true);
+    return this.http.get<Work[]>(this.API_URL).pipe(
+      map((works) => (works ?? []).map((work) => this.transformWork(work))),
+      tap((transformed) => this._works.set(transformed)),
+      finalize(() => this._isLoading.set(false)),
+      catchError((err) => {
         console.error('Error al obtener obras:', err);
         this._works.set([]);
-      }
-    });
+        return of([]);
+      })
+    );
   }
 
   /**
@@ -222,6 +204,7 @@ export class WorkService {
    * Lo usa el supervisor tras aprobar el crédito.
    */
   assignEngineer(workId: string, engineerId: string): void {
+    this._isLoading.set(true);
     this.http.patch<{ message: string; work: Work }>(
       `${this.API_URL}/${workId}`,
       { status: 'TECHNICAL_VISIT_PENDING' as WorkStatus, engineerId }
@@ -235,8 +218,8 @@ export class WorkService {
       },
       error: (err) => {
         console.error('Error al asignar ingeniero:', err);
-        throw err;
-      }
+      },
+      complete: () => this._isLoading.set(false),
     });
   }
 
@@ -245,6 +228,7 @@ export class WorkService {
    * El dashboard del ingeniero debe usar este método para ver solo sus obras.
    */
   getWorksByEngineerId(engineerId: string): Observable<Work[]> {
+    this._isLoading.set(true);
     return this.http.get<Work[]>(this.API_URL, { params: { engineerId } }).pipe(
       map((works) => (works ?? []).map((work) => this.transformWork(work))),
       tap((transformed) => {
@@ -253,6 +237,7 @@ export class WorkService {
         transformed.forEach((w) => byId.set(w.id, w));
         this._works.set(Array.from(byId.values()));
       }),
+      finalize(() => this._isLoading.set(false)),
       catchError((err) => {
         console.error('Error al cargar obras del ingeniero:', err);
         return of([]);
@@ -261,17 +246,23 @@ export class WorkService {
   }
 
   /**
-   * Actualiza el estado de una obra.
+   * Actualiza el estado de una obra. Opcionalmente envía motivo de rechazo cuando status es REJECTED.
    */
-  updateWorkStatus(id: string, status: WorkStatus): void {
+  updateWorkStatus(id: string, status: WorkStatus, rejectionReason?: string): void {
+    this._isLoading.set(true);
+    const body: { status: WorkStatus; rejectionReason?: string } = { status };
+    if (status === 'REJECTED' && rejectionReason != null) {
+      body.rejectionReason = rejectionReason;
+    }
     this.http.patch<{ message: string; work: Work }>(
       `${this.API_URL}/${id}`,
-      { status }
+      body
     ).subscribe({
-      next: () => {
+      next: (res) => {
         const currentWorks = this._works();
+        const updated = res?.work ? this.transformWork(res.work) : { ...currentWorks.find(w => w.id === id)!, status, rejectionReason };
         this._works.set(currentWorks.map(work =>
-          work.id === id ? { ...work, status } : work
+          work.id === id ? updated : work
         ));
         if (status === 'CREDIT_APPROVED') {
           this.notificationService.add({
@@ -283,8 +274,8 @@ export class WorkService {
       },
       error: (err) => {
         console.error('Error al actualizar estado de la obra:', err);
-        throw err;
-      }
+      },
+      complete: () => this._isLoading.set(false),
     });
   }
 
@@ -296,6 +287,7 @@ export class WorkService {
    * con su lista correspondiente (agrupar items por partnerId y usar el email del partner para el envío).
    */
   submitMaterialsToSuppliers(workId: string, items: WorkItem[]): Observable<{ message: string; work?: Work }> {
+    this._isLoading.set(true);
     return this.http.patch<{ message: string; work: Work }>(
       `${this.API_URL}/${workId}`,
       { items }
@@ -308,6 +300,7 @@ export class WorkService {
           ));
         }
       }),
+      finalize(() => this._isLoading.set(false)),
       catchError((err) => {
         console.error('Error al enviar materiales a proveedores:', err);
         throw err;
@@ -356,18 +349,21 @@ export class WorkService {
       partnerResponseDeadline,
       items
     };
+    this._isLoading.set(true);
     return this.http.patch<{ message: string; work: Work }>(`${this.API_URL}/${workId}`, body).pipe(
       tap((res) => {
         if (res?.work) {
           const currentWorks = this._works();
+          const updatedWork = res.work ? this.transformWork(res.work) : null;
           this._works.set(currentWorks.map(w =>
-            w.id === workId
-              ? { ...w, status: 'WAITING_PARTNERS', partnerResponseDeadline, items: res.work!.items ?? items }
+            w.id === workId && updatedWork
+              ? updatedWork
               : w
           ));
         }
       }),
       map((res) => ({ message: res?.message ?? 'OK', work: res?.work })),
+      finalize(() => this._isLoading.set(false)),
       catchError((err) => {
         console.error('Error en confirmTechnicalVisit:', err);
         throw err;
@@ -426,17 +422,29 @@ Equipo de Logística Renobo [Logo Naranja #fa5404]`;
   }
 
   /**
-   * Normaliza una obra del API/DynamoDB al formato del frontend (status, engineerId, items).
+   * Normaliza una obra del API/DynamoDB al formato unificado Work (userId, description, partnerDeadline).
    */
-  private transformWork(work: Partial<Work> & { estado?: string; assignedEngineerId?: string; materials?: Array<{ id: string; quantity: number; partnerId: string; price?: number }> }): Work {
+  private transformWork(work: Partial<Work> & {
+    estado?: string;
+    assignedEngineerId?: string;
+    descripcion?: string;
+    userEmail?: string;
+    partnerResponseDeadline?: string;
+    partnerConfirmationDeadline?: string;
+    userProfile?: CreditRequestUserProfile;
+    materials?: Array<{ id: string; quantity: number; partnerId: string; price?: number }>;
+    SK?: string;
+  }): Work {
     const status = (work.status ?? this.mapLegacyStatus(work.estado)) as WorkStatus;
-    const engineerId = work.engineerId ?? work.assignedEngineerId ?? '';
-    const items: WorkItem[] = (work.items ?? (work.materials ?? []).map((m) => ({
+    const rawEngineerId = work.engineerId ?? (work as { assignedEngineerId?: string }).assignedEngineerId;
+    const engineerId = rawEngineerId ? rawEngineerId : undefined;
+    const rawItems = work.items ?? (work.materials ?? []).map((m) => ({
       materialId: m.id,
       quantity: m.quantity,
       partnerId: m.partnerId,
       price: m.price ?? 0,
-    }))) as WorkItem[];
+    }));
+    const items: WorkItem[] = rawItems;
 
     let id = work.id ?? '';
     if (work.SK && String(work.SK).startsWith('WORK#')) {
@@ -446,19 +454,48 @@ Equipo de Logística Renobo [Logo Naranja #fa5404]`;
     const rawPlanId = work.planId ?? 'BRONZE';
     const planId = this.mapLegacyPlanId(rawPlanId) as CreditPlanId;
 
+    const userId = work.userId ?? work.userEmail ?? '';
+    const description = work.description ?? work.descripcion ?? '';
+    const partnerDeadline =
+      work.partnerDeadline ??
+      (work as { partnerResponseDeadline?: string }).partnerResponseDeadline ??
+      (work as { partnerConfirmationDeadline?: string }).partnerConfirmationDeadline;
+
+    const financialProfile: FinancialProfile | undefined = work.financialProfile
+      ? {
+          status: work.financialProfile.status as FinancialProfile['status'],
+          score: work.financialProfile.score,
+          creditsRequested: work.financialProfile.creditsRequested,
+        }
+      : work.userProfile
+        ? {
+            status: (work.userProfile.status === 'ATRASADO' ? 'MOROSO' : work.userProfile.status === 'SIN HISTORIAL' ? 'SIN ACTIVIDAD' : 'AL DÍA') as FinancialProfile['status'],
+            score: work.userProfile.score,
+            creditsRequested: work.userProfile.previousCredits ?? 0,
+          }
+        : undefined;
+
     const partnerResponses = work.partnerResponses ?? {};
+
     return {
-      ...work,
       id,
-      status,
-      planId,
+      userId,
       engineerId,
-      items,
-      partnerResponses,
+      planId,
+      title: work.title,
+      description,
+      status,
       createdAt: work.createdAt ?? new Date().toISOString(),
-      PK: undefined,
-      SK: undefined,
-    } as Work;
+      partnerDeadline,
+      items,
+      financialProfile,
+      planAmount: work.planAmount,
+      partnerResponses,
+      rejectionReason: work.rejectionReason,
+      userName: (work as { userName?: string }).userName,
+      userEmail: (work as { userEmail?: string }).userEmail,
+      userPhone: (work as { userPhone?: string }).userPhone,
+    };
   }
 
   /**
@@ -599,7 +636,8 @@ Equipo de Logística Renobo [Logo Naranja #fa5404]`;
     switch (estado) {
       case 'PENDING_CREDIT': return 'CREDIT_PENDING';
       case 'CREDIT_APPROVED': return 'CREDIT_APPROVED';
-      case 'CREDIT_REJECTED': return 'CREDIT_PENDING';
+      case 'CREDIT_REJECTED':
+      case 'REJECTED': return 'REJECTED';
       case 'TECHNICAL_VISIT_PENDING': return 'TECHNICAL_VISIT_PENDING';
       case 'OPEN':
       case 'ASSIGNED': return 'TECHNICAL_VISIT';

@@ -1,0 +1,50 @@
+<div class="request-success-page" style="background-color: #fff9f3; min-height: 100vh; padding: 2rem 1.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+  <!-- Confeti naranja sutil, una sola vez al cargar -->
+  <div class="confetti-layer" aria-hidden="true">
+    @for (p of confettiPieces(); track $index) {
+      <div
+        class="confetti-piece"
+        [style.left.%]="p.left"
+        [style.animation-delay.s]="p.delay"
+        [style.animation-duration.s]="p.duration"
+        [style.background-color]="p.color"
+        [style.width.px]="p.size"
+        [style.height.px]="p.size + 4"
+      ></div>
+    }
+  </div>
+
+  <div class="success-icon-wrap">
+    <div class="success-icon-circle" aria-hidden="true">
+      <span class="success-check">✔</span>
+    </div>
+  </div>
+
+  <h1 class="success-title">¡Solicitud Enviada con Éxito!</h1>
+
+  <p class="success-body">
+    Estamos revisando tu perfil financiero. Recibirás una notificación en cuanto un supervisor apruebe tu Plan {{ planName() }}.
+  </p>
+
+  <section class="next-steps" aria-label="Próximos pasos">
+    <h2 class="next-steps-title">Hoja de ruta</h2>
+    <ul class="next-steps-list">
+      <li class="next-step-item next-step-active">
+        <span class="next-step-icon" aria-hidden="true">🔍</span>
+        <span>Revisión de Supervisor <em>(En proceso)</em></span>
+      </li>
+      <li class="next-step-item">
+        <span class="next-step-icon" aria-hidden="true">👷</span>
+        <span>Asignación de Ingeniero <em>(Pendiente)</em></span>
+      </li>
+      <li class="next-step-item">
+        <span class="next-step-icon" aria-hidden="true">📝</span>
+        <span>Visita Técnica <em>(Próximamente)</em></span>
+      </li>
+    </ul>
+  </section>
+
+  <a routerLink="/servicios" class="success-cta">
+    Ir a mis servicios
+  </a>
+</div>

@@ -18,15 +18,24 @@
     </div>
   </header>
 
-  <!-- Tarjeta de Salud Financiera -->
-  <section class="rounded-2xl p-5 mb-6 text-white" style="background-color: #fa5404">
-    <h2 class="text-xs font-bold uppercase tracking-wider opacity-90 mb-3">Salud Financiera</h2>
-    <p class="text-4xl font-black tracking-tight mb-2">{{ userProfile().score }}</p>
-    <p class="text-sm opacity-90 mb-3">Credit Score</p>
-    <span class="inline-block px-3 py-1 rounded-full bg-white/20 text-xs font-bold uppercase tracking-wider">
-      {{ financialBadge() }}
-    </span>
-  </section>
+  <!-- Tarjeta de Salud Financiera (o esqueleto mientras carga) -->
+  @if (isLoading()) {
+    <section class="rounded-2xl p-5 mb-6 bg-slate-100 border border-slate-200">
+      <div class="skeleton h-3 w-24 mb-3 rounded"></div>
+      <div class="skeleton h-10 w-20 mb-2 rounded"></div>
+      <div class="skeleton h-4 w-28 mb-3 rounded"></div>
+      <div class="skeleton h-6 w-32 rounded-full"></div>
+    </section>
+  } @else {
+    <section class="rounded-2xl p-5 mb-6 text-white" style="background-color: #fa5404">
+      <h2 class="text-xs font-bold uppercase tracking-wider opacity-90 mb-3">Salud Financiera</h2>
+      <p class="text-4xl font-black tracking-tight mb-2">{{ userProfile().score }}</p>
+      <p class="text-sm opacity-90 mb-3">Credit Score</p>
+      <span class="inline-block px-3 py-1 rounded-full bg-white/20 text-xs font-bold uppercase tracking-wider">
+        {{ financialBadge() }}
+      </span>
+    </section>
+  }
 
   <!-- Grid de Estadísticas -->
   <section class="grid grid-cols-3 gap-3 mb-8">
@@ -44,11 +53,15 @@
     </div>
   </section>
 
-  <!-- Historial de Notificaciones -->
+  <!-- Historial de Notificaciones (o esqueletos mientras carga) -->
   <section>
     <h2 class="text-sm font-bold text-slate-800 mb-3">Historial de Notificaciones</h2>
     <div class="rounded-2xl border border-orange-100/50 bg-white shadow-sm overflow-hidden max-h-[50vh] overflow-y-auto">
-      @if (notificationsList().length === 0) {
+      @if (isLoading()) {
+        <div class="p-4 space-y-2">
+          <app-skeleton-card [count]="4"></app-skeleton-card>
+        </div>
+      } @else if (notificationsList().length === 0) {
         <div class="px-4 py-8 text-center text-slate-500 text-sm">
           <span class="text-3xl block mb-2">🔔</span>
           No hay notificaciones

@@ -3,7 +3,10 @@ import { Router } from '@angular/router';
 import { CommonModule, CurrencyPipe, DatePipe, isPlatformBrowser } from '@angular/common';
 import { WorkService, type Work, type CreditPlanId, type WorkStatus } from '../../services/work.service';
 import { AuthService } from '../../services/auth.service';
-import { EngineerService, type Engineer } from '../../services/engineer.service';
+import { EngineerService } from '../../services/engineer.service';
+import { ToastService } from '../../services/toast.service';
+
+export type AdminFilter = 'all' | 'pending_approval' | 'approved_no_engineer' | 'rejected';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -15,69 +18,71 @@ import { EngineerService, type Engineer } from '../../services/engineer.service'
 export class AdminDashboardComponent implements OnInit {
   public workService = inject(WorkService);
   public authService = inject(AuthService);
-  private engineerService = inject(EngineerService);
+  public engineerService = inject(EngineerService);
   private router = inject(Router);
   private platformId = inject(PLATFORM_ID);
+  private toastService = inject(ToastService);
 
-  /** Obra seleccionada para el panel de auditoría (drawer). Null cuando el drawer está cerrado. */
-  selectedWork = signal<any | null>(null);
+  /** ID de la obra seleccionada en el drawer. Null cuando el drawer está cerrado. */
+  selectedWorkId = signal<string | null>(null);
 
-  /** Pool de ingenieros disponibles (para asignar al aprobar). */
-  engineers = signal<Engineer[]>([]);
+  /** Obra actual del drawer (derivada de works para que al aprobar se actualice y muestre Asignar ingeniero). */
+  selectedWork = computed(() => {
+    const id = this.selectedWorkId();
+    if (!id) return null;
+    return this.workService.works().find(w => w.id === id) ?? null;
+  });
 
   /** Ingeniero seleccionado para la obra actual (drawer). */
   selectedEngineerId = signal<string | null>(null);
 
-  // Signal para el término de búsqueda
+  /** Motivo de rechazo (input en el panel de detalle). */
+  rejectionReason = signal('');
+
   searchTerm = signal('');
+  filterStatus = signal<AdminFilter>('all');
 
-  // Signal para el filtro de estado
-  filterStatus = signal<'all' | 'pending'>('all');
-
-  // Computed signal para obtener las obras con formato adaptado (cliente, plan, score)
   works = computed(() => {
     return this.workService.works().map(work => ({
       ...work,
       planIdDisplay: this.getPlanLabel(work.planId),
-      score: work.userProfile?.score ?? '—',
-      status: this.mapStatusToTemplate(work.status)
+      score: work.financialProfile?.score ?? (work as { userProfile?: { score?: number } }).userProfile?.score ?? null,
+      statusDisplay: this.mapStatusToTemplate(work.status)
     }));
   });
 
-  // Computed signal para filtrar obras basándose en el término de búsqueda y el estado
   filteredWorks = computed(() => {
     const term = this.searchTerm().toLowerCase().trim();
     const statusFilter = this.filterStatus();
-    let allWorks = this.works();
+    let list = this.works();
 
-    // Aplicar filtro de estado
-    if (statusFilter === 'pending') {
-      allWorks = allWorks.filter(work => work.status === 'PENDING');
+    if (statusFilter === 'pending_approval') {
+      list = list.filter(w => w.statusDisplay === 'PENDING');
+    } else if (statusFilter === 'approved_no_engineer') {
+      list = list.filter(w => w.statusDisplay === 'APPROVED' && !w.engineerId);
+    } else if (statusFilter === 'rejected') {
+      list = list.filter(w => w.statusDisplay === 'REJECTED');
     }
 
-    // Aplicar filtro de búsqueda
-    if (!term) {
-      return allWorks;
-    }
-
-    return allWorks.filter(work => {
+    if (!term) return list;
+    return list.filter(work => {
       const idMatch = work.id.toLowerCase().includes(term);
-      const emailMatch = (work.userEmail ?? '').toLowerCase().includes(term);
+      const titleMatch = (work.title ?? '').toLowerCase().includes(term);
+      const emailMatch = (work.userId ?? '').toLowerCase().includes(term);
       const planMatch = (work.planIdDisplay ?? '').toLowerCase().includes(term);
-      const scoreMatch = String(work.score).includes(term);
-      return idMatch || emailMatch || planMatch || scoreMatch;
+      const scoreMatch = String(work.score ?? '').includes(term);
+      return idMatch || titleMatch || emailMatch || planMatch || scoreMatch;
     });
   });
 
-  // Computed signal para contar obras pendientes (basado en las obras filtradas)
   pendingCount = computed(() => {
-    return this.filteredWorks().filter(work => work.status === 'PENDING').length;
+    return this.workService.works().filter(w => this.mapStatusToTemplate(w.status) === 'PENDING').length;
   });
 
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
-      this.workService.getAllWorks();
-      this.engineerService.getEngineers().subscribe((list) => this.engineers.set(list));
+      this.workService.getAllWorks().subscribe();
+      this.engineerService.getEngineers().subscribe();
     }
   }
 
@@ -90,28 +95,68 @@ export class AdminDashboardComponent implements OnInit {
         return 'PENDING';
       case 'CREDIT_APPROVED':
         return 'APPROVED';
+      case 'REJECTED':
+        return 'REJECTED';
       case 'TECHNICAL_VISIT_PENDING':
       case 'TECHNICAL_VISIT':
       case 'WAITING_PARTNERS':
       case 'IN_PROGRESS':
         return status;
       default:
-        return 'REJECTED';
+        return status ?? 'PENDING';
     }
   }
 
   /** Etiqueta del plan para mostrar (Bronce / Plata / Oro). */
-  getPlanLabel(planId?: CreditPlanId | null): string {
+  getPlanLabel(planId?: CreditPlanId | string | null): string {
     if (!planId) return '—';
-    const labels: Record<CreditPlanId, string> = { BRONZE: 'Bronce', SILVER: 'Plata', GOLD: 'Oro' };
+    const labels: Record<string, string> = { BRONZE: 'Bronce', SILVER: 'Plata', GOLD: 'Oro' };
     return labels[planId] ?? planId;
   }
 
-  /** Indica si el perfil del cliente es apto para crédito (score >= 60 y no moroso). */
+  /** Clases CSS para el badge del plan (Bronce=ámbar, Plata=gris, Oro=dorado). */
+  getPlanClass(planId?: CreditPlanId | string | null): string {
+    switch (planId) {
+      case 'BRONZE': return 'bg-amber-100 text-amber-800';
+      case 'SILVER': return 'bg-slate-200 text-slate-800';
+      case 'GOLD': return 'bg-yellow-100 text-yellow-800';
+      default: return 'bg-slate-100 text-slate-700';
+    }
+  }
+
+  /** Indica si el perfil del cliente es apto para crédito (score >= 60). */
   isAptoCredito(work: Work): boolean {
-    const p = work.userProfile;
+    const p = work.financialProfile;
     if (!p) return false;
-    return p.score >= 60 && !p.isMoroso;
+    return p.score >= 60;
+  }
+
+  /** Indica si el score recomienda aprobar (score > 750). */
+  isRecomendado(work: Work): boolean {
+    const score = work.financialProfile?.score ?? (work as { userProfile?: { score?: number } }).userProfile?.score;
+    return score != null && score > 750;
+  }
+
+  /** Estatus financiero para mostrar (AL DÍA / MOROSO / SIN ACTIVIDAD). */
+  getFinancialStatusLabel(work: Work): string {
+    const p = work.financialProfile;
+    if (p?.status) return p.status;
+    const up = (work as { userProfile?: { status?: string; isMoroso?: boolean } }).userProfile;
+    if (up?.isMoroso) return 'MOROSO';
+    if (up?.status) return up.status === 'ATRASADO' ? 'MOROSO' : up.status === 'SIN HISTORIAL' ? 'SIN ACTIVIDAD' : 'AL DÍA';
+    return '—';
+  }
+
+  /** Descripción de la obra (description o descripcion legacy). */
+  getWorkDescription(work: Work): string {
+    const d = work.description ?? (work as { descripcion?: string }).descripcion;
+    return d?.trim() || '—';
+  }
+
+  /** Score para mostrar en el panel (financialProfile o userProfile). */
+  getWorkScoreDisplay(work: Work): string | number {
+    const score = work.financialProfile?.score ?? (work as { userProfile?: { score?: number } }).userProfile?.score;
+    return score ?? '—';
   }
 
   /**
@@ -136,29 +181,37 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   /**
-   * Aprueba la solicitud de crédito (estado CREDIT_APPROVED).
+   * Aprueba la solicitud de crédito (estado CREDIT_APPROVED). Mantiene el panel abierto y muestra
+   * la sección "Asignar ingeniero" para esa misma obra (ciclo en un solo paso).
    */
   approve(workId: string): void {
-    if (confirm(`¿Estás seguro de aprobar la solicitud #${workId.slice(0, 8)}?`)) {
-      this.workService.updateWorkStatus(workId, 'CREDIT_APPROVED');
-    }
+    this.workService.updateWorkStatus(workId, 'CREDIT_APPROVED');
+    this.toastService.show('Crédito aprobado. Asigna un ingeniero a continuación.', 'success');
+    // No cerramos el drawer: selectedWork se actualiza desde workService.works() y el panel muestra "Asignar ingeniero"
   }
 
+  /**
+   * Rechaza la solicitud (estado REJECTED). Pide motivo breve y actualiza.
+   */
   reject(workId: string): void {
-    if (confirm(`¿Estás seguro de rechazar la solicitud #${workId.slice(0, 8)}?`)) {
-      this.workService.updateWorkStatus(workId, 'CREDIT_PENDING');
-    }
+    const fromInput = this.rejectionReason().trim();
+    const fromPrompt = prompt('Motivo breve de rechazo (opcional):');
+    const reason = fromInput || (fromPrompt ?? '');
+    this.workService.updateWorkStatus(workId, 'REJECTED', reason || undefined);
+    this.rejectionReason.set('');
+    this.closeDrawer();
   }
 
   /** Asigna la obra al drawer y lo abre. */
-  selectWork(work: unknown): void {
-    this.selectedWork.set(work);
+  selectWork(work: Work): void {
+    this.selectedWorkId.set(work.id);
     this.selectedEngineerId.set(null);
+    this.rejectionReason.set('');
   }
 
   /** Cierra el panel de auditoría. */
   closeDrawer(): void {
-    this.selectedWork.set(null);
+    this.selectedWorkId.set(null);
     this.selectedEngineerId.set(null);
   }
 

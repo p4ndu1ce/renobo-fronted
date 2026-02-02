@@ -1,0 +1,176 @@
+/* Capa de confeti: fija, detrás del contenido, una sola pasada */
+.confetti-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.confetti-piece {
+  position: absolute;
+  top: -8%;
+  width: 6px;
+  height: 10px;
+  border-radius: 2px;
+  opacity: 0.85;
+  animation: confetti-fall linear forwards;
+  animation-iteration-count: 1;
+}
+
+@keyframes confetti-fall {
+  from {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0.85;
+  }
+  to {
+    transform: translateY(108vh) rotate(420deg);
+    opacity: 0.35;
+  }
+}
+
+.request-success-page {
+  position: relative;
+  z-index: 1;
+}
+
+/* Icono: círculo naranja con check, animación Pop/Bounce */
+.success-icon-wrap {
+  margin-bottom: 1.5rem;
+}
+
+.success-icon-circle {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background-color: #fa5404;
+  color: white;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  animation: success-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.success-check {
+  font-size: 3rem;
+  line-height: 1;
+  font-weight: bold;
+}
+
+@keyframes success-pop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Mensaje principal */
+.success-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0 0 1rem;
+  max-width: 320px;
+  line-height: 1.3;
+}
+
+.success-body {
+  font-size: 0.9375rem;
+  color: #64748b;
+  margin: 0 0 2rem;
+  max-width: 320px;
+  line-height: 1.5;
+}
+
+/* Hoja de ruta */
+.next-steps {
+  width: 100%;
+  max-width: 320px;
+  margin-bottom: 2rem;
+  text-align: left;
+}
+
+.next-steps-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0 0 0.75rem;
+}
+
+.next-steps-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.next-step-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: white;
+  border-radius: 1rem;
+  border: 1px solid #f1f5f9;
+  font-size: 0.875rem;
+  color: #475569;
+}
+
+.next-step-item em {
+  font-style: normal;
+  color: #94a3b8;
+  font-size: 0.8125rem;
+}
+
+.next-step-active {
+  border-color: #fa5404;
+  background: #fff7ed;
+  color: #1e293b;
+}
+
+.next-step-active em {
+  color: #fa5404;
+  font-weight: 600;
+}
+
+.next-step-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+/* Botón de acción */
+.success-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 320px;
+  padding: 1rem 1.5rem;
+  background: #fa5404;
+  color: white;
+  font-weight: 700;
+  font-size: 1rem;
+  border-radius: 1.5rem;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(250, 84, 4, 0.35);
+  transition: background 0.2s, transform 0.15s;
+}
+
+.success-cta:hover {
+  background: #e04a03;
+}
+
+.success-cta:active {
+  transform: scale(0.98);
+}

@@ -17,11 +17,14 @@ export interface Service {
   partnerName?: string;
 }
 
+/** Plan desde DB: PK "PLAN", SK "PLAN_X", name, description, minAmount, maxAmount, interestPercent. */
 export interface CreditPlan {
   id: string;
   name: string;
+  description?: string;
   minAmount: number;
   maxAmount: number;
+  interestPercent?: number;
 }
 
 export interface PublicConfig {

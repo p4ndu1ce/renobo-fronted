@@ -53,7 +53,8 @@ export class PlanSelectionComponent {
     this.errorMessage.set('');
 
     const userProfile = this.authService.userProfile();
-    this.workService.createCreditRequest(planId, plan.amount, desc || 'Sin descripción', userProfile).subscribe({
+    const title = `Solicitud Plan ${plan.name}`;
+    this.workService.createCreditRequest(planId, plan.amount, title, desc || 'Sin descripción', userProfile).subscribe({
       next: () => {
         this.isSubmitting.set(false);
         this.router.navigate(['/home']);

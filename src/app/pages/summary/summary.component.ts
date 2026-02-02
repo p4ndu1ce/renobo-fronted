@@ -58,16 +58,17 @@ export class SummaryComponent {
         this.cartService.clearCart();
         if (res?.work) {
           const r = res.work;
+          const user = this.authService.currentUser();
+          const userId = user?.email ?? user?.id ?? '';
           const work: Work = {
             id: String(r['id'] ?? ''),
-            status: (r['status'] as Work['status']) ?? 'CREDIT_PENDING',
+            userId: String(r['userId'] ?? userId),
+            engineerId: (r['engineerId'] as string) ? (r['engineerId'] as string) : undefined,
             planId: (r['planId'] as Work['planId']) ?? 'BRONZE',
-            engineerId: String(r['engineerId'] ?? ''),
-            items: Array.isArray(r['items']) ? (r['items'] as Work['items']) : [],
+            description: (r['description'] ?? r['descripcion']) as string ?? descripcion,
+            status: (r['status'] as Work['status']) ?? 'CREDIT_PENDING',
             createdAt: String(r['createdAt'] ?? new Date().toISOString()),
-            descripcion: r['descripcion'] as string,
-            ubicacion: r['ubicacion'] as string,
-            presupuestoInicial: r['presupuestoInicial'] as number,
+            items: Array.isArray(r['items']) ? (r['items'] as Work['items']) : [],
           };
           this.workService.prependToMyWorks(work);
         }

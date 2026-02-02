@@ -7,96 +7,48 @@
       </div>
     }
     <header class="mb-6 sm:mb-8">
-      <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Mis asignaciones</h1>
-      <p class="text-slate-500 font-medium mt-1 text-sm sm:text-base">Obras asignadas a ti (crédito aprobado o esperando proveedores).</p>
+      <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Hoja de ruta técnica</h1>
+      <p class="text-slate-500 font-medium mt-1 text-sm sm:text-base">Visitas pendientes asignadas a ti. Toca una obra para ver la intención del cliente e iniciar el relevamiento.</p>
     </header>
 
     @if (assignedWorks().length === 0) {
       <div class="rounded-[2.5rem] bg-white border border-slate-200 shadow-sm p-8 sm:p-10 text-center">
         <p class="text-4xl mb-4">📋</p>
-        <h2 class="text-lg font-bold text-slate-800 mb-2">Sin asignaciones</h2>
-        <p class="text-sm text-slate-500">No tienes visitas técnicas programadas por ahora.</p>
+        <h2 class="text-lg font-bold text-slate-800 mb-2">Sin visitas pendientes</h2>
+        <p class="text-sm text-slate-500">No tienes relevamientos técnicos por iniciar.</p>
       </div>
     } @else {
       <ul class="space-y-4 sm:space-y-5">
         @for (work of assignedWorks(); track work.id) {
-          <li class="rounded-[2.5rem] bg-white border border-slate-200 shadow-sm overflow-hidden">
+          <li
+            class="rounded-[2.5rem] bg-white border-2 shadow-sm overflow-hidden transition-all cursor-pointer"
+            [class.border-[#fa5404]]="selectedWorkId() === work.id"
+            [class.border-slate-200]="selectedWorkId() !== work.id"
+            (click)="selectWork(work)"
+          >
             <div class="p-5 sm:p-6">
-              <div class="flex flex-col gap-4">
-                <div>
-                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Cliente</p>
-                  <p class="font-bold text-slate-900 text-lg mt-0.5">{{ work.userEmail || '—' }}</p>
-                </div>
-                <div class="flex items-center justify-between gap-3 flex-wrap">
-                  <span class="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-full text-xs font-bold">
-                    Plan {{ work.planLabel }}
-                  </span>
-                  @if (work.status === 'TECHNICAL_VISIT_PENDING') {
-                    <span class="px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-xs font-bold">
-                      Visita pendiente
-                    </span>
-                  }
-                  @if (work.status === 'WAITING_PARTNERS') {
-                    <span class="px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-xs font-bold">
-                      Esperando Proveedores
-                    </span>
-                  }
-                  @if (work.status === 'IN_PROGRESS') {
-                    <span class="px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full text-xs font-bold">
-                      En curso
-                    </span>
-                  }
-                  @if (work.planAmount != null) {
-                    <span class="text-sm text-slate-500 font-medium">{{ work.planAmount | currency }}</span>
-                  }
-                </div>
-                @if (work.status === 'WAITING_PARTNERS' && work.deadlineInfo) {
-                  <div class="rounded-xl bg-slate-50 border border-slate-200 p-3">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Plazo proveedores (48 h)</p>
-                    <p
-                      class="text-sm font-bold"
-                      [class.text-rose-600]="work.deadlineInfo.expired || work.deadlineInfo.urgent"
-                      [class.text-slate-700]="!work.deadlineInfo.expired && !work.deadlineInfo.urgent"
-                    >
-                      {{ work.deadlineInfo.text }}
-                    </p>
-                    <div class="mt-2 h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                      <div
-                        class="h-full rounded-full transition-all duration-500"
-                        [class.bg-rose-400]="work.deadlineInfo.expired || work.deadlineInfo.urgent"
-                        [class.bg-emerald-500]="!work.deadlineInfo.expired && !work.deadlineInfo.urgent"
-                        [style.width.%]="work.deadlineInfo.percentRemaining"
-                      ></div>
-                    </div>
-                  </div>
-                }
-                @if (work.status === 'TECHNICAL_VISIT_PENDING' || work.status === 'CREDIT_APPROVED') {
-                  <button
-                    type="button"
-                    (click)="startTechnicalVisit(work)"
-                    class="w-full py-3.5 rounded-2xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm sm:text-base transition-colors shadow-sm"
-                  >
-                    Iniciar Visita Técnica
-                  </button>
-                } @else if (work.status === 'WAITING_PARTNERS') {
-                  <button
-                    type="button"
-                    (click)="startTechnicalVisit(work)"
-                    class="w-full py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm transition-colors border border-slate-200"
-                  >
-                    Ver detalle de visita
-                  </button>
-                } @else if (work.status === 'IN_PROGRESS') {
-                  <button
-                    type="button"
-                    (click)="startTechnicalVisit(work)"
-                    class="w-full py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm transition-colors border border-slate-200"
-                  >
-                    Ver obra en curso
-                  </button>
-                }
-              </div>
+              <p class="text-xl sm:text-2xl font-black text-slate-900">{{ work.title || 'Sin título' }}</p>
+              <p class="text-slate-500 text-sm mt-1">{{ work.userId || '—' }}</p>
+              <span class="inline-block mt-3 px-3 py-1.5 rounded-full text-xs font-bold bg-[#fa5404]/15 text-[#fa5404] border border-[#fa5404]/30">
+                Plan {{ work.planLabel }}
+              </span>
             </div>
+
+            @if (selectedWorkId() === work.id && selectedWork(); as w) {
+              <div class="border-t border-slate-200 bg-slate-50/80 px-5 sm:p-6 py-5">
+                <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Intención del Cliente</h3>
+                <p class="font-bold text-slate-900 text-lg mb-1">{{ w.title || 'Sin título' }}</p>
+                <p class="text-slate-600 text-sm whitespace-pre-wrap">{{ getWorkDescription(w) }}</p>
+                <button
+                  type="button"
+                  (click)="startRelevamiento(w)"
+                  class="mt-5 w-full py-4 rounded-2xl text-white font-bold text-base transition-colors shadow-lg hover:opacity-95"
+                  style="background-color: #fa5404"
+                >
+                  Iniciar Relevamiento Técnico
+                </button>
+              </div>
+            }
           </li>
         }
       </ul>

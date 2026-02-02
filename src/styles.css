@@ -58,3 +58,56 @@ body {
   .main-layout app-calculadora .cart-footer {
     bottom: 4rem;
   }
+
+  /* Efecto shimmer para esqueletos de carga */
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  .skeleton {
+    background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite linear;
+    border-radius: 0.5rem;
+  }
+
+  /* Animación de entrada y salida tipo "Bounce" */
+  @keyframes toast-in {
+    from { transform: translateY(100%) scale(0.9); opacity: 0; }
+    to { transform: translateY(0) scale(1); opacity: 1; }
+  }
+
+  .toast-container {
+    position: fixed;
+    bottom: 100px; /* Por encima del Navbar */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    width: 90%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+  }
+
+  .toast-card {
+    background: #323232; /* Gris oscuro casi negro para contraste */
+    color: white;
+    padding: 16px 20px;
+    border-radius: 1.2rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    animation: toast-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    pointer-events: auto;
+  }
+
+  .toast-error {
+    border-left: 5px solid #ef4444; /* Rojo para errores técnicos */
+  }
+
+  .toast-success {
+    border-left: 5px solid #fa5404; /* Naranja Renobo para éxitos rápidos */
+  }

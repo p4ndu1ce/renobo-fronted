@@ -14,6 +14,7 @@ import { ConfigService, type Service } from '../../services/config.service';
 import { WorkService, type WorkItem, type PartnerResponseStatus } from '../../services/work.service';
 import { PartnerService } from '../../services/partner.service';
 import { AuthService } from '../../services/auth.service';
+import { WorkContextSummaryComponent } from './work-context-summary/work-context-summary.component';
 
 export interface OrderLine {
   id: string;
@@ -40,7 +41,7 @@ export interface SummaryByPartner {
 @Component({
   selector: 'app-technical-calculator',
   standalone: true,
-  imports: [CommonModule, CurrencyPipe],
+  imports: [CommonModule, CurrencyPipe, WorkContextSummaryComponent],
   templateUrl: './technical-calculator.component.html',
   styleUrl: './technical-calculator.component.css'
 })

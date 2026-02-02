@@ -1,65 +1,55 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { tap, catchError } from 'rxjs/operators';
+import { tap, catchError, finalize, map } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 import { ConfigService } from './config.service';
+import { AuthService } from './auth.service';
+import type { Partner } from '../models/types';
 
-export interface Partner {
-  id: string;
-  name: string;
-  email: string;
-  location: string;
-  /** IDs de categorías que este partner provee (ej. 'Construcción', 'Pinturas'). */
-  categoryIds: string[];
-}
-
-/** Lista mock de partners para logística de proveedores (calculadora / obra). */
-const MOCK_PARTNERS: Partner[] = [
-  {
-    id: 'partner-martillo',
-    name: 'Ferretería El Martillo',
-    email: 'pedidos@elmartillo.com',
-    location: 'Av. Principal 100, Centro',
-    categoryIds: ['Construcción', 'Materiales pesados', 'Plomería'],
-  },
-  {
-    id: 'partner-constru-todo',
-    name: 'Constru-Todo',
-    email: 'ventas@constru-todo.com',
-    location: 'Zona Industrial Nº 5',
-    categoryIds: ['Construcción', 'Acabados', 'Electricidad'],
-  },
-  {
-    id: 'partner-pinturas-pro',
-    name: 'Pinturas Pro',
-    email: 'pedidos@pinturaspro.com',
-    location: 'Calle Comercio 88',
-    categoryIds: ['Pinturas', 'Acabados'],
-  },
-];
+export type { Partner };
 
 @Injectable({ providedIn: 'root' })
 export class PartnerService {
   private readonly http = inject(HttpClient);
   private readonly configService = inject(ConfigService);
+  private readonly authService = inject(AuthService);
 
-  private readonly API_URL = 'https://s6txacomrf.execute-api.us-east-1.amazonaws.com/dev/partners';
+  private readonly API_URL = `${environment.apiUrl}/partners`;
 
-  private _partners = signal<Partner[]>(MOCK_PARTNERS);
+  private _partners = signal<Partner[]>([]);
   readonly partners = this._partners.asReadonly();
 
-  constructor() {
-    this.loadPartners();
-  }
+  /** true mientras se carga la lista de partners (para Skeleton Loaders). */
+  private _isLoading = signal(false);
+  readonly isLoading = this._isLoading.asReadonly();
 
   /**
-   * Carga la lista de partners desde el backend.
-   * Si falla, se mantienen los mock partners.
+   * Carga la lista de partners desde GET ${apiUrl}/partners.
+   * Solo hace la petición si hay token (evita 401 al arrancar sin login).
+   * Llamar tras login o al cargar el layout con sesión restaurada.
    */
   loadPartners(): void {
-    this.http.get<Partner[]>(this.API_URL).pipe(
-      tap((list) => this._partners.set(list ?? [])),
-      catchError(() => of(MOCK_PARTNERS))
+    if (!this.authService.getToken()) {
+      return;
+    }
+    this._isLoading.set(true);
+    type ApiPartner = { id: string; name: string; email: string; location: string; category?: string; categoryIds?: string[] };
+    this.http.get<ApiPartner[]>(this.API_URL).pipe(
+      map((list) => (list ?? []).map((p) => ({
+        id: p.id,
+        name: p.name,
+        email: p.email,
+        location: p.location,
+        category: p.category ?? p.categoryIds?.[0] ?? '',
+      }))),
+      tap((list) => this._partners.set(list)),
+      finalize(() => this._isLoading.set(false)),
+      catchError((err) => {
+        console.error('Error al cargar partners:', err);
+        this._partners.set([]);
+        return of([]);
+      })
     ).subscribe();
   }
 
@@ -72,13 +62,15 @@ export class PartnerService {
   }
 
   /**
-   * Versión síncrona: partners cuya lista categoryIds incluye la categoría del material.
+   * Versión síncrona: partners cuya categoría coincide con la del material.
    */
   getPartnersByMaterialSync(materialId: string): Partner[] {
     const catalog = this.configService.catalog();
-    const material = catalog?.services?.find((s) => s.id === materialId);
+    const services = catalog?.services ?? [];
+    const material = services.find((s) => s.id === materialId);
     const materialCategory = material?.category ?? 'Construcción';
-    return this._partners().filter((p) => p.categoryIds.includes(materialCategory));
+    const list = this._partners() ?? [];
+    return list.filter((p) => p?.category === materialCategory);
   }
 
   /**

@@ -1,62 +1,107 @@
-<div class="max-w-lg mx-auto px-4 sm:px-6">
+<div class="max-w-lg mx-auto px-4 sm:px-6" style="background-color: #fff9f3; min-height: 100%;">
   <header class="pt-2 pb-4">
-      <h1 class="text-xl font-bold text-slate-900">Catálogo de Servicios</h1>
-      <p class="text-slate-500 text-sm mt-0.5">Consulta precios y luego solicita tu presupuesto</p>
-    </header>
+    <h1 class="text-xl font-bold text-slate-900">Servicios Recientes</h1>
+    <p class="text-slate-500 text-sm mt-0.5">Tus solicitudes y seguimiento</p>
+  </header>
 
-    <!-- CTA: va directo a la calculadora -->
-    <a
-      routerLink="/calculadora"
-      class="flex items-center justify-center gap-3 w-full py-4 px-6 bg-accent text-white font-bold rounded-3xl shadow-sm hover:bg-blue-700 transition-colors mb-6"
-    >
-      <span class="text-xl leading-none">+</span>
-      <span>Solicitar Servicio</span>
-    </a>
-
-    <!-- Buscador -->
-    <div class="relative mb-6">
-      <span class="absolute left-4 top-3.5 text-slate-400">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
-      </span>
-      <input
-        type="text"
-        [value]="searchTerm()"
-        (input)="searchTerm.set($any($event.target).value)"
-        placeholder="Buscar por nombre o categoría..."
-        class="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-2xl shadow-sm focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all text-sm"
-      />
-    </div>
-
-    <!-- Catálogo: grid de tarjetas (solo consulta, sin input de cantidad) -->
-    <section>
-      @if (filteredServices().length === 0) {
-        <div class="rounded-3xl bg-white border border-slate-200 shadow-sm p-8 text-center">
-          <p class="text-slate-500 text-sm">No hay servicios que coincidan con tu búsqueda.</p>
-          <button (click)="searchTerm.set('')" class="text-accent font-medium text-sm mt-2">Limpiar búsqueda</button>
-        </div>
-      } @else {
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          @for (s of filteredServices(); track s.id) {
-            <article class="rounded-3xl bg-white border border-slate-200 shadow-sm p-4">
-              <span class="text-[10px] font-bold text-accent uppercase tracking-widest">{{ s.category }}</span>
-              <h3 class="font-bold text-slate-800 mt-1">{{ s.name }}</h3>
-              <p class="text-slate-500 text-sm mt-1">{{ s.price.value | currency }} / {{ s.unit }}</p>
-            </article>
-          }
-        </div>
-      }
+  @if (recentWorks().length > 0) {
+    <section class="mb-6">
+      <div class="space-y-3">
+        @for (work of recentWorks(); track work.id) {
+          <button
+            type="button"
+            (click)="goToSeguimiento(work.id)"
+            class="w-full text-left bg-white p-4 rounded-2xl border border-orange-100/50 shadow-sm flex justify-between items-center hover:border-[#fa5404]/40 transition-colors"
+          >
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center text-lg shrink-0">
+                🏗️
+              </div>
+              <div class="min-w-0">
+                <p class="font-bold text-slate-800 text-sm truncate">{{ work.description || 'Solicitud de obra' }}</p>
+                <p class="text-[10px] text-slate-400 font-medium">{{ work?.createdAt | date:'dd MMM, yyyy' }}</p>
+              </div>
+            </div>
+            <span
+              [class]="getStatusClass(work.status)"
+              class="px-2.5 py-1 rounded-full text-[9px] font-bold uppercase shrink-0 ml-2"
+            >
+              {{ getStatusLabel(work.status) }}
+            </span>
+          </button>
+        }
+      </div>
     </section>
+  } @else {
+    <section class="mb-6 rounded-2xl bg-white/60 border-2 border-dashed border-orange-100 p-6 text-center">
+      <p class="text-slate-500 text-sm">Aún no tienes servicios recientes.</p>
+      <p class="text-[10px] text-slate-400 mt-1">Solicita un plan de financiamiento en Inicio y luego podrás solicitar servicios aquí.</p>
+    </section>
+  }
 
-    <!-- Refuerzo del CTA al final -->
-    <div class="mt-8">
+  <!-- Botón Solicitar Nuevo Servicio: deshabilitado si no hay plan aprobado -->
+  <section class="mb-6">
+    @if (hasApprovedPlan()) {
       <a
         routerLink="/calculadora"
-        class="flex items-center justify-center gap-2 w-full py-3 px-6 bg-white border-2 border-accent text-accent font-bold rounded-3xl shadow-sm hover:bg-accent hover:text-white transition-colors"
+        class="flex items-center justify-center gap-3 w-full py-4 px-6 bg-[#fa5404] text-white font-bold rounded-3xl shadow-sm hover:bg-[#e04a03] transition-colors"
       >
-        <span>+</span>
-        <span>Ir a la calculadora para solicitar</span>
+        <span class="text-xl leading-none">+</span>
+        <span>Solicitar Nuevo Servicio</span>
       </a>
+    } @else {
+      <div class="rounded-3xl bg-white border-2 border-slate-200 p-5 text-center">
+        <button
+          type="button"
+          disabled
+          class="w-full py-4 px-6 bg-slate-100 text-slate-400 font-bold rounded-3xl cursor-not-allowed"
+        >
+          + Solicitar Nuevo Servicio
+        </button>
+        <p class="text-slate-500 text-xs mt-3">
+          Necesitas un plan de financiamiento aprobado para solicitar un nuevo servicio. Solicita tu crédito en Inicio y espera la aprobación.
+        </p>
+      </div>
+    }
+  </section>
+
+  <!-- Sección Categorías -->
+  <section class="mb-8">
+    <h2 class="text-base font-bold text-slate-800 mb-3">Categorías</h2>
+    <div class="grid grid-cols-3 gap-3">
+      @for (c of categorias; track c.nombre) {
+        <div class="rounded-3xl p-4 bg-white border border-orange-100/50 shadow-sm flex flex-col items-center justify-center min-h-[100px]">
+          <span class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-[#fa5404]/10 text-2xl mb-2">{{ c.icono }}</span>
+          <span class="text-sm font-medium text-slate-700 text-center">{{ c.nombre }}</span>
+        </div>
+      }
     </div>
+  </section>
+
+  <!-- Sección Partners (ferreterías aliadas) -->
+  <section class="mb-8">
+    <h2 class="text-base font-bold text-slate-800 mb-3">Ferreterías aliadas</h2>
+    @if (partnerService.partners().length > 0) {
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        @for (partner of partnerService.partners(); track partner.id) {
+          <article class="rounded-3xl bg-white border border-slate-200 shadow-sm p-4 flex items-center gap-4">
+            <div class="w-12 h-12 rounded-2xl bg-[#fa5404]/10 flex items-center justify-center text-xl font-bold text-[#fa5404] shrink-0">
+              {{ (partner.name && partner.name.charAt(0)) || 'F' }}
+            </div>
+            <div class="min-w-0 flex-1">
+              <h3 class="font-bold text-slate-800 truncate">{{ partner.name }}</h3>
+              <p class="text-slate-500 text-sm truncate">{{ partner.category || 'Ferretería' }}</p>
+              @if (partner.location) {
+                <p class="text-slate-400 text-xs mt-0.5 truncate">{{ partner.location }}</p>
+              }
+            </div>
+          </article>
+        }
+      </div>
+    } @else {
+      <div class="rounded-3xl bg-white/60 border border-slate-200 p-6 text-center">
+        <p class="text-slate-500 text-sm">Cargando ferreterías aliadas…</p>
+      </div>
+    }
+  </section>
 </div>

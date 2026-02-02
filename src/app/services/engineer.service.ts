@@ -1,7 +1,11 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
+import { map, catchError, finalize } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
+import { AuthService } from './auth.service';
 
-/** Ingeniero disponible para asignar por el supervisor. */
+/** Ingeniero disponible para asignar por el supervisor (desde GET /engineers). */
 export interface Engineer {
   id: string;
   name: string;
@@ -9,21 +13,57 @@ export interface Engineer {
   zona: string;
 }
 
-/** Lista mock de ingenieros (rol ENGINEER). Sustituir por GET /users?role=ENGINEER cuando exista. */
-const MOCK_ENGINEERS: Engineer[] = [
-  { id: 'eng-1', name: 'Carlos Méndez', especialidad: 'Electricidad y A/C', zona: 'Centro / Norte' },
-  { id: 'eng-2', name: 'María López', especialidad: 'Plomería y Gas', zona: 'Sur / Este' },
-  { id: 'eng-3', name: 'Roberto Sánchez', especialidad: 'Construcción y Acabados', zona: 'Metropolitana' },
-  { id: 'eng-4', name: 'Ana Torres', especialidad: 'Pintura y Restauración', zona: 'Centro / Oeste' },
-];
+/** Respuesta de GET /engineers (usuarios con role ENGINEER). */
+interface EngineerApiResponse {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  especialidad?: string;
+  zona?: string;
+}
 
 @Injectable({ providedIn: 'root' })
 export class EngineerService {
+  private readonly http = inject(HttpClient);
+  private readonly authService = inject(AuthService);
+
+  private readonly API_URL = `${environment.apiUrl}/engineers`;
+
+  private _engineers = signal<Engineer[]>([]);
+  readonly engineers = this._engineers.asReadonly();
+
+  private _isLoading = signal(false);
+  readonly isLoading = this._isLoading.asReadonly();
+
   /**
-   * Obtiene todos los ingenieros disponibles (rol ENGINEER).
-   * Por ahora devuelve una lista simulada; cuando el backend exponga GET /users?role=ENGINEER, se sustituye por HTTP.
+   * Carga la lista de ingenieros desde GET ${apiUrl}/engineers (usuarios con role ENGINEER).
+   * Solo hace la petición si hay token. Llamar desde el dashboard del supervisor.
    */
   getEngineers(): Observable<Engineer[]> {
-    return of([...MOCK_ENGINEERS]);
+    if (!this.authService.getToken()) {
+      return of([]);
+    }
+    this._isLoading.set(true);
+    return this.http.get<EngineerApiResponse[]>(this.API_URL).pipe(
+      map((list) =>
+        (list ?? []).map((u) => ({
+          id: u.id ?? u.email,
+          name: u.name ?? u.email ?? '—',
+          especialidad: u.especialidad ?? 'Por asignar',
+          zona: u.zona ?? 'Por asignar',
+        }))
+      ),
+      map((list) => {
+        this._engineers.set(list);
+        return list;
+      }),
+      finalize(() => this._isLoading.set(false)),
+      catchError((err) => {
+        console.error('Error al obtener ingenieros:', err);
+        this._engineers.set([]);
+        return of([]);
+      })
+    );
   }
 }

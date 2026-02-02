@@ -1,15 +1,16 @@
-import { Component, inject, computed, OnInit } from '@angular/core';
+import { Component, inject, computed, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
 import { WorkService } from '../../services/work.service';
+import { SkeletonCardComponent } from '../../shared/components/skeleton-card/skeleton-card.component';
 import type { CreditPlanId } from '../../services/work.service';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, SkeletonCardComponent],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.css',
 })
@@ -25,9 +26,14 @@ export class ProfileComponent implements OnInit {
     const user = this.auth.currentUser();
     const userId = user?.email ?? user?.id;
     if (userId) {
-      this.workService.getUserWorks(userId).subscribe();
+      this.workService.getUserWorks(userId).subscribe({ next: () => {}, error: () => {}, complete: () => this.isLoading.set(false) });
+    } else {
+      this.isLoading.set(false);
     }
   }
+
+  /** true mientras se cargan datos (obras / perfil). */
+  isLoading = signal(true);
 
   currentUser = this.auth.currentUser;
   userProfile = this.auth.userProfile;

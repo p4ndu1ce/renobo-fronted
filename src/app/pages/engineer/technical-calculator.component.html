@@ -1,4 +1,7 @@
 <div class="min-h-screen pb-40 bg-[#fff9f3]">
+  <!-- Sticky header: proyecto actual (ultra limpio para uso en obra / bajo el sol) -->
+  <app-work-context-summary [work]="currentWork()" />
+
   <!-- Checklist de disponibilidad (solo cuando la obra está WAITING_PARTNERS) -->
   @if (currentWork()?.status === 'WAITING_PARTNERS') {
     <section class="max-w-5xl mx-auto px-4 sm:px-6 pt-4 pb-6">

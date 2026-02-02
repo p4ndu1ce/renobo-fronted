@@ -1,5 +1,9 @@
 import { Injectable, signal, computed, effect, PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
+import { Observable, of } from 'rxjs';
+import { map, tap, catchError, finalize } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 
 export interface CurrentUser {
   id: string;
@@ -24,30 +28,49 @@ export interface UserProfile {
   isMoroso: boolean;
 }
 
+/** Respuesta esperada de GET /user/{id} (rol, credit score, historial financiero). */
+export interface UserProfileApiResponse {
+  role?: string;
+  creditScore?: number;
+  status?: string;
+  previousCredits?: number;
+  isMoroso?: boolean;
+  paymentStatus?: string;
+  creditsRequested?: number;
+}
+
+const DEFAULT_USER_PROFILE: UserProfile = {
+  status: 'AL DÍA',
+  score: 0,
+  previousCredits: 0,
+  isMoroso: false,
+};
+
+const DEFAULT_FINANCIAL_PROFILE: UserFinancialProfile = {
+  paymentStatus: 'sin_historial',
+  creditsRequested: 0,
+  isMoroso: false,
+  creditScore: null,
+};
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private platformId = inject(PLATFORM_ID);
+  private http = inject(HttpClient);
 
   public isLoggedIn = signal<boolean>(this.loadAuthState());
   public currentUser = signal<CurrentUser | null>(this.loadCurrentUser());
   private _token = signal<string | null>(this.loadToken());
   public userRole = signal<string | null>(this.loadUserRole());
 
-  /** Perfil financiero: historial de pagos, score, morosidad. Por defecto hasta que el backend lo provea. */
-  public userFinancialProfile = signal<UserFinancialProfile>({
-    paymentStatus: 'sin_historial',
-    creditsRequested: 0,
-    isMoroso: false,
-    creditScore: null,
-  });
+  /** true mientras se carga el perfil del usuario desde la API. */
+  public isLoading = signal(false);
 
-  /** Perfil de crédito simulado: se envía con la solicitud de plan para que el Supervisor decida. */
-  public userProfile = signal<UserProfile>({
-    status: 'AL DÍA',
-    score: 850,
-    previousCredits: 2,
-    isMoroso: false,
-  });
+  /** Perfil financiero: obtenido de GET /user/{id}. */
+  public userFinancialProfile = signal<UserFinancialProfile>({ ...DEFAULT_FINANCIAL_PROFILE });
+
+  /** Perfil de crédito: obtenido de GET /user/{id} (rol, score, historial). */
+  public userProfile = signal<UserProfile>({ ...DEFAULT_USER_PROFILE });
 
   public isSupervisor = computed(() => this.userRole() === 'SUPERVISOR');
   public isEngineer = computed(() => this.userRole() === 'ENGINEER');
@@ -207,7 +230,50 @@ export class AuthService {
     this.isLoggedIn.set(true);
     this.userRole.set(built.role ?? this.decodeTokenRole(token));
   }
-  
+
+  /**
+   * Obtiene rol, credit score e historial financiero real desde GET ${apiUrl}/user/{id}.
+   * Llamar tras el login para reemplazar datos por defecto.
+   */
+  loadUserProfile(userId: string): Observable<UserProfile> {
+    const id = userId.startsWith('user-') ? userId : userId;
+    this.isLoading.set(true);
+    const url = `${environment.apiUrl}/user/${encodeURIComponent(id)}`;
+    return this.http.get<UserProfileApiResponse>(url).pipe(
+      tap((res) => {
+        const status = (res.status ?? 'AL DÍA').toUpperCase().replace(/\s/g, ' ') as UserProfile['status'];
+        this.userProfile.set({
+          status: status === 'AL DÍA' || status === 'ATRASADO' || status === 'SIN HISTORIAL' ? status : 'AL DÍA',
+          score: res.creditScore ?? 0,
+          previousCredits: res.previousCredits ?? 0,
+          isMoroso: res.isMoroso ?? false,
+        });
+        this.userFinancialProfile.set({
+          paymentStatus: (res.paymentStatus as UserFinancialProfile['paymentStatus']) ?? 'sin_historial',
+          creditsRequested: res.creditsRequested ?? 0,
+          isMoroso: res.isMoroso ?? false,
+          creditScore: res.creditScore ?? null,
+        });
+        if (res.role) {
+          this.userRole.set(res.role);
+          const u = this.currentUser();
+          if (u) this.currentUser.set({ ...u, role: res.role });
+        }
+      }),
+      map((res): UserProfile => ({
+        status: (res.status === 'ATRASADO' ? 'ATRASADO' : res.status === 'SIN HISTORIAL' ? 'SIN HISTORIAL' : 'AL DÍA') as UserProfile['status'],
+        score: res.creditScore ?? 0,
+        previousCredits: res.previousCredits ?? 0,
+        isMoroso: res.isMoroso ?? false,
+      })),
+      finalize(() => this.isLoading.set(false)),
+      catchError((err) => {
+        console.error('Error al cargar perfil de usuario:', err);
+        return of(DEFAULT_USER_PROFILE);
+      })
+    );
+  }
+
   login(email?: string) { 
     // Método legacy para compatibilidad - ahora se usa setAuth después de llamar al backend
     this.isLoggedIn.set(true);
@@ -222,17 +288,7 @@ export class AuthService {
     this.currentUser.set(null);
     this._token.set(null);
     this.userRole.set(null);
-    this.userFinancialProfile.set({
-      paymentStatus: 'sin_historial',
-      creditsRequested: 0,
-      isMoroso: false,
-      creditScore: null,
-    });
-    this.userProfile.set({
-      status: 'AL DÍA',
-      score: 850,
-      previousCredits: 2,
-      isMoroso: false,
-    });
+    this.userFinancialProfile.set({ ...DEFAULT_FINANCIAL_PROFILE });
+    this.userProfile.set({ ...DEFAULT_USER_PROFILE });
   }
 }

@@ -1,0 +1,91 @@
+<div class="max-w-lg mx-auto px-4 sm:px-6" style="background-color: #fff9f3; min-height: 100%;">
+  @if (loading()) {
+    <div class="py-12 text-center text-slate-500 text-sm">Cargando seguimiento…</div>
+  } @else if (!workId() || !work()) {
+    <header class="pt-6 pb-4">
+      <h1 class="text-xl font-bold text-slate-900">Seguimiento de Servicios</h1>
+      <p class="text-slate-500 text-sm mt-0.5">Selecciona un servicio desde la página Servicios para ver su estado.</p>
+    </header>
+    <a routerLink="/servicios" class="inline-flex items-center gap-2 text-[#fa5404] font-bold text-sm mt-4">
+      ← Volver a Servicios
+    </a>
+  } @else {
+    <header class="pt-4 pb-6">
+      <a (click)="goBack()" class="inline-flex items-center gap-2 text-slate-500 hover:text-slate-700 text-sm font-medium mb-4 cursor-pointer">
+        ← Volver a Servicios
+      </a>
+      <h1 class="text-xl font-bold text-slate-900">Seguimiento de tu obra</h1>
+      <p class="text-slate-600 text-sm mt-1 line-clamp-2">{{ work()?.description || 'Solicitud de crédito' }}</p>
+      <p class="text-[10px] text-slate-400 font-medium mt-1">#{{ work()?.id?.slice(0, 8) }} · Plan {{ work()?.planId }}</p>
+    </header>
+
+    <!-- Ingeniero y fecha estimada -->
+    <section class="rounded-2xl bg-white border border-orange-100/50 shadow-sm p-5 mb-6">
+      <h2 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Responsable y plazos</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Ingeniero asignado</p>
+          <p class="font-bold text-slate-800 mt-0.5">{{ engineerName() || 'Pendiente de asignar' }}</p>
+        </div>
+        <div>
+          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Fecha estimada / plazo</p>
+          <p class="font-bold text-slate-800 mt-0.5">
+            @if (estimatedDate()) {
+              {{ estimatedDate() | date:'dd MMM yyyy, HH:mm' }}
+            } @else {
+              Por definir
+            }
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stepper vertical -->
+    <section class="rounded-2xl bg-white border border-orange-100/50 shadow-sm p-6 mb-6">
+      <h2 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-5">Progreso de la obra</h2>
+      <div class="flex flex-col">
+        @for (step of steps(); track step.label; let i = $index) {
+          <div class="flex gap-4 items-start">
+            <div class="flex flex-col items-center shrink-0">
+              <div
+                class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors"
+                [class.bg-[#fa5404]]="step.completed || step.current"
+                [class.text-white]="step.completed || step.current"
+                [class.bg-slate-200]="!step.completed && !step.current"
+                [class.text-slate-500]="!step.completed && !step.current"
+              >
+                @if (step.completed) {
+                  <span aria-hidden="true">✓</span>
+                } @else {
+                  <span>{{ i + 1 }}</span>
+                }
+              </div>
+              @if (i < steps().length - 1) {
+                <div
+                  class="w-0.5 flex-1 min-h-[28px] my-0.5 transition-colors"
+                  [class.bg-[#fa5404]]="step.completed"
+                  [class.bg-slate-200]="!step.completed"
+                ></div>
+              }
+            </div>
+            <div class="pb-6 pt-0.5">
+              <p
+                class="font-medium text-sm"
+                [class.text-slate-800]="step.current || step.completed"
+                [class.text-slate-500]="!step.current && !step.completed"
+              >
+                {{ step.label }}
+              </p>
+              @if (step.current) {
+                <p class="text-[10px] text-[#fa5404] font-bold uppercase tracking-wider mt-0.5">Estado actual</p>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- Resumen de materiales para el cliente -->
+    <app-client-material-summary [work]="work()" [engineerName]="engineerName()" />
+  }
+</div>
