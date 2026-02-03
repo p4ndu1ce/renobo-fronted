@@ -59,6 +59,14 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+            },
+            "development-client": {
+              "server": false,
+              "ssr": false,
+              "outputMode": "static",
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true
             }
           },
           "defaultConfiguration": "development"
@@ -71,9 +79,12 @@
             },
             "development": {
               "buildTarget": "renobo-frontend:build:development"
+            },
+            "development-client": {
+              "buildTarget": "renobo-frontend:build:development-client"
             }
           },
-          "defaultConfiguration": "development"
+          "defaultConfiguration": "development-client"
         },
         "test": {
           "builder": "@angular/build:unit-test"

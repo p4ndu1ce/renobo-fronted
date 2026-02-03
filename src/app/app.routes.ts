@@ -24,9 +24,8 @@ export const routes: Routes = [
     path: '',
     component: MainLayoutComponent,
     children: [
-      // Ruta por defecto: redirigir a home
-      { path: '', redirectTo: 'home', pathMatch: 'full' },
-      // Home explícito (sin guard para que cargue siempre)
+      // Ruta por defecto: mismo componente que 'home' (evita redirect HTTP con SSR + HashLocation → ERR_TOO_MANY_REDIRECTS)
+      { path: '', component: HomeComponent, pathMatch: 'full' },
       { path: 'home', component: HomeComponent },
       { path: 'plan-selection', component: PlanSelectionComponent, canActivate: [authGuard] },
       { path: 'servicios', component: ServiciosComponent },
@@ -44,6 +43,6 @@ export const routes: Routes = [
   },
   { path: 'login', component: LoginComponent, canActivate: [guestGuard] },
   { path: 'register', component: RegisterComponent, canActivate: [guestGuard] },
-  // Cualquier ruta no definida → home (evita pantalla en blanco en APK)
-  { path: '**', redirectTo: '/home' },
+  // Cualquier ruta no definida → home (evita pantalla en blanco en APK). Relativo para evitar bucles con SSR + hash.
+  { path: '**', redirectTo: 'home' },
 ];
