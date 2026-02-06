@@ -1,0 +1,209 @@
+<div class="min-h-screen bg-background pb-20 font-outfit">
+
+  @if (!submitted()) {
+  <div class="bg-primary text-primary-foreground p-5 sticky top-0 z-50 rounded-b-3xl shadow-xl">
+    <div class="flex items-center gap-4">
+      <button type="button" (click)="goBack()" class="p-2 hover:bg-white/10 rounded-xl transition-colors"
+        aria-label="Volver">
+        <lucide-icon [name]="icons.ArrowLeft" class="w-6 h-6"></lucide-icon>
+      </button>
+      <div>
+        <h1 class="text-lg font-poppins font-bold">Solicitud de Crédito</h1>
+        <p class="text-[10px] uppercase font-black tracking-widest text-[#FF5500]">Paso Final</p>
+      </div>
+    </div>
+  </div>
+
+  <form (ngSubmit)="onSubmit()" class="p-5 space-y-6">
+    <section class="bg-card border border-border/40 rounded-[2.5rem] p-6 shadow-sm">
+      <div class="p-6 flex flex-col space-y-1.5">
+        <div class="flex items-center gap-2">
+          <lucide-icon [name]="icons.User" class="w-5 h-5 text-foreground"></lucide-icon>
+          <h3 class="text-lg font-poppins font-bold text-foreground leading-none tracking-tight">
+            Datos Personales
+          </h3>
+        </div>
+      </div>
+
+      <div class="p-6 pt-0 space-y-4 font-outfit">
+
+        <div class="space-y-2">
+          <label htmlFor="fullName" class="text-sm font-medium leading-none text-foreground">
+            Nombre Completo *
+          </label>
+          <input id="fullName" type="text" placeholder="Juan Pérez" [ngModel]="form().fullName"
+            (ngModelChange)="updateFormField('fullName', $event)" name="fullName" required
+            class="flex h-10 w-full rounded-md border border-border bg-input-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5500] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all" />
+        </div>
+
+        <div class="space-y-2">
+          <label htmlFor="email" class="text-sm font-medium leading-none text-foreground">
+            Correo Electrónico *
+          </label>
+          <div class="relative">
+            <span
+              class="absolute left-3 right-auto top-1/2 -translate-y-1/2 flex items-center justify-center w-4 h-4 text-gray-400 pointer-events-none">
+              <lucide-icon [name]="icons.Mail" class="w-4 h-4 block shrink-0"></lucide-icon>
+            </span>
+            <input id="email" type="email" placeholder="correo@ejemplo.com" [ngModel]="form().email"
+              (ngModelChange)="updateFormField('email', $event)" name="email" required
+              class="flex h-10 w-full rounded-md border border-border bg-input-background pl-10 pr-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5500] transition-all" />
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <label htmlFor="phone" class="text-sm font-medium leading-none text-foreground">
+            Teléfono *
+          </label>
+          <div class="relative">
+            <span
+              class="absolute left-3 right-auto top-1/2 -translate-y-1/2 flex items-center justify-center w-4 h-4 text-gray-400 pointer-events-none">
+              <lucide-icon [name]="icons.Phone" class="w-4 h-4 block shrink-0"></lucide-icon>
+            </span>
+            <input id="phone" type="tel" placeholder="+58 412 1234567" [ngModel]="form().phone"
+              (ngModelChange)="updateFormField('phone', $event)" name="phone" required
+              class="flex h-10 w-full rounded-md border border-border bg-input-background pl-10 pr-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5500] transition-all" />
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="bg-card border border-border/40 rounded-[2.5rem] p-6 shadow-sm">
+      <div class="p-6 flex flex-col space-y-1.5">
+        <div class="flex items-center gap-2">
+          <lucide-icon [name]="icons.FileText" class="w-5 h-5 text-foreground"></lucide-icon>
+          <h3 class="text-lg font-poppins font-bold text-foreground leading-none tracking-tight">
+            Detalles del Servicio
+          </h3>
+        </div>
+      </div>
+
+      <div class="p-6 pt-0 space-y-4 font-outfit">
+
+        <div class="space-y-2">
+          <label class="text-sm font-medium leading-none text-foreground">
+            Categoría de Servicio *
+          </label>
+          <div class="relative">
+            <select [ngModel]="form().category" (ngModelChange)="updateFormField('category', $event)" name="category"
+              required
+              class="flex h-10 w-full items-center justify-between rounded-md border border-border bg-input-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#FF5500] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none transition-all">
+              <option value="" disabled selected>Selecciona una categoría</option>
+              @for (cat of categories; track cat) {
+              <option [value]="cat">{{ cat }}</option>
+              }
+            </select>
+            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground">
+              <svg class="h-4 w-4 fill-current" viewBox="0 0 20 20">
+                <path
+                  d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <label htmlFor="description" class="text-sm font-medium leading-none text-foreground">
+            Descripción del Trabajo *
+          </label>
+          <textarea id="description" placeholder="Describe el trabajo que necesitas realizar..."
+            [ngModel]="form().description" (ngModelChange)="updateFormField('description', $event)" name="description"
+            rows="5" required
+            class="flex min-h-[120px] w-full rounded-md border border-border bg-input-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5500] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all resize-none"></textarea>
+        </div>
+
+        <div class="space-y-2">
+          <label htmlFor="budget" class="text-sm font-medium leading-none text-foreground">
+            Presupuesto Estimado *
+          </label>
+          <div class="relative">
+            <span class="absolute left-3 top-2.5 text-gray-400 text-sm">$</span>
+            <input id="budget" type="number" placeholder="800" [ngModel]="form().budget"
+              (ngModelChange)="updateFormField('budget', $event)" name="budget" required
+              class="flex h-10 w-full rounded-md border border-border bg-input-background pl-8 pr-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5500] transition-all" />
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <label class="text-sm font-medium leading-none text-foreground">
+            Adjuntar Fotos/Videos (opcional)
+          </label>
+          <input #fileInput type="file" multiple accept="image/*,video/*" class="hidden"
+            (change)="onFilesSelected($event)" />
+          <button type="button" (click)="fileInput.click()"
+            class="w-full h-20 flex flex-col items-center justify-center gap-2 rounded-md border border-dashed border-border bg-transparent text-sm font-medium ring-offset-background transition-colors hover:bg-orange-50 hover:border-orange-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5500] focus-visible:ring-offset-2">
+            <lucide-icon [name]="icons.Upload" class="w-6 h-6 text-orange-600"></lucide-icon>
+            <span class="text-muted-foreground">Cargar Archivos</span>
+          </button>
+
+          @if (files().length > 0) {
+          <div
+            class="flex items-center gap-2 mt-2 p-2 bg-orange-50 rounded-md border border-orange-100 animate-in fade-in slide-in-from-top-1">
+            <lucide-icon [name]="icons.FileText" class="w-4 h-4 text-orange-600"></lucide-icon>
+            <p class="text-xs text-orange-800 font-medium">
+              {{ files().length }} archivo(s) adjunto(s)
+            </p>
+          </div>
+          }
+        </div>
+
+      </div>
+    </section>
+
+    <div class="bg-orange-50 border border-orange-200 rounded-[var(--radius)] overflow-hidden">
+      <div class="p-5 space-y-3 font-outfit">
+
+        <h3 class="font-poppins font-bold text-orange-900 mb-3 tracking-tight">
+          Resumen de Financiamiento
+        </h3>
+
+        <div class="flex justify-between items-center text-sm">
+          <span class="text-orange-800/70 font-medium">Plan seleccionado:</span>
+          <span class="font-bold text-orange-900">{{ planName() }}</span>
+        </div>
+
+        <div class="flex justify-between items-center text-sm">
+          <span class="text-orange-800/70 font-medium">Monto solicitado:</span>
+          <span class="font-bold text-orange-900">${{ form().budget | number:'1.2-2' }}</span>
+        </div>
+
+        <div class="flex justify-between items-center text-sm">
+          <span class="text-orange-800/70 font-medium">Plazo estimado:</span>
+          <span class="font-bold text-orange-900">{{ data()?.installments }} meses</span>
+        </div>
+
+        <div class="pt-3 mt-1 border-t border-orange-200/60">
+          <p class="text-[10px] text-orange-700/80 leading-relaxed italic">
+            * Los pagos en moneda nacional están sujetos a cambios según la tasa oficial del **Banco Central de
+            Venezuela (BCV)** vigente al día del pago.
+          </p>
+        </div>
+      </div>
+    </div>
+  </form>
+  } @else {
+  <div class="min-h-screen bg-primary flex items-center justify-center p-6">
+    <div class="text-center space-y-8 max-w-sm">
+      <div class="w-32 h-32 bg-[#FF5500] rounded-[3rem] flex items-center justify-center mx-auto shadow-2xl">
+        <lucide-icon [name]="icons.CircleCheck" class="w-16 h-16 text-white"></lucide-icon>
+      </div>
+
+      <div class="space-y-2">
+        <h2 class="text-3xl font-poppins font-black text-white">¡Recibido!</h2>
+        <p class="text-white/60 text-sm">Tu solicitud está siendo procesada por nuestro equipo técnico.</p>
+      </div>
+
+      <div class="bg-white/10 p-6 rounded-[2.5rem] border border-white/10">
+        <p class="text-[10px] font-bold text-[#FF5500] uppercase tracking-[0.3em] mb-2">Número de Ticket</p>
+        <p class="text-4xl font-black text-white tracking-tighter">#{{ requestId() }}</p>
+      </div>
+
+      <button type="button" (click)="goHome()"
+        class="w-full py-4 bg-white text-primary rounded-2xl font-black shadow-lg hover:scale-105 transition-transform">
+        VOLVER AL DASHBOARD
+      </button>
+    </div>
+  </div>
+  }
+</div>

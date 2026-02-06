@@ -1,9 +1,11 @@
-/* Reservar espacio en dispositivos con notches (safe area) */
 .safe-area-pb {
-  padding-bottom: env(safe-area-inset-bottom, 0);
+  padding-bottom: max(env(safe-area-inset-bottom, 0), 6px);
 }
 
-/* Ícono activo: naranja de la marca (#fa5404) */
+.nav-height {
+  height: 4.5rem;
+}
+
 .nav-item-active {
-  color: #fa5404 !important;
+  color: #ff5500 !important;
 }

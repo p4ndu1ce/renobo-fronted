@@ -1,263 +1,191 @@
-<div class="home-by-role max-w-lg mx-auto px-4 sm:px-6" style="background-color: #fff9f3; min-height: 100%;">
+<div class="home-by-role min-h-screen bg-background pb-24 font-outfit">
   @if (isLoading()) {
-    <div class="space-y-3 pt-2">
+    <div class="p-5 space-y-3">
       <app-skeleton-card [count]="3"></app-skeleton-card>
     </div>
   } @else {
-  <!-- CLIENT: obra en curso o planes -->
-  @if (userRole() !== 'ENGINEER' && userRole() !== 'SUPERVISOR') {
-    @if (currentWork(); as work) {
-      <section class="mb-4">
-        <h1 class="text-xl font-black text-slate-900 tracking-tight mb-0.5">Inicio</h1>
-        <p class="text-slate-500 text-sm">Tu solicitud en curso aparece abajo. Toca la tarjeta para ver el seguimiento completo.</p>
-      </section>
-      <a
-        [routerLink]="['/seguimiento']"
-        [queryParams]="{ workId: work.id }"
-        class="active-card block rounded-[2.5rem] border-2 border-orange-200 bg-white shadow-md overflow-hidden mb-6 no-underline text-inherit hover:shadow-lg hover:border-[#fa5404]/50 transition-all"
-      >
-        <div class="p-5">
-          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Servicio en curso</p>
-          <h2 class="text-lg font-bold text-slate-900 mb-1">{{ work.title || 'Sin título' }}</h2>
-          <p class="text-sm text-slate-500 mb-4">Plan {{ getPlanLabel(work.planId) }}</p>
-          <!-- Stepper horizontal: Crédito → Visita Técnica → Obra -->
-          <div class="flex items-center gap-1">
-            @for (step of currentWorkSteps(); track step.label; let i = $index) {
-              <div class="flex items-center min-w-0 flex-1">
-                <div
-                  class="shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors"
-                  [class.bg-[#fa5404]]="step.completed || step.current"
-                  [class.text-white]="step.completed || step.current"
-                  [class.bg-slate-200]="!step.completed && !step.current"
-                  [class.text-slate-500]="!step.completed && !step.current"
-                >
-                  @if (step.completed) {
-                    <span aria-hidden="true">✓</span>
-                  } @else {
-                    <span>{{ i + 1 }}</span>
-                  }
-                </div>
-                <span
-                  class="ml-1.5 text-xs font-medium truncate"
-                  [class.text-slate-800]="step.current || step.completed"
-                  [class.text-slate-400]="!step.current && !step.completed"
-                >
-                  {{ step.label }}
-                </span>
+    <!-- CLIENT: Dashboard (referencia) + obra en curso si existe -->
+    @if (userRole() !== 'ENGINEER' && userRole() !== 'SUPERVISOR') {
+      <main class="p-5 space-y-8">
+        <!-- Financing CTA (primera sección) -->
+        <section class="mb-4">
+          <div class="w-full">
+  
+            <div class="bg-gradient-to-r from-orange-100 to-orange-50 border border-orange-200 rounded-[var(--radius)] shadow-sm overflow-hidden">
+              
+              <div class="p-6 pb-3">
+                <h3 class="text-lg font-poppins font-bold text-orange-800 leading-none tracking-tight">
+                  Opciones de Financiamiento
+                </h3>
               </div>
-              @if (i < currentWorkSteps().length - 1) {
-                <div class="shrink-0 w-3 h-0.5 rounded-full bg-slate-200" [class.bg-[#fa5404]]="step.completed"></div>
-              }
-            }
+          
+              <div class="p-6 pt-0">
+                <p class="text-sm text-orange-900/80 mb-4 font-outfit">
+                  Financia tus proyectos desde $200 hasta $1,500
+                </p>
+          
+                <button
+                  (click)="navigateTo('/financing')"
+                  class="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-[#FF5500] text-[#FF5500] font-bold rounded-md bg-transparent hover:bg-orange-100/50 transition-all active:scale-[0.98]"
+                >
+                  <lucide-icon [name]="icons.CreditCard" class="w-[18px] h-[18px]"></lucide-icon>
+                  <span>Ver Planes</span>
+                </button>
+              </div>
+          
+            </div>
           </div>
-          <p class="mt-3 text-sm font-semibold text-[#fa5404]">Ver seguimiento completo →</p>
-        </div>
-      </a>
-    } @else {
-    <section class="mb-6">
-      <h1 class="text-xl font-black text-slate-900 tracking-tight mb-1">Planes de Financiamiento</h1>
-      <p class="text-slate-500 text-sm">Toca una tarjeta para ver condiciones y solicitar.</p>
-    </section>
+        </section>
 
-    <section class="flex flex-col gap-4 mb-6">
-      @for (plan of clientPlans(); track plan.id) {
-        <!-- Contenedor: SIEMPRE fondo blanco; borde naranja solo si está seleccionada -->
-        <div
-          class="plan-card rounded-[2.5rem] overflow-hidden flex flex-col transition-all duration-300 bg-white"
-          [class.border-2]="selectedPlan()?.id === plan.id"
-          [class.border-[#fa5404]]="selectedPlan()?.id === plan.id"
-          [class.border]="selectedPlan()?.id !== plan.id"
-          [class.border-slate-200]="selectedPlan()?.id !== plan.id"
-          [class.min-h-[100px]]="selectedPlan()?.id !== plan.id"
-        >
-          <!-- Cabecera (solo aquí el naranja cuando está seleccionada) -->
-          <button
-            type="button"
-            (click)="selectPlan(plan)"
-            class="w-full text-left p-5 flex items-start gap-4 transition-colors"
-            [class.bg-[#f2f0eb]]="selectedPlan()?.id !== plan.id"
-            [class.text-slate-800]="selectedPlan()?.id !== plan.id"
-            [class.bg-[#fa5404]]="selectedPlan()?.id === plan.id"
-            [class.text-white]="selectedPlan()?.id === plan.id"
-          >
-            <div class="flex-1 min-w-0">
-              <p class="font-bold text-lg">{{ plan.name }}</p>
-              <p class="text-sm mt-0.5 opacity-90">Presupuesto: {{ plan.minAmount | currency }} - {{ plan.maxAmount | currency }}</p>
-              @if (plan.description) {
-                <p class="text-sm mt-1 opacity-90 line-clamp-2">{{ plan.description }}</p>
-              }
-            </div>
-            <span class="shrink-0 text-sm font-bold opacity-90" aria-hidden="true">
-              {{ selectedPlan()?.id === plan.id ? '▲' : '▼' }}
-            </span>
-          </button>
-
-          <!-- Cuerpo del formulario: SIEMPRE fondo blanco; solo visible cuando está seleccionada -->
-          @if (selectedPlan()?.id === plan.id) {
-            <div class="px-5 pb-5 pt-0 transition-all duration-300 bg-white border-t border-slate-100">
-              <!-- Campos read-only: Nombre, Correo, Teléfono -->
-              <dl class="space-y-2 text-sm mb-5">
-                <div>
-                  <dt class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Nombre completo</dt>
-                  <dd class="rounded-lg px-3 py-2.5 bg-slate-50 border border-slate-200 text-slate-500 text-sm">{{ authService.currentUser()?.name ?? '—' }}</dd>
-                </div>
-                <div>
-                  <dt class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Correo</dt>
-                  <dd class="rounded-lg px-3 py-2.5 bg-slate-50 border border-slate-200 text-slate-500 text-sm">{{ authService.currentUser()?.email ?? '—' }}</dd>
-                </div>
-                <div>
-                  <dt class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Teléfono</dt>
-                  <dd class="rounded-lg px-3 py-2.5 bg-slate-50 border border-slate-200 text-slate-500 text-sm">{{ getCurrentUserPhone() }}</dd>
-                </div>
-              </dl>
-
-              <div class="space-y-4">
-                <div>
-                  <label for="category-{{ plan.id }}" class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1.5">Categoría de Servicio</label>
-                  <select
-                    id="category-{{ plan.id }}"
-                    [value]="serviceCategory()"
-                    (change)="serviceCategory.set($any($event.target).value)"
-                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-800 focus:ring-2 focus:ring-orange-500/20 focus:border-[#fa5404] outline-none transition-all"
-                  >
-                    @for (opt of SERVICE_CATEGORIES; track opt.value) {
-                      <option [value]="opt.value" class="text-slate-800">{{ opt.label }}</option>
-                    }
-                  </select>
-                </div>
-                <div>
-                  <label for="work-desc-{{ plan.id }}" class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1.5">Descripción del Trabajo</label>
-                  <textarea
-                    id="work-desc-{{ plan.id }}"
-                    [value]="workDescription()"
-                    (input)="workDescription.set($any($event.target).value)"
-                    placeholder="Cuéntanos qué quieres construir..."
-                    rows="3"
-                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-orange-500/20 focus:border-[#fa5404] outline-none transition-all resize-y min-h-[80px]"
-                  ></textarea>
-                </div>
-                <div>
-                  <div class="flex items-center gap-2 mb-1.5">
-                    <label for="budget-{{ plan.id }}" class="text-[10px] font-bold uppercase tracking-wider text-slate-600">Presupuesto Estimado</label>
-                    <span class="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-500" aria-hidden="true" title="Ayuda">?</span>
-                  </div>
-                  <input
-                    id="budget-{{ plan.id }}"
-                    type="number"
-                    [value]="estimatedBudget() ?? ''"
-                    (input)="estimatedBudget.set($any($event.target).value ? +$any($event.target).value : null)"
-                    min="0"
-                    step="1"
-                    placeholder="0"
-                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-orange-500/20 focus:border-[#fa5404] outline-none transition-all"
-                  />
-                  <p class="text-xs text-slate-500 mt-2">¿No estás seguro? Usa nuestra <a routerLink="/calculadora" class="underline font-bold text-[#fa5404] hover:opacity-80">Calculadora</a> para estimar tu presupuesto.</p>
-                </div>
-                <div>
-                  <button type="button" (click)="onAttachmentsClick()" class="flex items-center gap-2 px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors">
-                    <span aria-hidden="true">📎</span>
-                    <span>Adjuntos</span>
-                  </button>
-                </div>
-              </div>
-
-              <!-- Nota destacada -->
-              <div class="mt-5 p-4 rounded-xl border-2 border-[#fa5404]/40 bg-[#fa5404]/5 text-slate-700 text-sm">
-                Nota: Los pagos están sujetos a cambios según la tasa del Banco Central de Venezuela, según día de pago.
-              </div>
-
-              <app-loading-button
-                label="Solicitar este Plan"
-                [isLoading]="isSubmitting()"
-                [disabled]="!workDescription().trim()"
-                btnClass="mt-5 w-full py-4 px-6 bg-[#fa5404] text-white font-bold rounded-2xl shadow-lg hover:opacity-95 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-300"
-                (clicked)="requestPlan(plan)"
-              />
-            </div>
-          }
-        </div>
-      }
-    </section>
-    }
-
-    <!-- Servicios Recientes: últimos 3 servicios del cliente -->
-    <section class="mb-6">
-      <h2 class="text-base font-bold text-slate-800 mb-3">Servicios Recientes</h2>
-      @if (recentWorks().length > 0) {
-        <div class="space-y-3">
-          @for (work of recentWorks(); track work.id) {
+        <!-- Obra en curso (opcional) -->
+        @if (currentWork(); as work) {
+          <section class="mb-4">
+            <h2 class="text-lg font-poppins font-bold text-foreground mb-1">Tu solicitud en curso</h2>
+            <p class="text-slate-500 text-sm mb-3">Toca la tarjeta para ver el seguimiento completo.</p>
             <a
               [routerLink]="['/seguimiento']"
               [queryParams]="{ workId: work.id }"
-              class="w-full text-left bg-white p-4 rounded-2xl border border-orange-100/50 shadow-sm flex justify-between items-center hover:border-[#fa5404]/40 transition-colors no-underline text-inherit"
+              class="block rounded-[2.5rem] border-2 border-orange-200 bg-card shadow-md overflow-hidden no-underline text-inherit hover:shadow-lg hover:border-[#FF5500]/50 transition-all"
             >
-              <div class="flex items-center gap-3 min-w-0">
-                <div class="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center text-lg shrink-0">🏗️</div>
-                <div class="min-w-0">
-                  <p class="font-bold text-slate-800 text-sm truncate">{{ work.title || work.description || 'Solicitud de obra' }}</p>
-                  <p class="text-[10px] text-slate-400 font-medium">{{ work.createdAt | date:'dd MMM, yyyy' }}</p>
+              <div class="p-5">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Servicio en curso</p>
+                <h3 class="text-lg font-bold text-foreground mb-1">{{ work.title || 'Sin título' }}</h3>
+                <p class="text-sm text-muted-foreground mb-4">Plan {{ getPlanLabel(work.planId) }}</p>
+                <div class="flex items-center gap-1">
+                  @for (step of currentWorkSteps(); track step.label; let i = $index) {
+                    <div class="flex items-center min-w-0 flex-1">
+                      <div
+                        class="shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors"
+                        [class.bg-[#FF5500]]="step.completed || step.current"
+                        [class.text-white]="step.completed || step.current"
+                        [class.bg-slate-200]="!step.completed && !step.current"
+                        [class.text-slate-500]="!step.completed && !step.current"
+                      >
+                        @if (step.completed) {
+                          <span aria-hidden="true">✓</span>
+                        } @else {
+                          <span>{{ i + 1 }}</span>
+                        }
+                      </div>
+                      <span
+                        class="ml-1.5 text-xs font-medium truncate"
+                        [class.text-slate-800]="step.current || step.completed"
+                        [class.text-slate-400]="!step.current && !step.completed"
+                      >
+                        {{ step.label }}
+                      </span>
+                    </div>
+                    @if (i < currentWorkSteps().length - 1) {
+                      <div class="shrink-0 w-3 h-0.5 rounded-full bg-slate-200" [class.bg-[#FF5500]]="step.completed"></div>
+                    }
+                  }
                 </div>
+                <p class="mt-3 text-sm font-semibold text-[#FF5500]">Ver seguimiento completo →</p>
               </div>
-              <span
-                [class]="getStatusClass(work.status)"
-                class="px-2.5 py-1 rounded-full text-[9px] font-bold uppercase shrink-0 ml-2"
-              >
-                {{ getStatusLabel(work.status) }}
-              </span>
             </a>
+          </section>
+        }
+
+        <!-- Solicitar Servicio -->
+        <button
+          type="button"
+          (click)="navigateTo('/plan-selection')"
+          class="w-full h-20 bg-[#FF5500] text-white rounded-3xl shadow-xl shadow-orange-500/30 flex items-center justify-center gap-3 active:scale-[0.97] transition-all group"
+        >
+          <div class="p-3 bg-white/20 rounded-2xl group-hover:rotate-12 transition-transform text-white">
+            <lucide-icon name="Wrench" class="w-7 h-7 text-white"></lucide-icon>
+          </div>
+          <span class="text-lg font-bold font-poppins">Solicitar Servicio</span>
+        </button>
+
+        <!-- Actividad Reciente (referencia, datos reales) -->
+        <section>
+          <div class="flex items-center justify-between mb-4 px-1">
+            <h3 class="font-poppins font-bold text-lg text-foreground">Actividad Reciente</h3>
+            <a routerLink="/seguimiento" class="text-[#FF5500] text-xs font-bold">Ver todos</a>
+          </div>
+          @if (recentWorks().length > 0) {
+            <div class="space-y-4">
+              @for (work of recentWorks(); track work.id) {
+                <a
+                  [routerLink]="['/seguimiento']"
+                  [queryParams]="{ workId: work.id }"
+                  class="bg-card border border-border/40 p-4 rounded-3xl flex justify-between items-center active:scale-[0.98] transition-all no-underline text-inherit"
+                >
+                  <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-2xl bg-orange-50 flex items-center justify-center">
+                      <lucide-icon [name]="icons.ClipboardList" class="w-6 h-6 text-[#FF5500]"></lucide-icon>
+                    </div>
+                    <div>
+                      <h4 class="font-bold text-sm text-foreground">{{ work.title || work.description || 'Solicitud de obra' }}</h4>
+                      <p class="text-[10px] text-muted-foreground">{{ work.createdAt | date:'dd/MM/yyyy' }}</p>
+                    </div>
+                  </div>
+                  <span
+                    [class]="work.status === 'FINISHED' ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-[#FF5500]'"
+                    class="px-3 py-1 rounded-full text-[10px] font-black uppercase"
+                  >
+                    {{ getStatusLabel(work.status) }}
+                  </span>
+                </a>
+              }
+            </div>
+          } @else {
+            <div class="rounded-2xl bg-card/60 border-2 border-dashed border-border p-6 text-center">
+              <p class="text-muted-foreground text-sm">Aún no tienes servicios recientes.</p>
+              <p class="text-[10px] text-muted-foreground/80 mt-1">Solicita un servicio arriba y aparecerán aquí.</p>
+            </div>
           }
-        </div>
-      } @else {
-        <div class="rounded-2xl bg-white/60 border-2 border-dashed border-orange-100 p-6 text-center">
-          <p class="text-slate-500 text-sm">Aún no tienes servicios recientes.</p>
-          <p class="text-[10px] text-slate-400 mt-1">Solicita un plan arriba y tus solicitudes aparecerán aquí.</p>
-        </div>
-      }
-    </section>
-  }
+        </section>
+      </main>
+    }
 
-  <!-- ENGINEER: Visitas Técnicas de Hoy + botón Mis Asignaciones -->
-  @if (userRole() === 'ENGINEER') {
-    <header class="mb-6">
-      <h1 class="text-xl font-black text-slate-900 tracking-tight">Visitas Técnicas de Hoy</h1>
-      <p class="text-slate-500 text-sm mt-0.5">Resumen de tus asignaciones</p>
-    </header>
-    <div class="rounded-2xl bg-white border border-orange-100/50 shadow-sm p-6 mb-6">
-      <p class="text-4xl font-black text-[#fa5404] tabular-nums">{{ todayVisitsCount() }}</p>
-      <p class="text-sm font-medium text-slate-600 mt-1">visitas programadas</p>
-    </div>
-    <a
-      routerLink="/engineer"
-      class="flex items-center justify-center gap-3 w-full py-4 px-6 bg-[#fa5404] text-white font-bold rounded-[2.5rem] shadow-orange-200 hover:shadow-[0_6px_20px_0_rgba(250,84,4,0.3)] transition-shadow"
-    >
-      <span class="text-xl leading-none">📋</span>
-      <span>Mis Asignaciones</span>
-    </a>
-  }
+    <!-- ENGINEER: Visitas Técnicas de Hoy + Mis Asignaciones -->
+    @if (userRole() === 'ENGINEER') {
+      <div class="p-5 max-w-lg mx-auto">
+        <header class="mb-6">
+          <h1 class="text-xl font-black text-slate-900 tracking-tight">Visitas Técnicas de Hoy</h1>
+          <p class="text-slate-500 text-sm mt-0.5">Resumen de tus asignaciones</p>
+        </header>
+        <div class="rounded-2xl bg-card border border-border/50 shadow-sm p-6 mb-6">
+          <p class="text-4xl font-black text-[#FF5500] tabular-nums">{{ todayVisitsCount() }}</p>
+          <p class="text-sm font-medium text-muted-foreground mt-1">visitas programadas</p>
+        </div>
+        <a
+          routerLink="/engineer"
+          class="flex items-center justify-center gap-3 w-full py-4 px-6 bg-[#FF5500] text-white font-bold rounded-[2.5rem] shadow-orange-200 hover:shadow-[0_6px_20px_0_rgba(255,85,0,0.3)] transition-shadow no-underline"
+        >
+          <lucide-icon [name]="icons.ClipboardList" class="w-6 h-6"></lucide-icon>
+          <span>Mis Asignaciones</span>
+        </a>
+      </div>
+    }
 
-  <!-- SUPERVISOR: KPIs (Créditos por Aprobar, Obras sin Ingeniero) -->
-  @if (userRole() === 'SUPERVISOR') {
-    <header class="mb-6">
-      <h1 class="text-xl font-black text-slate-900 tracking-tight">Panel de Supervisión</h1>
-      <p class="text-slate-500 text-sm mt-0.5">Indicadores clave</p>
-    </header>
-    <div class="grid grid-cols-2 gap-4 mb-6">
-      <div class="rounded-2xl bg-white border border-orange-100/50 shadow-sm p-5">
-        <p class="text-3xl font-black text-slate-900 tabular-nums">{{ creditsPendingCount() }}</p>
-        <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mt-1">Créditos por Aprobar</p>
+    <!-- SUPERVISOR: KPIs + Gestión -->
+    @if (userRole() === 'SUPERVISOR') {
+      <div class="p-5 max-w-lg mx-auto">
+        <header class="mb-6">
+          <h1 class="text-xl font-black text-slate-900 tracking-tight">Panel de Supervisión</h1>
+          <p class="text-slate-500 text-sm mt-0.5">Indicadores clave</p>
+        </header>
+        <div class="grid grid-cols-2 gap-4 mb-6">
+          <div class="rounded-2xl bg-card border border-border/50 shadow-sm p-5">
+            <p class="text-3xl font-black text-foreground tabular-nums">{{ creditsPendingCount() }}</p>
+            <p class="text-xs font-bold text-muted-foreground uppercase tracking-wider mt-1">Créditos por Aprobar</p>
+          </div>
+          <div class="rounded-2xl bg-card border border-rose-100/50 shadow-sm p-5">
+            <p class="text-3xl font-black text-rose-600 tabular-nums">{{ worksUnassignedCount() }}</p>
+            <p class="text-xs font-bold text-muted-foreground uppercase tracking-wider mt-1">Obras sin Ingeniero</p>
+          </div>
+        </div>
+        <a
+          routerLink="/admin"
+          class="flex items-center justify-center gap-3 w-full py-4 px-6 bg-[#FF5500] text-white font-bold rounded-[2.5rem] shadow-orange-200 hover:shadow-[0_6px_20px_0_rgba(255,85,0,0.3)] transition-shadow no-underline"
+        >
+          <lucide-icon [name]="icons.Wrench" class="w-6 h-6"></lucide-icon>
+          <span>Gestión de Créditos y Asignación</span>
+        </a>
       </div>
-      <div class="rounded-2xl bg-white border border-rose-100/50 shadow-sm p-5">
-        <p class="text-3xl font-black text-rose-600 tabular-nums">{{ worksUnassignedCount() }}</p>
-        <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mt-1">Obras sin Ingeniero</p>
-      </div>
-    </div>
-    <a
-      routerLink="/admin"
-      class="flex items-center justify-center gap-3 w-full py-4 px-6 bg-[#fa5404] text-white font-bold rounded-[2.5rem] shadow-orange-200 hover:shadow-[0_6px_20px_0_rgba(250,84,4,0.3)] transition-shadow"
-    >
-      <span class="text-xl leading-none">⚙️</span>
-      <span>Gestión de Créditos y Asignación</span>
-    </a>
-  }
+    }
   }
 </div>

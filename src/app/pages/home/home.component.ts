@@ -2,13 +2,13 @@ import { Component, inject, computed, OnInit, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { LucideAngularModule, Wrench, ClipboardList, CreditCard } from 'lucide-angular';
 import { ConfigService } from '../../services/config.service';
 import type { CreditPlan } from '../../services/config.service';
 import { WorkService } from '../../services/work.service';
 import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
 import { SkeletonCardComponent } from '../../shared/components/skeleton-card/skeleton-card.component';
-import { LoadingButtonComponent } from '../../shared/components/loading-button/loading-button.component';
 import type { WorkStatus, CreditPlanId } from '../../services/work.service';
 
 export interface Categoria {
@@ -30,7 +30,7 @@ export const SERVICE_CATEGORIES = [
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterLink, SkeletonCardComponent, LoadingButtonComponent],
+  imports: [CommonModule, RouterLink, LucideAngularModule, SkeletonCardComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css',
 })
@@ -135,6 +135,19 @@ export class HomeComponent implements OnInit {
     ).length;
   });
 
+  /** Iconos Lucide para el dashboard (Solicitar Servicio, Categorías, etc.). */
+  readonly icons = { Wrench, ClipboardList, CreditCard };
+
+  /** Categorías para la rejilla del dashboard (nombre de icono Lucide). */
+  categories = signal([
+    { id: 'electricidad', name: 'Electricidad', icon: 'Zap', color: 'text-yellow-500' },
+    { id: 'plomeria', name: 'Plomería', icon: 'Droplet', color: 'text-blue-500' },
+    { id: 'carpinteria', name: 'Carpintería', icon: 'Hammer', color: 'text-amber-700' },
+    { id: 'pintura', name: 'Pintura', icon: 'PaintBucket', color: 'text-purple-500' },
+    { id: 'aire', name: 'A/C', icon: 'Wind', color: 'text-cyan-500' },
+    { id: 'general', name: 'General', icon: 'Settings', color: 'text-muted-foreground' },
+  ]);
+
   categorias: Categoria[] = [
     { nombre: 'Electricidad', icono: '💡', bg: 'bg-amber-50' },
     { nombre: 'Plomería', icono: '🔧', bg: 'bg-sky-50' },
@@ -143,6 +156,12 @@ export class HomeComponent implements OnInit {
     { nombre: 'A/C', icono: '❄️', bg: 'bg-cyan-50' },
     { nombre: 'General', icono: '📦', bg: 'bg-slate-50' },
   ];
+
+  /** Navegación con datos opcionales (ej. desde Actividad Reciente). */
+  navigateTo(path: string, data?: unknown) {
+    if (data != null) this.authService.navigationData.set(data);
+    this.router.navigate([path]);
+  }
 
   /** Selecciona un plan (objeto completo) para expandir la card. Toggle si ya está seleccionado. Al expandir, limpia el formulario. */
   selectPlan(plan: CreditPlan): void {

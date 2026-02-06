@@ -6,7 +6,7 @@ import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../services/auth.service';
 import { PartnerService } from '../services/partner.service';
 import { LoadingButtonComponent } from '../shared/components/loading-button/loading-button.component';
-import { LucideAngularModule, Mail, Lock, Fingerprint, Facebook } from 'lucide-angular';
+import { LucideAngularModule, Mail, Lock, FingerprintPattern } from 'lucide-angular';
 
 @Component({
   selector: 'app-login',
@@ -38,8 +38,7 @@ export class LoginComponent {
 
   readonly MailIcon = Mail;
   readonly LockIcon = Lock;
-  readonly FingerprintIcon = Fingerprint;
-  readonly FacebookIcon = Facebook;
+  readonly FingerprintIcon = FingerprintPattern;
 
   onLogin() {
     const e = this.email().trim();

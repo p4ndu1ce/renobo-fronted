@@ -99,6 +99,12 @@ export class AuthService {
     return first || 'Invitado';
   });
 
+  /** Alias de currentUser para uso en templates (ej. user()?.name). */
+  public user = this.currentUser;
+
+  /** Datos opcionales al navegar (ej. desde Actividad Reciente a detalle). */
+  public navigationData = signal<unknown>(null);
+
   constructor() {
     console.log('🔧 AuthService constructor - Estado inicial:', {
       isLoggedIn: this.isLoggedIn(),

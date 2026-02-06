@@ -1,0 +1,5 @@
+.financing-form input:focus,
+.financing-form select:focus,
+.financing-form textarea:focus {
+  --tw-ring-color: rgba(255, 85, 0, 0.2);
+}

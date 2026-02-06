@@ -1,0 +1,5 @@
+/* Usar variables de theme para consistencia */
+.financing-screen input:focus,
+.financing-screen select:focus {
+  --tw-ring-color: rgba(255, 85, 0, 0.2);
+}
