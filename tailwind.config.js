@@ -1,11 +1,17 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: 'class',
   content: [
     "./src/**/*.{html,ts}",
   ],
   theme: {
     extend: {
       colors: {
+        /* Para que @apply en theme.css funcione con Tailwind v3 (variables de theme.css) */
+        background: 'var(--background)',
+        foreground: 'var(--foreground)',
+        border: 'var(--border)',
+        ring: 'var(--ring)',
         primary: '#fa5404',
         'brand-light': '#fff9f3',
         secondary: '#334155',
@@ -21,6 +27,8 @@ module.exports = {
       },
       fontFamily: {
         sans: ['Inter', 'ui-sans-serif', 'system-ui'],
+        poppins: ['var(--font-poppins)', 'sans-serif'],
+        outfit: ['var(--font-outfit)', 'sans-serif'],
       },
       boxShadow: {
         'orange-200': '0 4px 14px 0 rgba(250, 84, 4, 0.25)',

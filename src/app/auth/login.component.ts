@@ -1,46 +1,72 @@
 import { Component, inject, signal } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../services/auth.service';
 import { PartnerService } from '../services/partner.service';
-import { CommonModule } from '@angular/common';
 import { LoadingButtonComponent } from '../shared/components/loading-button/loading-button.component';
+import { LucideAngularModule, Mail, Lock, Fingerprint, Facebook } from 'lucide-angular';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, CommonModule, RouterLink, LoadingButtonComponent],
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink,
+    LoadingButtonComponent,
+    LucideAngularModule,
+  ],
   templateUrl: './login.component.html',
-  styleUrl: './login.component.css'
+  styleUrl: './login.component.css',
 })
 export class LoginComponent {
-  private fb = inject(FormBuilder);
+  private http = inject(HttpClient);
   private authService = inject(AuthService);
   private partnerService = inject(PartnerService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
-  private http = inject(HttpClient);
 
-  private readonly AUTH_API_URL = 'https://m587zdkcje.execute-api.us-east-1.amazonaws.com/dev/auth/login';
+  private readonly AUTH_API_URL =
+    'https://m587zdkcje.execute-api.us-east-1.amazonaws.com/dev/auth/login';
 
-  errorMessage = '';
+  email = signal('');
+  password = signal('');
+  errorMessage = signal('');
   isSubmitting = signal(false);
 
-  loginForm: FormGroup = this.fb.group({
-    email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(6)]]
-  });
+  readonly MailIcon = Mail;
+  readonly LockIcon = Lock;
+  readonly FingerprintIcon = Fingerprint;
+  readonly FacebookIcon = Facebook;
 
-  onSubmit() {
-    if (this.loginForm.valid) {
-      this.errorMessage = '';
-      this.isSubmitting.set(true);
-      const { email, password } = this.loginForm.value;
+  onLogin() {
+    const e = this.email().trim();
+    const p = this.password();
+    if (!e || !p) {
+      this.errorMessage.set('Ingresa email y contraseña.');
+      return;
+    }
+    if (p.length < 6) {
+      this.errorMessage.set('La contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(e)) {
+      this.errorMessage.set('Email inválido.');
+      return;
+    }
 
-      this.http.post<{ token: string; user: { name: string; email: string; role: string } }>(
+    this.errorMessage.set('');
+    this.isSubmitting.set(true);
+
+    this.http
+      .post<{ token: string; user: { name: string; email: string; role: string } }>(
         this.AUTH_API_URL,
-        { email, password }
-      ).subscribe({
+        { email: e, password: p }
+      )
+      .subscribe({
         next: (response) => {
           this.isSubmitting.set(false);
           const user = {
@@ -71,10 +97,11 @@ export class LoginComponent {
         },
         error: (err) => {
           this.isSubmitting.set(false);
-          this.errorMessage = err.error?.error || 'Error al iniciar sesión. Verifica tus credenciales.';
+          this.errorMessage.set(
+            err.error?.error || 'Error al iniciar sesión. Verifica tus credenciales.'
+          );
           console.error('Error en login:', err);
-        }
+        },
       });
-    }
   }
 }

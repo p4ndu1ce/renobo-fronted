@@ -1,12 +1,71 @@
+@import "./fonts.css";
+@import "./theme.css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* Base layer: tipografía y estilos que las utilidades Tailwind pueden sobrescribir. */
+@layer base {
+  * {
+    @apply border-border;
+    outline-color: var(--ring);
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  html {
+    font-size: var(--font-size);
+  }
+
+  h1 {
+    font-size: var(--text-2xl);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  h2 {
+    font-size: var(--text-xl);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  h3 {
+    font-size: var(--text-lg);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  h4 {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  label {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  button {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  input {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-normal);
+    line-height: 1.5;
+  }
+}
+
 body {
-    /* El degradado que pediste: Naranja arriba, Gris cálido abajo */
+    /* El degradado: naranja arriba, gris cálido abajo. Fuente: Inter (definida en tailwind.config). */
     background: linear-gradient(to bottom, #fb5303 0%, #e5e0de 100%);
     background-attachment: fixed;
-    /* Mantiene el degradado fijo al hacer scroll */
     min-height: 100vh;
     margin: 0;
     font-family: 'Inter', system-ui, sans-serif;

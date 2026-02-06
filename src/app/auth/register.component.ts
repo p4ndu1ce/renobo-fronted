@@ -1,68 +1,97 @@
 import { Component, inject, signal } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { AuthService } from '../services/auth.service';
-import { CommonModule } from '@angular/common';
 import { LoadingButtonComponent } from '../shared/components/loading-button/loading-button.component';
-
-function passwordMatchValidator(control: AbstractControl): ValidationErrors | null {
-  const password = control.get('password');
-  const confirmPassword = control.get('confirmPassword');
-
-  if (password && confirmPassword && password.value !== confirmPassword.value) {
-    return { passwordMismatch: true };
-  }
-  return null;
-}
+import { LucideAngularModule, User, Mail, Phone, FileText, Lock } from 'lucide-angular';
 
 @Component({
   selector: 'app-register',
-  imports: [ReactiveFormsModule, CommonModule, RouterLink, LoadingButtonComponent],
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink,
+    LoadingButtonComponent,
+    LucideAngularModule,
+  ],
   templateUrl: './register.component.html',
-  styleUrl: './register.component.css'
+  styleUrl: './register.component.css',
 })
 export class RegisterComponent {
-  private fb = inject(FormBuilder);
-  private authService = inject(AuthService);
-  private router = inject(Router);
   private http = inject(HttpClient);
+  private router = inject(Router);
 
-  private readonly AUTH_API_URL = 'https://m587zdkcje.execute-api.us-east-1.amazonaws.com/dev/auth/register';
+  private readonly AUTH_API_URL =
+    'https://m587zdkcje.execute-api.us-east-1.amazonaws.com/dev/auth/register';
 
-  errorMessage = '';
+  name = signal('');
+  email = signal('');
+  phone = signal('');
+  documentId = signal('');
+  role = signal<'CLIENT' | 'ENGINEER' | 'AFFILIATOR' | 'CREW'>('CLIENT');
+  password = signal('');
+  confirmPassword = signal('');
+
+  errorMessage = signal('');
   isSubmitting = signal(false);
 
-  registerForm: FormGroup = this.fb.group({
-    name: ['', [Validators.required, Validators.minLength(2)]],
-    email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(6)]],
-    confirmPassword: ['', [Validators.required]],
-    documentId: ['', [Validators.required, Validators.minLength(5)]],
-    role: ['CLIENT', [Validators.required]] // Por defecto CLIENT para usuarios nuevos
-  }, { validators: passwordMatchValidator });
+  readonly UserIcon = User;
+  readonly MailIcon = Mail;
+  readonly PhoneIcon = Phone;
+  readonly FileTextIcon = FileText;
+  readonly LockIcon = Lock;
 
   onSubmit() {
-    if (this.registerForm.valid) {
-      this.errorMessage = '';
-      this.isSubmitting.set(true);
-      const { name, email, password, documentId, role } = this.registerForm.value;
+    const n = this.name().trim();
+    const e = this.email().trim();
+    const doc = this.documentId().trim();
+    const p = this.password();
+    const cp = this.confirmPassword();
 
-      this.http.post<{ message: string; usuario: { name: string; email: string; role: string } }>(
+    this.errorMessage.set('');
+
+    if (n.length < 2) {
+      this.errorMessage.set('El nombre debe tener al menos 2 caracteres.');
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(e)) {
+      this.errorMessage.set('Email inválido.');
+      return;
+    }
+    if (doc.length < 5) {
+      this.errorMessage.set('Documento de identidad requerido (mín. 5 caracteres).');
+      return;
+    }
+    if (p.length < 6) {
+      this.errorMessage.set('La contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+    if (p !== cp) {
+      this.errorMessage.set('Las contraseñas no coinciden.');
+      return;
+    }
+
+    this.isSubmitting.set(true);
+
+    this.http
+      .post<{ message: string; usuario: { name: string; email: string; role: string } }>(
         this.AUTH_API_URL,
-        { name, email, password, documentId, role }
-      ).subscribe({
-        next: (response) => {
+        { name: n, email: e, password: p, documentId: doc, role: this.role() }
+      )
+      .subscribe({
+        next: () => {
           this.isSubmitting.set(false);
           alert('¡Registro exitoso! Ahora puedes iniciar sesión.');
           this.router.navigate(['/login']);
         },
         error: (err) => {
           this.isSubmitting.set(false);
-          this.errorMessage = err.error?.error || 'Error al registrar. Intenta nuevamente.';
+          this.errorMessage.set(err.error?.error || 'Error al registrar. Intenta nuevamente.');
           console.error('Error en registro:', err);
-        }
+        },
       });
-    }
   }
 }

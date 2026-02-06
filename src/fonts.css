@@ -1,0 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@700;800;900&family=Outfit:wght@700;800;900&display=swap');
+
+:root {
+  --font-poppins: 'Poppins', sans-serif;
+  --font-outfit: 'Outfit', sans-serif;
+}
+
+/* No definir body aquí: styles.css usa Inter como fuente global. Usa var(--font-poppins) o var(--font-outfit) en clases concretas si las necesitas. */

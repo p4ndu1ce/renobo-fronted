@@ -6,6 +6,7 @@
   "scss.validate": false,
   "less.validate": false,
   "files.associations": {
-    "styles.css": "tailwindcss"
+    "styles.css": "tailwindcss",
+    "theme.css": "tailwindcss"
   }
 }

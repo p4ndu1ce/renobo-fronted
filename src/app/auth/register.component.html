@@ -1,118 +1,153 @@
-<div class="auth-bg min-h-screen flex items-center justify-center p-4">
-  <div class="w-full max-w-md">
-    <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-200/80 p-8">
-      <h1 class="text-3xl font-black text-slate-900 mb-2">Crear Cuenta</h1>
-      <p class="text-slate-500 text-sm mb-6">Completa el formulario para registrarte</p>
+<div class="min-h-screen bg-gradient-to-b from-[#FF5500] to-background flex flex-col items-center justify-center px-4 py-8 font-outfit">
+  <div class="mb-6 text-center">
+    <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-lg mb-3 mx-auto">
+      <span class="text-[#FF5500] text-3xl font-black">R</span>
+    </div>
+    <h1 class="text-white text-2xl font-poppins font-bold tracking-tight">RENOBO</h1>
+  </div>
 
-      @if (errorMessage) {
-        <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-          <p class="text-red-600 text-sm font-medium">{{ errorMessage }}</p>
-        </div>
-      }
+  <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-md border border-border">
+    <h2 class="text-2xl font-poppins font-bold text-foreground mb-2 text-center">Crear cuenta</h2>
+    <p class="text-muted-foreground text-center mb-6 text-sm">Completa el formulario para registrarte</p>
 
-      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="space-y-4">
-        <div>
-          <label for="name" class="block text-sm font-bold text-slate-700 mb-2">Nombre</label>
+    @if (errorMessage()) {
+      <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+        <p class="text-red-600 text-sm font-medium">{{ errorMessage() }}</p>
+      </div>
+    }
+
+    <form (submit)="$event.preventDefault(); onSubmit()" class="space-y-4">
+      <div class="space-y-1.5">
+        <label class="text-sm font-medium text-foreground">Nombre completo</label>
+        <div class="relative">
+          <div class="absolute left-0 top-0 bottom-0 w-10 flex items-center justify-center pointer-events-none">
+            <lucide-icon [name]="UserIcon" class="h-4 w-4 text-muted-foreground shrink-0"></lucide-icon>
+          </div>
           <input
-            id="name"
             type="text"
-            formControlName="name"
-            class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
+            [ngModel]="name()"
+            (ngModelChange)="name.set($event)"
+            name="name"
+            class="w-full pl-10 pr-4 py-2.5 bg-input-background border border-border rounded-md focus:ring-2 focus:ring-[#FF5500] outline-none transition-all"
             placeholder="Tu nombre completo"
           />
-          @if (registerForm.get('name')?.invalid && registerForm.get('name')?.touched) {
-            <p class="text-red-500 text-xs mt-1">Mínimo 2 caracteres</p>
-          }
         </div>
+      </div>
 
-        <div>
-          <label for="email" class="block text-sm font-bold text-slate-700 mb-2">Email</label>
+      <div class="space-y-1.5">
+        <label class="text-sm font-medium text-foreground">Email</label>
+        <div class="relative">
+          <div class="absolute left-0 top-0 bottom-0 w-10 flex items-center justify-center pointer-events-none">
+            <lucide-icon [name]="MailIcon" class="h-4 w-4 text-muted-foreground shrink-0"></lucide-icon>
+          </div>
           <input
-            id="email"
             type="email"
-            formControlName="email"
-            class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
-            placeholder="tu@email.com"
+            [ngModel]="email()"
+            (ngModelChange)="email.set($event)"
+            name="email"
+            class="w-full pl-10 pr-4 py-2.5 bg-input-background border border-border rounded-md focus:ring-2 focus:ring-[#FF5500] outline-none transition-all"
+            placeholder="tu&#64;email.com"
           />
-          @if (registerForm.get('email')?.invalid && registerForm.get('email')?.touched) {
-            <p class="text-red-500 text-xs mt-1">Email inválido</p>
-          }
         </div>
+      </div>
 
-        <div>
-          <label for="documentId" class="block text-sm font-bold text-slate-700 mb-2">Documento de Identidad</label>
+      <div class="space-y-1.5">
+        <label class="text-sm font-medium text-foreground">Teléfono <span class="text-muted-foreground font-normal">(opcional)</span></label>
+        <div class="relative">
+          <div class="absolute left-0 top-0 bottom-0 w-10 flex items-center justify-center pointer-events-none">
+            <lucide-icon [name]="PhoneIcon" class="h-4 w-4 text-muted-foreground shrink-0"></lucide-icon>
+          </div>
           <input
-            id="documentId"
+            type="tel"
+            [ngModel]="phone()"
+            (ngModelChange)="phone.set($event)"
+            name="phone"
+            class="w-full pl-10 pr-4 py-2.5 bg-input-background border border-border rounded-md focus:ring-2 focus:ring-[#FF5500] outline-none transition-all"
+            placeholder="+34 600 000 000"
+          />
+        </div>
+      </div>
+
+      <div class="space-y-1.5">
+        <label class="text-sm font-medium text-foreground">Documento de identidad</label>
+        <div class="relative">
+          <div class="absolute left-0 top-0 bottom-0 w-10 flex items-center justify-center pointer-events-none">
+            <lucide-icon [name]="FileTextIcon" class="h-4 w-4 text-muted-foreground shrink-0"></lucide-icon>
+          </div>
+          <input
             type="text"
-            formControlName="documentId"
-            class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
+            [ngModel]="documentId()"
+            (ngModelChange)="documentId.set($event)"
+            name="documentId"
+            class="w-full pl-10 pr-4 py-2.5 bg-input-background border border-border rounded-md focus:ring-2 focus:ring-[#FF5500] outline-none transition-all"
             placeholder="Número de documento"
           />
-          @if (registerForm.get('documentId')?.invalid && registerForm.get('documentId')?.touched) {
-            <p class="text-red-500 text-xs mt-1">Documento requerido</p>
-          }
         </div>
+      </div>
 
-        <div>
-          <label for="role" class="block text-sm font-bold text-slate-700 mb-2">Tipo de Usuario</label>
-          <select
-            id="role"
-            formControlName="role"
-            class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
-          >
-            <option value="CLIENT">Cliente</option>
-            <option value="ENGINEER">Ingeniero</option>
-            <option value="AFFILIATOR">Afiliador</option>
-            <option value="CREW">Equipo</option>
-          </select>
-        </div>
+      <div class="space-y-1.5">
+        <label class="text-sm font-medium text-foreground">Tipo de usuario</label>
+        <select
+          [ngModel]="role()"
+          (ngModelChange)="role.set($event)"
+          name="role"
+          class="w-full px-4 py-2.5 bg-input-background border border-border rounded-md focus:ring-2 focus:ring-[#FF5500] outline-none transition-all text-foreground"
+        >
+          <option value="CLIENT">Cliente</option>
+          <option value="ENGINEER">Ingeniero</option>
+          <option value="AFFILIATOR">Afiliador</option>
+          <option value="CREW">Equipo</option>
+        </select>
+      </div>
 
-        <div>
-          <label for="password" class="block text-sm font-bold text-slate-700 mb-2">Contraseña</label>
+      <div class="space-y-1.5">
+        <label class="text-sm font-medium text-foreground">Contraseña</label>
+        <div class="relative">
+          <div class="absolute left-0 top-0 bottom-0 w-10 flex items-center justify-center pointer-events-none">
+            <lucide-icon [name]="LockIcon" class="h-4 w-4 text-muted-foreground shrink-0"></lucide-icon>
+          </div>
           <input
-            id="password"
             type="password"
-            formControlName="password"
-            class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
+            [ngModel]="password()"
+            (ngModelChange)="password.set($event)"
+            name="password"
+            class="w-full pl-10 pr-4 py-2.5 bg-input-background border border-border rounded-md focus:ring-2 focus:ring-[#FF5500] outline-none transition-all"
             placeholder="••••••••"
           />
-          @if (registerForm.get('password')?.invalid && registerForm.get('password')?.touched) {
-            <p class="text-red-500 text-xs mt-1">Mínimo 6 caracteres</p>
-          }
         </div>
+      </div>
 
-        <div>
-          <label for="confirmPassword" class="block text-sm font-bold text-slate-700 mb-2">Confirmar Contraseña</label>
+      <div class="space-y-1.5">
+        <label class="text-sm font-medium text-foreground">Confirmar contraseña</label>
+        <div class="relative">
+          <div class="absolute left-0 top-0 bottom-0 w-10 flex items-center justify-center pointer-events-none">
+            <lucide-icon [name]="LockIcon" class="h-4 w-4 text-muted-foreground shrink-0"></lucide-icon>
+          </div>
           <input
-            id="confirmPassword"
             type="password"
-            formControlName="confirmPassword"
-            class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
+            [ngModel]="confirmPassword()"
+            (ngModelChange)="confirmPassword.set($event)"
+            name="confirmPassword"
+            class="w-full pl-10 pr-4 py-2.5 bg-input-background border border-border rounded-md focus:ring-2 focus:ring-[#FF5500] outline-none transition-all"
             placeholder="••••••••"
           />
-          @if (registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched) {
-            <p class="text-red-500 text-xs mt-1">Las contraseñas no coinciden</p>
-          }
-          @if (registerForm.hasError('passwordMismatch') && registerForm.get('confirmPassword')?.touched) {
-            <p class="text-red-500 text-xs mt-1">Las contraseñas no coinciden</p>
-          }
         </div>
+      </div>
 
+      <div class="pt-4">
         <app-loading-button
           type="submit"
-          label="REGISTRARSE"
-          [isLoading]="isSubmitting()"
-          [disabled]="registerForm.invalid"
-          btnClass="w-full px-6 py-3 bg-accent text-white font-black rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-blue-200"
+          label="Registrarse"
+        [isLoading]="isSubmitting()"
+        [disabled]="!name().trim() || !email().trim() || !documentId().trim() || !password() || !confirmPassword()"
+        btnClass="w-full py-3 bg-[#FF5500] text-white rounded-md font-bold shadow-lg hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:brightness-100 disabled:active:scale-100"
         />
-      </form>
-
-      <div class="mt-6 text-center">
-        <p class="text-slate-500 text-sm">
-          ¿Ya tienes cuenta?
-          <a routerLink="/login" class="text-accent font-bold hover:underline">Inicia sesión</a>
-        </p>
       </div>
-    </div>
+    </form>
+
+    <p class="mt-6 text-center text-sm text-muted-foreground">
+      ¿Ya tienes cuenta?
+      <a routerLink="/login" class="text-[#FF5500] font-bold hover:underline cursor-pointer">Inicia sesión</a>
+    </p>
   </div>
 </div>
