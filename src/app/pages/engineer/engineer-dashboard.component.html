@@ -1,13 +1,5 @@
 <div class="engineer-page min-h-screen">
   <div class="max-w-lg mx-auto px-4 py-6 sm:py-8">
-    <section class="mb-6">
-      <app-wallet-card
-        [balance]="walletService.balance()"
-        subtitle="Comisiones por cobrar"
-        currency="USD"
-        badge="+12.5%"
-      />
-    </section>
     @if (successMessage()) {
       <div class="mb-4 rounded-2xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-emerald-800 text-sm font-medium flex items-center gap-2">
         <span aria-hidden="true">✓</span>

@@ -4,16 +4,8 @@
       <app-skeleton-card [count]="3"></app-skeleton-card>
     </div>
   } @else {
-  <!-- CLIENT: Billetera + obra en curso o planes -->
+  <!-- CLIENT: obra en curso o planes -->
   @if (userRole() !== 'ENGINEER' && userRole() !== 'SUPERVISOR') {
-    <section class="mb-6">
-      <app-wallet-card
-        [balance]="clientWalletBalance()"
-        subtitle="Crédito disponible para servicios"
-        currency="USD"
-        badge="Crédito Activo"
-      />
-    </section>
     @if (currentWork(); as work) {
       <section class="mb-4">
         <h1 class="text-xl font-black text-slate-900 tracking-tight mb-0.5">Inicio</h1>

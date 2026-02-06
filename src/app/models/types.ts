@@ -3,13 +3,6 @@
  * Referencia única para User, Work y Partner en toda la app.
  */
 
-/** Billetera del usuario (saldo a favor o crédito disponible). */
-export interface Wallet {
-  balance: number;
-  currency: string;
-  lastUpdate: string;
-}
-
 /** Perfil financiero (usuario o contexto de solicitud). */
 export interface FinancialProfile {
   status: 'AL DÍA' | 'MOROSO' | 'SIN ACTIVIDAD';

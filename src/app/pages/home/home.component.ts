@@ -9,7 +9,6 @@ import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
 import { SkeletonCardComponent } from '../../shared/components/skeleton-card/skeleton-card.component';
 import { LoadingButtonComponent } from '../../shared/components/loading-button/loading-button.component';
-import { WalletCardComponent } from '../../shared/components/wallet-card/wallet-card.component';
 import type { WorkStatus, CreditPlanId } from '../../services/work.service';
 
 export interface Categoria {
@@ -31,7 +30,7 @@ export const SERVICE_CATEGORIES = [
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterLink, SkeletonCardComponent, LoadingButtonComponent, WalletCardComponent],
+  imports: [CommonModule, RouterLink, SkeletonCardComponent, LoadingButtonComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css',
 })
@@ -70,16 +69,6 @@ export class HomeComponent implements OnInit {
   clientPlans = computed(() => this.configService.catalog()?.creditPlans ?? []);
 
   recentWorks = computed(() => this.workService.myWorks().slice(0, 3));
-
-  /** Balance cliente: crédito aprobado menos lo gastado (obras FINISHED). Fórmula: Credit_approved - sum(Material_Costs). Mock: planAmount aprobado - planAmount de obras finalizadas. */
-  clientWalletBalance = computed(() => {
-    const works = this.workService.myWorks();
-    const approved = works.filter((w) => w.status !== 'REJECTED' && w.status !== 'CREDIT_PENDING');
-    const totalApproved = approved.reduce((sum, w) => sum + (w.planAmount ?? 0), 0);
-    const finished = works.filter((w) => w.status === 'FINISHED');
-    const totalSpent = finished.reduce((sum, w) => sum + (w.planAmount ?? 0), 0);
-    return Math.max(0, totalApproved - totalSpent);
-  });
 
   /** Estados considerados "finalizados": con una obra en estos estados el usuario puede solicitar otra. */
   private static readonly TERMINAL_STATUSES = new Set<string>(['REJECTED', 'FINISHED']);

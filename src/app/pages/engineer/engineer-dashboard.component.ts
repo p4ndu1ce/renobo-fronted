@@ -4,14 +4,12 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { WorkService, type Work, type CreditPlanId } from '../../services/work.service';
 import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
-import { WalletService } from '../../services/wallet.service';
 import { LoadingButtonComponent } from '../../shared/components/loading-button/loading-button.component';
-import { WalletCardComponent } from '../../shared/components/wallet-card/wallet-card.component';
 
 @Component({
   selector: 'app-engineer-dashboard',
   standalone: true,
-  imports: [CommonModule, LoadingButtonComponent, WalletCardComponent],
+  imports: [CommonModule, LoadingButtonComponent],
   templateUrl: './engineer-dashboard.component.html',
   styleUrl: './engineer-dashboard.component.css'
 })
@@ -22,7 +20,6 @@ export class EngineerDashboardComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private platformId = inject(PLATFORM_ID);
   private toastService = inject(ToastService);
-  public walletService = inject(WalletService);
 
   /** Mensaje de éxito tras redirección (ej. "Solicitud enviada a proveedores"). */
   successMessage = signal<string | null>(null);
@@ -100,17 +97,13 @@ export class EngineerDashboardComponent implements OnInit, OnDestroy {
     this.router.navigate(['/engineer/visit', work.id]);
   }
 
-  /** Marca la obra como finalizada (IN_PROGRESS → FINISHED). Actualiza wallet del ingeniero (comisión mock). */
+  /** Marca la obra como finalizada (IN_PROGRESS → FINISHED). */
   finishWork(work: Work): void {
     if (work.status !== 'IN_PROGRESS') return;
     this.isFinishingWork.set(true);
-    const planAmount = work.planAmount ?? 0;
-    const commissionRate = 0.1;
-    const commission = planAmount * commissionRate;
     this.workService.finishWork(work.id).subscribe({
       next: () => {
         this.isFinishingWork.set(false);
-        this.walletService.addBalance(commission);
         this.successMessage.set('Obra finalizada correctamente.');
         this.router.navigate([], { relativeTo: this.route, queryParams: {}, queryParamsHandling: '', replaceUrl: true });
       },
