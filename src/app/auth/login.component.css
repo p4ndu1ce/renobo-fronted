@@ -1,1 +1,35 @@
-/* Component styles */
+/* Fondo gradiente Figma (igual que splash) */
+.login-page {
+  background: linear-gradient(to bottom, #ff5500, #ff7700, var(--background));
+}
+
+/* Entrada de la vista Login (nueva API animate.enter) */
+.login-page-enter {
+  animation: login-fade-in 400ms ease-out forwards;
+}
+
+@keyframes login-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Card con variables de theme.css */
+.login-card {
+  background-color: var(--card);
+  color: var(--card-foreground);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  padding: 2rem;
+  width: 100%;
+  max-width: 28rem;
+}
+
+/* Fondo del texto "O entrar con" para que coincida con la card */
+.login-divider-bg {
+  background-color: var(--card);
+}

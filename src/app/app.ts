@@ -10,7 +10,6 @@ import { ToastComponent } from './components/toast/toast.component';
     <app-toast />
   `,
   styleUrl: './app.scss',
-  encapsulation: ViewEncapsulation.None
+  encapsulation: ViewEncapsulation.None,
 })
-export class App {
-}
+export class App {}
