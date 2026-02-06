@@ -43,3 +43,19 @@
 .active-card:active {
   transform: scale(0.98);
 }
+
+/* Lista Servicios Recientes: entrada con stagger (animate.enter + CSS nativo) */
+.recent-service-enter {
+  animation: recentServiceEnter 400ms ease-out forwards;
+  animation-delay: calc(100ms * var(--index, 0));
+}
+@keyframes recentServiceEnter {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

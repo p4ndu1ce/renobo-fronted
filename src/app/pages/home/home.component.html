@@ -1,191 +1,175 @@
 <div class="home-by-role min-h-screen bg-background pb-24 font-outfit">
   @if (isLoading()) {
-    <div class="p-5 space-y-3">
-      <app-skeleton-card [count]="3"></app-skeleton-card>
-    </div>
+  <div class="p-5 space-y-3">
+    <app-skeleton-card [count]="3"></app-skeleton-card>
+  </div>
   } @else {
-    <!-- CLIENT: Dashboard (referencia) + obra en curso si existe -->
-    @if (userRole() !== 'ENGINEER' && userRole() !== 'SUPERVISOR') {
-      <main class="p-5 space-y-8">
-        <!-- Financing CTA (primera sección) -->
-        <section class="mb-4">
-          <div class="w-full">
-  
-            <div class="bg-gradient-to-r from-orange-100 to-orange-50 border border-orange-200 rounded-[var(--radius)] shadow-sm overflow-hidden">
-              
-              <div class="p-6 pb-3">
-                <h3 class="text-lg font-poppins font-bold text-orange-800 leading-none tracking-tight">
-                  Opciones de Financiamiento
-                </h3>
-              </div>
-          
-              <div class="p-6 pt-0">
-                <p class="text-sm text-orange-900/80 mb-4 font-outfit">
-                  Financia tus proyectos desde $200 hasta $1,500
-                </p>
-          
-                <button
-                  (click)="navigateTo('/financing')"
-                  class="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-[#FF5500] text-[#FF5500] font-bold rounded-md bg-transparent hover:bg-orange-100/50 transition-all active:scale-[0.98]"
-                >
-                  <lucide-icon [name]="icons.CreditCard" class="w-[18px] h-[18px]"></lucide-icon>
-                  <span>Ver Planes</span>
-                </button>
-              </div>
-          
-            </div>
-          </div>
-        </section>
+  <!-- CLIENT: Dashboard (referencia) + obra en curso si existe -->
+  @if (userRole() !== 'ENGINEER' && userRole() !== 'SUPERVISOR') {
+  <main class="p-5 space-y-8">
+    <!-- Financing CTA (primera sección) -->
+    <section class="mb-4">
+      <div class="w-full">
 
-        <!-- Obra en curso (opcional) -->
-        @if (currentWork(); as work) {
-          <section class="mb-4">
-            <h2 class="text-lg font-poppins font-bold text-foreground mb-1">Tu solicitud en curso</h2>
-            <p class="text-slate-500 text-sm mb-3">Toca la tarjeta para ver el seguimiento completo.</p>
-            <a
-              [routerLink]="['/seguimiento']"
-              [queryParams]="{ workId: work.id }"
-              class="block rounded-[2.5rem] border-2 border-orange-200 bg-card shadow-md overflow-hidden no-underline text-inherit hover:shadow-lg hover:border-[#FF5500]/50 transition-all"
-            >
-              <div class="p-5">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Servicio en curso</p>
-                <h3 class="text-lg font-bold text-foreground mb-1">{{ work.title || 'Sin título' }}</h3>
-                <p class="text-sm text-muted-foreground mb-4">Plan {{ getPlanLabel(work.planId) }}</p>
-                <div class="flex items-center gap-1">
-                  @for (step of currentWorkSteps(); track step.label; let i = $index) {
-                    <div class="flex items-center min-w-0 flex-1">
-                      <div
-                        class="shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors"
-                        [class.bg-[#FF5500]]="step.completed || step.current"
-                        [class.text-white]="step.completed || step.current"
-                        [class.bg-slate-200]="!step.completed && !step.current"
-                        [class.text-slate-500]="!step.completed && !step.current"
-                      >
-                        @if (step.completed) {
-                          <span aria-hidden="true">✓</span>
-                        } @else {
-                          <span>{{ i + 1 }}</span>
-                        }
-                      </div>
-                      <span
-                        class="ml-1.5 text-xs font-medium truncate"
-                        [class.text-slate-800]="step.current || step.completed"
-                        [class.text-slate-400]="!step.current && !step.completed"
-                      >
-                        {{ step.label }}
-                      </span>
-                    </div>
-                    @if (i < currentWorkSteps().length - 1) {
-                      <div class="shrink-0 w-3 h-0.5 rounded-full bg-slate-200" [class.bg-[#FF5500]]="step.completed"></div>
-                    }
-                  }
-                </div>
-                <p class="mt-3 text-sm font-semibold text-[#FF5500]">Ver seguimiento completo →</p>
+        <div
+          class="bg-gradient-to-r from-orange-100 to-orange-50 border border-orange-200 rounded-[var(--radius)] shadow-sm overflow-hidden">
+
+          <div class="p-6 pb-3">
+            <h3 class="text-lg font-poppins font-bold text-orange-800 leading-none tracking-tight">
+              Opciones de Financiamiento
+            </h3>
+          </div>
+
+          <div class="p-6 pt-0">
+            <p class="text-sm text-orange-900/80 mb-4 font-outfit">
+              Financia tus proyectos desde $200 hasta $1,500
+            </p>
+
+            <button (click)="navigateTo('/financing')"
+              class="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-[#FF5500] text-[#FF5500] font-bold rounded-md bg-transparent hover:bg-orange-100/50 transition-all active:scale-[0.98]">
+              <lucide-icon [name]="icons.CreditCard" class="w-[18px] h-[18px]"></lucide-icon>
+              <span>Ver Planes</span>
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Obra en curso (opcional) -->
+    @if (currentWork(); as work) {
+    <section class="mb-4">
+      <h2 class="text-lg font-poppins font-bold text-foreground mb-1">Tu solicitud en curso</h2>
+      <p class="text-slate-500 text-sm mb-3">Toca la tarjeta para ver el seguimiento completo.</p>
+      <a [routerLink]="['/seguimiento']" [queryParams]="{ workId: work.id }"
+        class="block rounded-[2.5rem] border-2 border-orange-200 bg-card shadow-md overflow-hidden no-underline text-inherit hover:shadow-lg hover:border-[#FF5500]/50 transition-all">
+        <div class="p-5">
+          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Servicio en curso</p>
+          <h3 class="text-lg font-bold text-foreground mb-1">{{ work.title || 'Sin título' }}</h3>
+          <p class="text-sm text-muted-foreground mb-4">Plan {{ getPlanLabel(work.planId) }}</p>
+          <div class="flex items-center gap-1">
+            @for (step of currentWorkSteps(); track step.label; let i = $index) {
+            <div class="flex items-center min-w-0 flex-1">
+              <div
+                class="shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors"
+                [class.bg-[#FF5500]]="step.completed || step.current"
+                [class.text-white]="step.completed || step.current"
+                [class.bg-slate-200]="!step.completed && !step.current"
+                [class.text-slate-500]="!step.completed && !step.current">
+                @if (step.completed) {
+                <span aria-hidden="true">✓</span>
+                } @else {
+                <span>{{ i + 1 }}</span>
+                }
               </div>
-            </a>
-          </section>
-        }
-
-        <!-- Solicitar Servicio -->
-        <button
-          type="button"
-          (click)="navigateTo('/plan-selection')"
-          class="w-full h-20 bg-[#FF5500] text-white rounded-3xl shadow-xl shadow-orange-500/30 flex items-center justify-center gap-3 active:scale-[0.97] transition-all group"
-        >
-          <div class="p-3 bg-white/20 rounded-2xl group-hover:rotate-12 transition-transform text-white">
-            <lucide-icon name="Wrench" class="w-7 h-7 text-white"></lucide-icon>
-          </div>
-          <span class="text-lg font-bold font-poppins">Solicitar Servicio</span>
-        </button>
-
-        <!-- Actividad Reciente (referencia, datos reales) -->
-        <section>
-          <div class="flex items-center justify-between mb-4 px-1">
-            <h3 class="font-poppins font-bold text-lg text-foreground">Actividad Reciente</h3>
-            <a routerLink="/seguimiento" class="text-[#FF5500] text-xs font-bold">Ver todos</a>
-          </div>
-          @if (recentWorks().length > 0) {
-            <div class="space-y-4">
-              @for (work of recentWorks(); track work.id) {
-                <a
-                  [routerLink]="['/seguimiento']"
-                  [queryParams]="{ workId: work.id }"
-                  class="bg-card border border-border/40 p-4 rounded-3xl flex justify-between items-center active:scale-[0.98] transition-all no-underline text-inherit"
-                >
-                  <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-2xl bg-orange-50 flex items-center justify-center">
-                      <lucide-icon [name]="icons.ClipboardList" class="w-6 h-6 text-[#FF5500]"></lucide-icon>
-                    </div>
-                    <div>
-                      <h4 class="font-bold text-sm text-foreground">{{ work.title || work.description || 'Solicitud de obra' }}</h4>
-                      <p class="text-[10px] text-muted-foreground">{{ work.createdAt | date:'dd/MM/yyyy' }}</p>
-                    </div>
-                  </div>
-                  <span
-                    [class]="work.status === 'FINISHED' ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-[#FF5500]'"
-                    class="px-3 py-1 rounded-full text-[10px] font-black uppercase"
-                  >
-                    {{ getStatusLabel(work.status) }}
-                  </span>
-                </a>
-              }
+              <span class="ml-1.5 text-xs font-medium truncate" [class.text-slate-800]="step.current || step.completed"
+                [class.text-slate-400]="!step.current && !step.completed">
+                {{ step.label }}
+              </span>
             </div>
-          } @else {
-            <div class="rounded-2xl bg-card/60 border-2 border-dashed border-border p-6 text-center">
-              <p class="text-muted-foreground text-sm">Aún no tienes servicios recientes.</p>
-              <p class="text-[10px] text-muted-foreground/80 mt-1">Solicita un servicio arriba y aparecerán aquí.</p>
-            </div>
+            @if (i < currentWorkSteps().length - 1) { <div class="shrink-0 w-3 h-0.5 rounded-full bg-slate-200"
+              [class.bg-[#FF5500]]="step.completed">
+          </div>
           }
-        </section>
-      </main>
-    }
-
-    <!-- ENGINEER: Visitas Técnicas de Hoy + Mis Asignaciones -->
-    @if (userRole() === 'ENGINEER') {
-      <div class="p-5 max-w-lg mx-auto">
-        <header class="mb-6">
-          <h1 class="text-xl font-black text-slate-900 tracking-tight">Visitas Técnicas de Hoy</h1>
-          <p class="text-slate-500 text-sm mt-0.5">Resumen de tus asignaciones</p>
-        </header>
-        <div class="rounded-2xl bg-card border border-border/50 shadow-sm p-6 mb-6">
-          <p class="text-4xl font-black text-[#FF5500] tabular-nums">{{ todayVisitsCount() }}</p>
-          <p class="text-sm font-medium text-muted-foreground mt-1">visitas programadas</p>
+          }
         </div>
-        <a
-          routerLink="/engineer"
-          class="flex items-center justify-center gap-3 w-full py-4 px-6 bg-[#FF5500] text-white font-bold rounded-[2.5rem] shadow-orange-200 hover:shadow-[0_6px_20px_0_rgba(255,85,0,0.3)] transition-shadow no-underline"
-        >
-          <lucide-icon [name]="icons.ClipboardList" class="w-6 h-6"></lucide-icon>
-          <span>Mis Asignaciones</span>
-        </a>
-      </div>
-    }
+        <p class="mt-3 text-sm font-semibold text-[#FF5500]">Ver seguimiento completo →</p>
+</div>
+</a>
+</section>
+}
 
-    <!-- SUPERVISOR: KPIs + Gestión -->
-    @if (userRole() === 'SUPERVISOR') {
-      <div class="p-5 max-w-lg mx-auto">
-        <header class="mb-6">
-          <h1 class="text-xl font-black text-slate-900 tracking-tight">Panel de Supervisión</h1>
-          <p class="text-slate-500 text-sm mt-0.5">Indicadores clave</p>
-        </header>
-        <div class="grid grid-cols-2 gap-4 mb-6">
-          <div class="rounded-2xl bg-card border border-border/50 shadow-sm p-5">
-            <p class="text-3xl font-black text-foreground tabular-nums">{{ creditsPendingCount() }}</p>
-            <p class="text-xs font-bold text-muted-foreground uppercase tracking-wider mt-1">Créditos por Aprobar</p>
-          </div>
-          <div class="rounded-2xl bg-card border border-rose-100/50 shadow-sm p-5">
-            <p class="text-3xl font-black text-rose-600 tabular-nums">{{ worksUnassignedCount() }}</p>
-            <p class="text-xs font-bold text-muted-foreground uppercase tracking-wider mt-1">Obras sin Ingeniero</p>
-          </div>
+<!-- Solicitar Servicio -->
+<button type="button" (click)="navigateTo('/plan-selection')"
+  class="w-full h-20 bg-[#FF5500] text-white rounded-3xl shadow-xl shadow-orange-500/30 flex items-center justify-center gap-3 active:scale-[0.97] transition-all group">
+  <div class="p-3 bg-white/20 rounded-2xl group-hover:rotate-12 transition-transform text-white">
+    <lucide-icon name="Wrench" class="w-7 h-7 text-white"></lucide-icon>
+  </div>
+  <span class="text-lg font-bold font-poppins">Solicitar Servicio</span>
+</button>
+
+<!-- Actividad Reciente (referencia, datos reales) -->
+<section class="space-y-4">
+  <h3 class="font-poppins font-bold text-lg text-foreground px-1">
+    Servicios Recientes
+  </h3>
+
+  <div class="space-y-3">
+    @for (service of recentServices(); track service.id) {
+    <div (click)="navigateToTracking(service)"
+      class="recent-service-item group bg-card border border-border/50 rounded-[var(--radius)] p-4 cursor-pointer transition-all hover:shadow-md hover:border-orange-200 active:scale-[0.98]"
+      [style.--index]="$index"
+      animate.enter="recent-service-enter">
+      <div class="flex justify-between items-center">
+        <div class="space-y-1">
+          <h4 class="font-poppins font-semibold text-foreground group-hover:text-orange-600 transition-colors">
+            {{ service.title }}
+          </h4>
+          <p class="text-xs text-muted-foreground font-outfit">
+            {{ service.date }}
+          </p>
         </div>
-        <a
-          routerLink="/admin"
-          class="flex items-center justify-center gap-3 w-full py-4 px-6 bg-[#FF5500] text-white font-bold rounded-[2.5rem] shadow-orange-200 hover:shadow-[0_6px_20px_0_rgba(255,85,0,0.3)] transition-shadow no-underline"
-        >
-          <lucide-icon [name]="icons.Wrench" class="w-6 h-6"></lucide-icon>
-          <span>Gestión de Créditos y Asignación</span>
-        </a>
+
+        <span [class]="service.status === 'Finalizado' 
+                      ? 'bg-green-500 text-white' 
+                      : 'bg-[#FF5500] text-white'"
+          class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm">
+          {{ service.status }}
+        </span>
       </div>
+    </div>
+    } @empty {
+    <div class="p-8 text-center border-2 border-dashed border-border rounded-xl">
+      <p class="text-sm text-muted-foreground">No tienes servicios recientes.</p>
+    </div>
     }
-  }
+  </div>
+</section>
+</main>
+}
+
+<!-- ENGINEER: Visitas Técnicas de Hoy + Mis Asignaciones -->
+@if (userRole() === 'ENGINEER') {
+<div class="p-5 max-w-lg mx-auto">
+  <header class="mb-6">
+    <h1 class="text-xl font-black text-slate-900 tracking-tight">Visitas Técnicas de Hoy</h1>
+    <p class="text-slate-500 text-sm mt-0.5">Resumen de tus asignaciones</p>
+  </header>
+  <div class="rounded-2xl bg-card border border-border/50 shadow-sm p-6 mb-6">
+    <p class="text-4xl font-black text-[#FF5500] tabular-nums">{{ todayVisitsCount() }}</p>
+    <p class="text-sm font-medium text-muted-foreground mt-1">visitas programadas</p>
+  </div>
+  <a routerLink="/engineer"
+    class="flex items-center justify-center gap-3 w-full py-4 px-6 bg-[#FF5500] text-white font-bold rounded-[2.5rem] shadow-orange-200 hover:shadow-[0_6px_20px_0_rgba(255,85,0,0.3)] transition-shadow no-underline">
+    <lucide-icon [name]="icons.ClipboardList" class="w-6 h-6"></lucide-icon>
+    <span>Mis Asignaciones</span>
+  </a>
+</div>
+}
+
+<!-- SUPERVISOR: KPIs + Gestión -->
+@if (userRole() === 'SUPERVISOR') {
+<div class="p-5 max-w-lg mx-auto">
+  <header class="mb-6">
+    <h1 class="text-xl font-black text-slate-900 tracking-tight">Panel de Supervisión</h1>
+    <p class="text-slate-500 text-sm mt-0.5">Indicadores clave</p>
+  </header>
+  <div class="grid grid-cols-2 gap-4 mb-6">
+    <div class="rounded-2xl bg-card border border-border/50 shadow-sm p-5">
+      <p class="text-3xl font-black text-foreground tabular-nums">{{ creditsPendingCount() }}</p>
+      <p class="text-xs font-bold text-muted-foreground uppercase tracking-wider mt-1">Créditos por Aprobar</p>
+    </div>
+    <div class="rounded-2xl bg-card border border-rose-100/50 shadow-sm p-5">
+      <p class="text-3xl font-black text-rose-600 tabular-nums">{{ worksUnassignedCount() }}</p>
+      <p class="text-xs font-bold text-muted-foreground uppercase tracking-wider mt-1">Obras sin Ingeniero</p>
+    </div>
+  </div>
+  <a routerLink="/admin"
+    class="flex items-center justify-center gap-3 w-full py-4 px-6 bg-[#FF5500] text-white font-bold rounded-[2.5rem] shadow-orange-200 hover:shadow-[0_6px_20px_0_rgba(255,85,0,0.3)] transition-shadow no-underline">
+    <lucide-icon [name]="icons.Wrench" class="w-6 h-6"></lucide-icon>
+    <span>Gestión de Créditos y Asignación</span>
+  </a>
+</div>
+}
+}
 </div>

@@ -70,6 +70,18 @@ export class HomeComponent implements OnInit {
 
   recentWorks = computed(() => this.workService.myWorks().slice(0, 3));
 
+  /** Servicios recientes para la sección "Servicios Recientes" (Actividades recientes). Origen: señal local; luego puede venir de API. */
+  recentServices = signal([
+    { id: 1, title: 'Reparación eléctrica', status: 'En proceso', date: '05/01/2026' },
+    { id: 2, title: 'Instalación de lavamanos', status: 'Finalizado', date: '28/12/2025' },
+  ]);
+
+  /** Navega a seguimiento pasando el servicio en navigationData (para usar en Servicios Recientes). */
+  navigateToTracking(service: { id: number; title: string; status: string; date: string }) {
+    this.authService.navigationData.set(service);
+    this.router.navigate(['/tracking']);
+  }
+
   /** Estados considerados "finalizados": con una obra en estos estados el usuario puede solicitar otra. */
   private static readonly TERMINAL_STATUSES = new Set<string>(['REJECTED', 'FINISHED']);
 
