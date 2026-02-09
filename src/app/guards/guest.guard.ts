@@ -21,8 +21,13 @@ export const guestGuard: CanActivateFn = (route, state) => {
     const runCheck = () => {
       if (authService.isLoggedIn()) {
         if (authService.isSupervisor()) {
-          console.log('[guestGuard] logueado supervisor → redirigiendo a /admin', { url: state.url });
-          router.navigate(['/admin']);
+          router.navigate(['/supervisor']);
+          resolve(false);
+          return;
+        }
+        if (authService.isPartner()) {
+          console.log('[guestGuard] logueado partner → redirigiendo a /partner', { url: state.url });
+          router.navigate(['/partner']);
           resolve(false);
           return;
         }

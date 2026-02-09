@@ -74,6 +74,7 @@ export class AuthService {
 
   public isSupervisor = computed(() => this.userRole() === 'SUPERVISOR');
   public isEngineer = computed(() => this.userRole() === 'ENGINEER');
+  public isPartner = computed(() => this.userRole() === 'PARTNER');
 
   /**
    * ID del ingeniero para filtrar obras asignadas.

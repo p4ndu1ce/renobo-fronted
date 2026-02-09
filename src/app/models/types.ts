@@ -15,7 +15,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'CLIENT' | 'ENGINEER' | 'SUPERVISOR';
+  role: 'CLIENT' | 'ENGINEER' | 'SUPERVISOR' | 'PARTNER';
   financialProfile?: FinancialProfile;
 }
 

@@ -55,6 +55,6 @@ export class ChatScreenComponent {
   }
 
   goBack(): void {
-    this.router.navigate(['/seguimiento']);
+    this.router.navigate(['/tracking']);
   }
 }

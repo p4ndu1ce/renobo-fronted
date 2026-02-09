@@ -22,16 +22,25 @@
       </a>
     } @else if (userRole() === 'SUPERVISOR') {
       <a
-        routerLink="/admin"
+        routerLink="/supervisor"
         routerLinkActive="nav-item-active text-[#FF5500]"
         class="flex flex-col items-center gap-1 py-1 px-3 text-slate-600 hover:text-[#FF5500] transition-colors no-underline"
       >
         <lucide-icon [name]="icons.Settings" class="w-6 h-6"></lucide-icon>
         <span class="text-xs">Panel</span>
       </a>
+    } @else if (userRole() === 'PARTNER') {
+      <a
+        routerLink="/partner"
+        routerLinkActive="nav-item-active text-[#FF5500]"
+        class="flex flex-col items-center gap-1 py-1 px-3 text-slate-600 hover:text-[#FF5500] transition-colors no-underline"
+      >
+        <lucide-icon [name]="icons.ClipboardList" class="w-6 h-6"></lucide-icon>
+        <span class="text-xs">Panel</span>
+      </a>
     } @else {
       <a
-lim        routerLink="/categories"
+        routerLink="/categories"
         routerLinkActive="nav-item-active text-[#FF5500]"
         class="flex flex-col items-center gap-1 py-1 px-3 text-slate-600 hover:text-[#FF5500] transition-colors no-underline"
       >
@@ -40,9 +49,9 @@ lim        routerLink="/categories"
       </a>
     }
 
-    @if (userRole() !== 'ENGINEER' && userRole() !== 'SUPERVISOR') {
+    @if (userRole() !== 'ENGINEER' && userRole() !== 'SUPERVISOR' && userRole() !== 'PARTNER') {
       <a
-        routerLink="/seguimiento"
+        routerLink="/tracking"
         routerLinkActive="nav-item-active text-[#FF5500]"
         class="flex flex-col items-center gap-1 py-1 px-3 text-slate-600 hover:text-[#FF5500] transition-colors no-underline"
       >

@@ -55,7 +55,7 @@ export const roleGuard: CanActivateFn = (route, state) => {
     return false;
   }
 
-  // Compatibilidad: rutas sin data.roles (ej. /admin) exigen SUPERVISOR
+  // Compatibilidad: rutas sin data.roles (ej. /supervisor) exigen SUPERVISOR
   if (finalRole === 'SUPERVISOR') {
     console.log('✅ roleGuard: Usuario es supervisor, permitiendo acceso');
     return true;

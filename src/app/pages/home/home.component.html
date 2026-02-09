@@ -5,7 +5,7 @@
   </div>
   } @else {
   <!-- CLIENT: Dashboard (estilos Figma; header y bottom nav vienen del main-layout) -->
-  @if (userRole() !== 'ENGINEER' && userRole() !== 'SUPERVISOR') {
+  @if (userRole() !== 'ENGINEER' && userRole() !== 'SUPERVISOR' && userRole() !== 'PARTNER') {
   <div class="min-h-full bg-gradient-to-b from-orange-50 to-white">
     <div class="p-4 space-y-6">
       <!-- Opciones de Financiamiento (primero) -->
@@ -27,7 +27,7 @@
 
       <!-- Quick action: Solicitar Servicio -->
       <div class="dashboard-section">
-        <button type="button" (click)="navigateTo('/plan-selection')"
+        <button type="button" (click)="navigateTo('/request')"
           class="w-full h-16 bg-gradient-to-r from-[#FF5500] to-[#FF6600] hover:from-[#FF6600] hover:to-[#FF7700] text-white text-lg font-medium shadow-lg rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.98]">
           <lucide-icon [name]="icons.Wrench" class="w-6 h-6"></lucide-icon>
           Solicitar Servicio
@@ -84,6 +84,21 @@
 </div>
 }
 
+<!-- PARTNER: Panel de proveedor -->
+@if (userRole() === 'PARTNER') {
+<div class="p-5 max-w-lg mx-auto">
+  <header class="mb-6">
+    <h1 class="text-xl font-black text-slate-900 tracking-tight">Panel Partner</h1>
+    <p class="text-slate-500 text-sm mt-0.5">Gestión de pedidos y materiales</p>
+  </header>
+  <a routerLink="/partner"
+    class="flex items-center justify-center gap-3 w-full py-4 px-6 bg-[#FF5500] text-white font-bold rounded-[2.5rem] shadow-orange-200 hover:shadow-[0_6px_20px_0_rgba(255,85,0,0.3)] transition-shadow no-underline">
+    <lucide-icon [name]="icons.ClipboardList" class="w-6 h-6"></lucide-icon>
+    <span>Ir al Panel</span>
+  </a>
+</div>
+}
+
 <!-- SUPERVISOR: KPIs + Gestión -->
 @if (userRole() === 'SUPERVISOR') {
 <div class="p-5 max-w-lg mx-auto">
@@ -101,7 +116,7 @@
       <p class="text-xs font-bold text-muted-foreground uppercase tracking-wider mt-1">Obras sin Ingeniero</p>
     </div>
   </div>
-  <a routerLink="/admin"
+  <a routerLink="/supervisor"
     class="flex items-center justify-center gap-3 w-full py-4 px-6 bg-[#FF5500] text-white font-bold rounded-[2.5rem] shadow-orange-200 hover:shadow-[0_6px_20px_0_rgba(255,85,0,0.3)] transition-shadow no-underline">
     <lucide-icon [name]="icons.Wrench" class="w-6 h-6"></lucide-icon>
     <span>Gestión de Créditos y Asignación</span>

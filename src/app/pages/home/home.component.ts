@@ -86,7 +86,7 @@ export class HomeComponent implements OnInit {
     if (service.status === 'Finalizado') {
       this.router.navigate(['/rating'], { state: { workId: String(service.id), title: service.title } });
     } else {
-      this.router.navigate(['/seguimiento'], { queryParams: { workId: String(service.id) } });
+      this.router.navigate(['/tracking'], { queryParams: { workId: String(service.id) } });
     }
   }
 

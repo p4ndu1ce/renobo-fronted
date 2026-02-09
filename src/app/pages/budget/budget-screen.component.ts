@@ -77,7 +77,7 @@ export class BudgetScreenComponent {
     const time = this.selectedTime();
     if (id == null || !date || !time) return;
     const budget = this.budgets.find((b) => b.id === id);
-    this.router.navigate(['/seguimiento'], {
+    this.router.navigate(['/tracking'], {
       state: { budget, scheduledDate: date, scheduledTime: time },
     });
   }

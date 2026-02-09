@@ -34,7 +34,9 @@ export class SplashScreenComponent implements OnInit {
       this.onComplete.emit();
       if (this.authService.isLoggedIn()) {
         if (this.authService.isSupervisor()) {
-          this.router.navigate(['/admin']);
+          this.router.navigate(['/supervisor']);
+        } else if (this.authService.isPartner()) {
+          this.router.navigate(['/partner']);
         } else {
           this.router.navigate(['/home']);
         }

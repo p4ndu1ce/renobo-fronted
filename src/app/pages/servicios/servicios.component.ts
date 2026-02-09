@@ -67,9 +67,9 @@ export class ServiciosComponent implements OnInit {
 
   goToSeguimiento(workId?: string): void {
     if (workId) {
-      this.router.navigate(['/seguimiento'], { queryParams: { workId } });
+      this.router.navigate(['/tracking'], { queryParams: { workId } });
     } else {
-      this.router.navigate(['/seguimiento']);
+      this.router.navigate(['/tracking']);
     }
   }
 
