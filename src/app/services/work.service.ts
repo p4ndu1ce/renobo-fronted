@@ -499,6 +499,33 @@ Equipo de Logística Renobo [Logo Naranja #fa5404]`;
   }
 
   /**
+   * Envía la valoración del cliente para una obra finalizada (rating 1-5 y comentario opcional).
+   * Solo el dueño de la obra puede valorar.
+   */
+  submitRating(workId: string, rating: number, ratingComment?: string): Observable<{ message: string; work: Work }> {
+    const body: { rating: number; ratingComment?: string } = { rating };
+    if (ratingComment?.trim()) body.ratingComment = ratingComment.trim();
+    return this.http.patch<{ message: string; work: Work }>(`${this.API_URL}/${workId}`, body).pipe(
+      tap((res) => {
+        if (res?.work) {
+          const w = this.transformWork(res.work);
+          const currentWorks = this._works();
+          this._works.set(currentWorks.map((x) => (x.id === workId ? w : x)));
+          const myWorks = this._myWorks();
+          if (myWorks.some((x) => x.id === workId)) {
+            this._myWorks.set(myWorks.map((x) => (x.id === workId ? w : x)));
+          }
+        }
+      }),
+      map((res) => ({ message: res?.message ?? 'OK', work: this.transformWork(res?.work!) })),
+      catchError((err) => {
+        console.error('Error en submitRating:', err);
+        throw err;
+      })
+    );
+  }
+
+  /**
    * Actualiza las respuestas de partners (checklist de disponibilidad). ENGINEER only.
    */
   updatePartnerResponse(workId: string, partnerResponses: Record<string, PartnerResponseStatus>): Observable<{ message: string; work: Work }> {

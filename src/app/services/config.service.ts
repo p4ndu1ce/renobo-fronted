@@ -27,9 +27,19 @@ export interface CreditPlan {
   interestPercent?: number;
 }
 
+export interface BankDetails {
+  bankName: string;
+  accountType: string;
+  accountNumber: string;
+  beneficiary: string;
+  rif: string;
+  referenceFormat: string;
+}
+
 export interface PublicConfig {
   services: Service[];
   creditPlans: CreditPlan[];
+  bankDetails?: BankDetails | null;
 }
 
 @Injectable({

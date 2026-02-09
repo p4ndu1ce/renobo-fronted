@@ -14,7 +14,7 @@
   </header>
 
   <div class="space-y-4 mb-8">
-    @for (plan of plans; track plan.id) {
+    @for (plan of plans(); track plan.id) {
       <!-- Contenedor de la card (marco): SIEMPRE bg-white -->
       <div
         class="rounded-[2.5rem] overflow-hidden bg-white transition-all"

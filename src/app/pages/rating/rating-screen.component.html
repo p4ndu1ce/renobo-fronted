@@ -76,13 +76,21 @@
         </div>
       </section>
 
+      @if (errorMessage()) {
+        <p class="text-sm text-rose-600 font-medium mb-3">{{ errorMessage() }}</p>
+      }
       <button
         type="button"
         (click)="submit()"
-        class="w-full h-14 rounded-xl bg-gradient-to-r from-[#FF5500] to-[#FF6600] hover:from-[#FF6600] hover:to-[#FF7700] text-white text-lg font-semibold flex items-center justify-center gap-2 transition-all active:scale-[0.99]"
+        [disabled]="isSubmitting()"
+        class="w-full h-14 rounded-xl bg-gradient-to-r from-[#FF5500] to-[#FF6600] hover:from-[#FF6600] hover:to-[#FF7700] text-white text-lg font-semibold flex items-center justify-center gap-2 transition-all active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed"
       >
-        <lucide-icon [name]="icons.Send" class="w-5 h-5"></lucide-icon>
-        Enviar Valoración
+        @if (isSubmitting()) {
+          <span>Enviando…</span>
+        } @else {
+          <lucide-icon [name]="icons.Send" class="w-5 h-5"></lucide-icon>
+          Enviar Valoración
+        }
       </button>
     }
   </div>

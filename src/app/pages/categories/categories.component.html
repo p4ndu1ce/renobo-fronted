@@ -8,7 +8,7 @@
   </header>
 
   <div class="p-4 space-y-4">
-    @for (category of categories; track category.id) {
+    @for (category of categories(); track category.id) {
       <section class="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden hover:shadow-lg transition-shadow">
         <div class="p-4">
           <div class="flex items-center gap-4 mb-3">

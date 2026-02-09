@@ -271,3 +271,16 @@ Todo el flujo técnico está conectado al backend; solo el fallback de planLimit
 11. **Notificaciones (opcional):** Endpoints de notificaciones persistentes si se quieren conservar entre sesiones.
 
 Si quieres, el siguiente paso puede ser: (1) implementar en backend los endpoints de Pagos y Rating, y (2) en frontend reemplazar los mocks de Home/Categories/Plan Selection por datos del config o nuevos endpoints.
+
+---
+
+## ✅ Hecho (implementado)
+
+- **Backend Rating:** En work-service se añadieron `rating`, `ratingComment`, `ratedAt` al modelo Work y al PATCH `/works/:id`. El cliente puede enviar solo `{ rating, ratingComment }` para su propia obra.
+- **Backend Pagos:** En work-service: tabla `Payments` (PK=USER#userId, SK=PAYMENT#date#uuid), handlers `GET /payments`, `POST /payments`, `GET /payments/next-due`. Next-due se calcula a partir de la primera obra activa del usuario (planAmount/12).
+- **Backend Config:** En config-service, `getPublicConfig` ahora incluye `bankDetails` (lectura de ítem CONFIG#BANK). Para que el front reciba datos bancarios hay que insertar en la tabla Config un ítem con PK=`CONFIG`, SK=`BANK` y atributos: bankName, accountType, accountNumber, beneficiary, rif, referenceFormat.
+- **Frontend Plan Selection:** Usa `configService.catalog()?.creditPlans`; si no hay catalog, fallback a planes Bronce/Plata/Oro hardcodeados.
+- **Frontend Home:** Categorías derivadas del config (servicios agrupados por category) con fallback; mismo para `categorias` (legacy).
+- **Frontend Categories:** Lista de categorías y servicios desde `configService.catalog()?.services` agrupados por category, con fallback.
+- **Frontend Pagos:** `PaymentsService` para GET payments, GET next-due, POST payment. Datos bancarios desde `configService.catalog()?.bankDetails` con fallback.
+- **Frontend Rating:** `workService.submitRating(workId, rating, comment)` con workId desde `history.state`; mensaje de error y estado de envío en la UI.

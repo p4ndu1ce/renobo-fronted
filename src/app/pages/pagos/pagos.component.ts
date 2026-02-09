@@ -1,21 +1,13 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { LucideIconsModule } from '../../shared/lucide-icons.module';
 import { ArrowLeft, CreditCard, Calendar, DollarSign, Check, Upload, CheckCircle2, ChevronRight, Send } from 'lucide-angular';
+import { ConfigService } from '../../services/config.service';
+import { PaymentsService, type PaymentRecord, type PaymentType } from '../../services/payments.service';
 
-export interface PaymentRecord {
-  id: string;
-  date: string;
-  amount: number;
-  description?: string;
-}
-
-export type PaymentType = 'inicial' | 'cuota' | 'adelanto';
-
-/** Datos bancarios para transferencia (mock; pueden venir de config). */
-const BANK_DETAILS = {
+const FALLBACK_BANK = {
   bankName: 'Banco de Venezuela',
   accountType: 'Cuenta Corriente',
   accountNumber: '0102-0123-4567-8901234',
@@ -31,11 +23,15 @@ const BANK_DETAILS = {
   templateUrl: './pagos.component.html',
   styleUrl: './pagos.component.css',
 })
-export class PagosComponent {
+export class PagosComponent implements OnInit {
   private router = inject(Router);
+  private configService = inject(ConfigService);
+  private paymentsService = inject(PaymentsService);
 
   readonly icons = { ArrowLeft, CreditCard, Calendar, DollarSign, Check, Upload, CheckCircle2, ChevronRight, Send };
-  readonly bankDetails = BANK_DETAILS;
+
+  /** Datos bancarios desde config o fallback. */
+  bankDetails = computed(() => this.configService.catalog()?.bankDetails ?? FALLBACK_BANK);
 
   /** 0 = historial, 1 = paso datos banco, 2 = paso formulario, 3 = éxito */
   step = signal(0);
@@ -48,14 +44,10 @@ export class PagosComponent {
   proofFile = signal<File | null>(null);
   proofFileName = signal<string | null>(null);
 
-  /** Historial de pagos (mock). */
-  payments = signal<PaymentRecord[]>([]);
-
-  /** Próxima cuota a pagar (mock; luego desde API). null = sin cuota pendiente. */
-  nextDue = signal<{ amount: number; dueDate: string } | null>({
-    amount: 85,
-    dueDate: '2026-02-20',
-  });
+  payments = this.paymentsService.payments;
+  nextDue = this.paymentsService.nextDue;
+  loading = this.paymentsService.loading;
+  submitting = this.paymentsService.submitting;
 
   paymentTypeLabel = computed(() => {
     const t = this.paymentType();
@@ -64,12 +56,9 @@ export class PagosComponent {
     return 'Pago de cuota';
   });
 
-  constructor() {
-    this.payments.set([
-      { id: '1', date: '2026-01-15T10:30:00', amount: 85, description: 'Cuota Plan Bronce' },
-      { id: '2', date: '2025-12-10T14:00:00', amount: 85, description: 'Cuota Plan Bronce' },
-      { id: '3', date: '2025-11-08T09:15:00', amount: 120, description: 'Cuota Plan Plata' },
-    ]);
+  ngOnInit(): void {
+    this.paymentsService.getPayments().subscribe();
+    this.paymentsService.getNextDue().subscribe();
   }
 
   goBack(): void {
@@ -109,8 +98,16 @@ export class PagosComponent {
   }
 
   submitPayment(): void {
-    // TODO: enviar a API (tipo, monto, referencia, fecha, archivo). Por ahora solo pasamos al éxito.
-    this.nextStep();
+    const amountStr = this.amount().trim().replace(/,/g, '');
+    const amountNum = parseFloat(amountStr);
+    if (isNaN(amountNum) || amountNum <= 0) return;
+    const type = this.paymentType();
+    const reference = this.reference().trim() || undefined;
+    const date = this.paymentDate().trim() || new Date().toISOString();
+    this.paymentsService.createPayment({ amount: amountNum, type, reference, date }).subscribe({
+      next: () => this.nextStep(),
+      error: () => {},
+    });
   }
 
   finishAndBack(): void {

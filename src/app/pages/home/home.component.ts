@@ -158,24 +158,53 @@ export class HomeComponent implements OnInit {
   /** Iconos Lucide para el dashboard (estilos Figma). */
   readonly icons = { House, Wrench, ClipboardList, CreditCard, Menu, Bell, User, Zap, Droplet, Hammer, PaintBucket, Settings, Wind };
 
-  /** Categorías del dashboard (interfaz Figma). */
-  categories = signal<FigmaServiceCategory[]>([
-    { id: 'electricidad', name: 'Electricidad', icon: 'Zap', color: 'text-yellow-500' },
-    { id: 'plomeria', name: 'Plomería', icon: 'Droplet', color: 'text-blue-500' },
-    { id: 'carpinteria', name: 'Carpintería', icon: 'Hammer', color: 'text-amber-700' },
-    { id: 'pintura', name: 'Pintura', icon: 'PaintBucket', color: 'text-purple-500' },
-    { id: 'aire', name: 'A/C', icon: 'Wind', color: 'text-cyan-500' },
-    { id: 'general', name: 'General', icon: 'Settings', color: 'text-muted-foreground' },
-  ]);
+  /** Mapa categoría (normalizada) → icono y color para UI. */
+  private static readonly CATEGORY_UI: Record<string, { icon: string; color: string }> = {
+    electricidad: { icon: 'Zap', color: 'text-yellow-500' },
+    plomeria: { icon: 'Droplet', color: 'text-blue-500' },
+    carpinteria: { icon: 'Hammer', color: 'text-amber-700' },
+    pintura: { icon: 'PaintBucket', color: 'text-purple-500' },
+    'a/c': { icon: 'Wind', color: 'text-cyan-500' },
+    general: { icon: 'Settings', color: 'text-muted-foreground' },
+    revestimiento: { icon: 'PaintBucket', color: 'text-purple-500' },
+    'i.e': { icon: 'Zap', color: 'text-yellow-500' },
+    'i.s': { icon: 'Droplet', color: 'text-blue-500' },
+    infraestructura: { icon: 'Hammer', color: 'text-amber-700' },
+    superestructura: { icon: 'Settings', color: 'text-muted-foreground' },
+    'a.s-a.b': { icon: 'Settings', color: 'text-muted-foreground' },
+  };
 
-  categorias: Categoria[] = [
-    { nombre: 'Electricidad', icono: '💡', bg: 'bg-amber-50' },
-    { nombre: 'Plomería', icono: '🔧', bg: 'bg-sky-50' },
-    { nombre: 'Carpintería', icono: '🪚', bg: 'bg-amber-50' },
-    { nombre: 'Pintura', icono: '🎨', bg: 'bg-purple-50' },
-    { nombre: 'A/C', icono: '❄️', bg: 'bg-cyan-50' },
-    { nombre: 'General', icono: '📦', bg: 'bg-slate-50' },
-  ];
+  /** Categorías del dashboard desde config (servicios agrupados); fallback a lista por defecto. */
+  categories = computed<FigmaServiceCategory[]>(() => {
+    const services = this.configService.catalog()?.services ?? [];
+    const byCategory = new Map<string, string[]>();
+    for (const s of services) {
+      const cat = (s.category || 'General').trim();
+      const list = byCategory.get(cat) ?? [];
+      if (!list.includes(s.name)) list.push(s.name);
+      byCategory.set(cat, list);
+    }
+    if (byCategory.size === 0) {
+      return [
+        { id: 'electricidad', name: 'Electricidad', icon: 'Zap', color: 'text-yellow-500' },
+        { id: 'plomeria', name: 'Plomería', icon: 'Droplet', color: 'text-blue-500' },
+        { id: 'general', name: 'General', icon: 'Settings', color: 'text-muted-foreground' },
+      ];
+    }
+    return Array.from(byCategory.entries()).map(([name, svcs]) => {
+      const id = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+      const ui = HomeComponent.CATEGORY_UI[id] ?? HomeComponent.CATEGORY_UI['general'] ?? { icon: 'Settings', color: 'text-muted-foreground' };
+      return { id, name, icon: ui.icon, color: ui.color, services: svcs };
+    });
+  });
+
+  /** Categorías legacy (emoji + bg) para compatibilidad; derivadas del mismo config. */
+  categorias = computed<Categoria[]>(() => {
+    const cats = this.categories();
+    const bg = ['bg-amber-50', 'bg-sky-50', 'bg-purple-50', 'bg-cyan-50', 'bg-slate-50'];
+    const icono = ['💡', '🔧', '🎨', '❄️', '📦'];
+    return cats.map((c, i) => ({ nombre: c.name, icono: icono[i % icono.length], bg: bg[i % bg.length] }));
+  });
 
   /** Navegación con datos opcionales (ej. desde Actividad Reciente). */
   navigateTo(path: string, data?: unknown) {

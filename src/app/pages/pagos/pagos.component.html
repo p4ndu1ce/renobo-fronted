@@ -96,24 +96,24 @@
         <div class="p-4 space-y-4">
           <div>
             <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Banco</p>
-            <p class="font-medium text-slate-900">{{ bankDetails.bankName }}</p>
+            <p class="font-medium text-slate-900">{{ bankDetails().bankName }}</p>
           </div>
           <div>
             <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Tipo de cuenta</p>
-            <p class="font-medium text-slate-900">{{ bankDetails.accountType }}</p>
+            <p class="font-medium text-slate-900">{{ bankDetails().accountType }}</p>
           </div>
           <div>
             <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Número de cuenta</p>
-            <p class="font-mono font-medium text-slate-900">{{ bankDetails.accountNumber }}</p>
+            <p class="font-mono font-medium text-slate-900">{{ bankDetails().accountNumber }}</p>
           </div>
           <div>
             <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Beneficiario</p>
-            <p class="font-medium text-slate-900">{{ bankDetails.beneficiary }}</p>
-            <p class="text-sm text-slate-500">RIF: {{ bankDetails.rif }}</p>
+            <p class="font-medium text-slate-900">{{ bankDetails().beneficiary }}</p>
+            <p class="text-sm text-slate-500">RIF: {{ bankDetails().rif }}</p>
           </div>
           <div class="pt-2 border-t border-slate-100">
             <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Referencia</p>
-            <p class="text-sm text-slate-700">{{ bankDetails.referenceFormat }}</p>
+            <p class="text-sm text-slate-700">{{ bankDetails().referenceFormat }}</p>
           </div>
         </div>
       </section>
@@ -200,7 +200,7 @@
         </div>
       </section>
 
-      <button type="button" (click)="submitPayment()" [disabled]="!proofFile()"
+      <button type="button" (click)="submitPayment()" [disabled]="submitting()"
         class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-[#FF5500] to-[#FF6600] hover:from-[#FF6600] hover:to-[#FF7700] text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
         <lucide-icon [name]="icons.Send" class="w-5 h-5"></lucide-icon>
         Enviar comprobante
