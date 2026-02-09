@@ -3,19 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { LoadingButtonComponent } from '../shared/components/loading-button/loading-button.component';
-import { LucideAngularModule, User, Mail, Phone, FileText, Lock } from 'lucide-angular';
+import { LucideAngularModule, User, Mail, Phone, FileText, Lock, FingerprintPattern } from 'lucide-angular';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    RouterLink,
-    LoadingButtonComponent,
-    LucideAngularModule,
-  ],
+  imports: [CommonModule, FormsModule, RouterLink, LucideAngularModule],
   templateUrl: './register.component.html',
   styleUrl: './register.component.css',
 })
@@ -42,6 +35,7 @@ export class RegisterComponent {
   readonly PhoneIcon = Phone;
   readonly FileTextIcon = FileText;
   readonly LockIcon = Lock;
+  readonly FingerprintIcon = FingerprintPattern;
 
   onSubmit() {
     const n = this.name().trim();

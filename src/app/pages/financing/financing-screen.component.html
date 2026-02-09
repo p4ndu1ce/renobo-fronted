@@ -1,59 +1,59 @@
-<div class="min-h-screen bg-background pb-24 font-outfit">
-  <div class="bg-primary text-primary-foreground p-5 shadow-lg sticky top-0 z-50 rounded-b-3xl">
-    <div class="flex items-center gap-4">
-      <button type="button" (click)="goBack()" class="p-2 hover:bg-white/10 rounded-xl transition-colors" aria-label="Volver">
+<div class="financing-screen min-h-screen bg-gradient-to-b from-orange-50 to-white pb-20">
+  <!-- Header Figma -->
+  <header class="bg-gradient-to-r from-[#FF5500] to-[#FF6600] text-white p-4 shadow-lg sticky top-0 z-10">
+    <div class="flex items-center gap-3">
+      <button type="button" (click)="goBack()" class="p-2 -m-2 text-white hover:bg-white/20 rounded-lg transition-colors" aria-label="Volver">
         <lucide-icon [name]="icons.ArrowLeft" class="w-6 h-6"></lucide-icon>
       </button>
-      <h1 class="text-xl font-poppins font-bold">Financiamiento</h1>
+      <h1 class="text-xl font-bold">Opciones de Financiamiento</h1>
     </div>
-  </div>
+  </header>
 
-  <div class="p-5 space-y-6">
-    <div class="bg-green-600 text-white p-5 rounded-[2rem] shadow-xl shadow-green-500/20 flex items-center gap-4">
-      <div class="bg-white/20 p-3 rounded-2xl">
-        <lucide-icon [name]="icons.Check" class="w-6 h-6"></lucide-icon>
+  <div class="p-4 space-y-4">
+    <!-- Benefits Banner Figma -->
+    <section class="rounded-xl overflow-hidden bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-sm">
+      <div class="p-4 flex items-center gap-3">
+        <div class="bg-white/20 p-3 rounded-full shrink-0">
+          <lucide-icon [name]="icons.Check" class="w-6 h-6"></lucide-icon>
+        </div>
+        <div>
+          <h3 class="font-bold text-base">¡Financia tu proyecto!</h3>
+          <p class="text-sm opacity-90">Cero intereses • Cuotas flexibles</p>
+        </div>
       </div>
-      <div>
-        <h3 class="font-bold text-lg leading-tight">¡Proyecto Financiado!</h3>
-        <p class="text-xs opacity-80">Cero intereses • Cuotas fijas • Aprobación express</p>
-      </div>
-    </div>
+    </section>
 
+    <!-- Planes de financiación Figma -->
     <div class="space-y-4">
-      <h3 class="font-poppins font-bold text-lg text-foreground px-1">Selecciona un Plan</h3>
-
       @for (plan of financingPlans; track plan.id) {
         <div
           (click)="selectPlan(plan.id)"
-          [class]="selectedPlanId() === plan.id ? 'border-[#FF5500] ring-2 ring-[#FF5500]/20 shadow-lg' : 'border-border/40'"
-          class="bg-card border p-5 rounded-[2rem] transition-all cursor-pointer active:scale-[0.98]">
-
-          <div class="flex items-start justify-between mb-3">
-            <div class="flex items-center gap-4">
-              <div [class]="'bg-gradient-to-br ' + plan.color + ' p-3 rounded-2xl text-white shadow-md'">
+          [class]="selectedPlanId() === plan.id ? 'border-2 shadow-lg ' + plan.borderColor : 'border border-slate-200 hover:shadow-md'"
+          class="rounded-xl bg-white p-5 cursor-pointer transition-all active:scale-[0.99]">
+          <div class="flex items-start justify-between mb-4">
+            <div class="flex items-center gap-3">
+              <div [class]="'bg-gradient-to-br ' + plan.color + ' p-3 rounded-lg text-white shrink-0'">
                 <lucide-icon [name]="plan.icon" class="w-7 h-7"></lucide-icon>
               </div>
               <div>
-                <h4 class="font-poppins font-bold text-foreground">{{ plan.name }}</h4>
-                <span class="text-[10px] font-black text-[#FF5500] bg-orange-50 px-2 py-0.5 rounded-full tracking-tighter">
+                <h3 class="font-bold text-lg text-slate-900">{{ plan.name }}</h3>
+                <span class="inline-block mt-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
                   {{ plan.range }}
                 </span>
               </div>
             </div>
             @if (selectedPlanId() === plan.id) {
-              <div class="bg-green-500 text-white rounded-full p-1">
-                <lucide-icon [name]="icons.Check" class="w-4 h-4"></lucide-icon>
+              <div class="bg-green-500 text-white rounded-full p-1 shrink-0">
+                <lucide-icon [name]="icons.Check" class="w-5 h-5"></lucide-icon>
               </div>
             }
           </div>
-
-          <p class="text-xs text-muted-foreground mb-4 font-medium">{{ plan.description }}</p>
-
-          <div class="grid grid-cols-1 gap-2">
+          <p class="text-sm text-gray-600 mb-3">{{ plan.description }}</p>
+          <div class="space-y-2">
             @for (feature of plan.features; track feature) {
-              <div class="flex items-center gap-2 text-[11px] font-semibold text-foreground/80">
-                <lucide-icon [name]="icons.Check" class="w-3 h-3 text-green-500"></lucide-icon>
-                {{ feature }}
+              <div class="flex items-center gap-2 text-sm text-slate-700">
+                <lucide-icon [name]="icons.Check" class="w-4 h-4 text-green-600 shrink-0"></lucide-icon>
+                <span>{{ feature }}</span>
               </div>
             }
           </div>
@@ -61,54 +61,53 @@
       }
     </div>
 
-    @if (showSimulator()) {
-      <div class="bg-primary text-primary-foreground rounded-[2.5rem] overflow-hidden shadow-2xl">
-        <div class="p-6 bg-white/5 border-b border-white/10 flex items-center gap-3">
-          <lucide-icon [name]="icons.Calculator" class="text-[#ffffff] w-6 h-6"></lucide-icon>
-          <h3 class="font-poppins text-white font-bold">Simulador de Cuotas</h3>
+    <!-- Simulador de cuotas Figma -->
+    @if (showSimulator() && selectedPlan()) {
+      <section class="rounded-xl border-2 border-orange-300 bg-white shadow-lg overflow-hidden">
+        <div class="bg-gradient-to-r from-[#FF5500] to-[#FF6600] text-white p-4 flex items-center gap-2">
+          <lucide-icon [name]="icons.Calculator" class="w-6 h-6"></lucide-icon>
+          <h2 class="font-bold text-lg">Simulador de Cuotas</h2>
         </div>
-
-        <div class="bg-white p-6 space-y-6">
-          <div class="space-y-2">
-            <label class="text-xs font-bold uppercase tracking-widest opacity-60">Monto del Proyecto ($)</label>
+        <div class="p-5 space-y-4">
+          <div>
+            <label for="amount" class="block text-sm font-medium text-slate-700 mb-1">Monto del Proyecto</label>
             <div class="relative">
-              <lucide-icon [name]="icons.DollarSign" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8a8a8a]"></lucide-icon>
+              <lucide-icon [name]="icons.DollarSign" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"></lucide-icon>
               <input
+                id="amount"
                 type="number"
                 [ngModel]="amount()"
                 (ngModelChange)="amount.set($event === '' || $event == null ? null : +$event)"
-                [min]="selectedPlan()?.min ?? 200"
-                [max]="selectedPlan()?.max ?? 1500"
+                [min]="selectedPlan()?.minAmount ?? 200"
+                [max]="selectedPlan()?.maxAmount ?? 1500"
                 placeholder="Ej: 800"
-                class="w-full bg-gray-700/10 border border-gray-700/20 rounded-2xl py-4 pl-12 pr-4 outline-none focus:ring-2 focus:ring-[#FF5500] transition-all text-xl text-primary-foreground"
-              />
+                class="w-full border border-slate-200 rounded-lg py-3 pl-10 pr-4 outline-none focus:ring-2 focus:ring-[#FF5500] focus:border-[#FF5500] text-slate-900" />
             </div>
           </div>
 
-          <div class="space-y-2">
-            <label class="text-xs font-bold uppercase tracking-widest opacity-60">Plazo (Meses)</label>
+          <div>
+            <label for="installments" class="block text-sm font-medium text-slate-700 mb-1">Número de Cuotas</label>
             <select
+              id="installments"
               [ngModel]="installments()"
               (ngModelChange)="installments.set(+$event)"
-              class="w-full bg-gray-700/10 border border-gray-700/20 rounded-2xl py-4 px-4 outline-none focus:ring-2 focus:ring-[#FF5500] transition-all appearance-none text-primary-foreground"
-            >
-              <option [value]="3" class="bg-primary text-white">3 cuotas</option>
-              <option [value]="6" class="bg-primary text-white">6 cuotas</option>
-              <option [value]="9" class="bg-primary text-white">9 cuotas</option>
-              <option [value]="12" class="bg-primary text-white">12 cuotas</option>
+              class="w-full border border-slate-200 rounded-lg py-3 px-4 outline-none focus:ring-2 focus:ring-[#FF5500] focus:border-[#FF5500] text-slate-900 bg-white appearance-none">
+              <option [value]="3">3 cuotas</option>
+              <option [value]="6">6 cuotas</option>
+              <option [value]="9">9 cuotas</option>
+              <option [value]="12">12 cuotas</option>
             </select>
           </div>
 
-          @if (amount() && amount()! > 0) {
-            <div class="bg-[#fff8ed] rounded-3xl p-6 space-y-4 shadow-inner">
+          @if (amount() != null && amount()! > 0) {
+            <div class="bg-orange-50 p-4 rounded-lg space-y-3 border border-orange-100">
               <div class="flex justify-between items-center">
-                <span class="text-lg font-bold text-black/50 uppercase">Inicial requerida (40%):</span>
-                <span class="text-2xl font-black text-orange-500">${{ downPayment() | number:'1.2-2' }}</span>
+                <span class="text-slate-700">Inicial (40%):</span>
+                <span class="text-xl font-bold text-orange-600">${{ downPayment() | number:'1.2-2' }}</span>
               </div>
-              <div class="w-full h-px bg-black/20"></div>
               <div class="flex justify-between items-center">
-                <span class="text-lg font-bold text-black/50 uppercase">Cuota mensual fija:</span>
-                <span class="text-3xl font-black text-orange-500">${{ monthlyInstallment() | number:'1.2-2' }}</span>
+                <span class="text-slate-700">Cuota mensual:</span>
+                <span class="text-2xl font-bold text-orange-600">${{ monthlyInstallment() | number:'1.2-2' }}</span>
               </div>
               <div class="pt-2 border-t border-orange-200">
                 <p class="text-xs text-gray-600 text-center">
@@ -122,23 +121,23 @@
             type="button"
             (click)="requestFinancing()"
             [disabled]="!amount() || amount()! <= 0"
-            class="w-full py-5 bg-primary text-primary-foreground rounded-2xl shadow-lg hover:scale-[1.02] active:scale-95 disabled:opacity-30 disabled:pointer-events-none transition-all flex items-center justify-center gap-2"
-          >
-            <lucide-icon [name]="icons.CreditCard" class="text-white w-5 h-5"></lucide-icon>
-            <span class="text-white font-bold">SOLICITAR FINANCIAMIENTO</span>
+            class="w-full py-3.5 rounded-lg font-semibold text-white flex items-center justify-center gap-2 bg-gradient-to-r from-[#FF5500] to-[#FF6600] hover:from-[#FF6600] hover:to-[#FF7700] transition-all disabled:opacity-50 disabled:pointer-events-none active:scale-[0.98]">
+            <lucide-icon [name]="icons.CreditCard" class="w-5 h-5"></lucide-icon>
+            Solicitar Financiamiento
           </button>
         </div>
-      </div>
+      </section>
     }
 
-    <div class="bg-blue-50 border border-blue-100 p-5 rounded-[2rem] flex items-start gap-4">
-      <lucide-icon [name]="icons.CreditCard" class="text-blue-600 w-6 h-6 shrink-0"></lucide-icon>
-      <div>
-        <h4 class="font-bold text-blue-900 text-sm">Nota Legal</h4>
-        <p class="text-[11px] text-blue-800 leading-relaxed mt-1">
-          Cálculos basados en divisas. Los pagos en Bs. se procesarán a la tasa oficial del Banco Central de Venezuela (BCV) del día de pago.
+    <!-- Nota importante Figma -->
+    <section class="rounded-xl bg-blue-50 border border-blue-200 overflow-hidden">
+      <div class="p-4">
+        <h4 class="font-bold text-blue-900 mb-2">Nota Importante</h4>
+        <p class="text-sm text-blue-800">
+          Los pagos están sujetos a cambios según la tasa del Banco Central de
+          Venezuela, según día de pago.
         </p>
       </div>
-    </div>
+    </section>
   </div>
 </div>

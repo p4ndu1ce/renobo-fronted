@@ -5,7 +5,8 @@ import { WorkService } from '../../services/work.service';
 import { AuthService } from '../../services/auth.service';
 import { EngineerService } from '../../services/engineer.service';
 import { ClientMaterialSummaryComponent } from './client-material-summary/client-material-summary.component';
-import type { Work, WorkStatus } from '../../services/work.service';
+import { LucideAngularModule, ArrowLeft, MapPin, Clock, Phone, MessageCircle, Star, CheckCircle2 } from 'lucide-angular';
+import type { WorkStatus } from '../../services/work.service';
 
 /** Pasos del stepper de seguimiento (orden fijo). */
 const TRACKING_STEPS: { key: WorkStatus | string; label: string }[] = [
@@ -24,12 +25,14 @@ const STATUS_INDEX: Record<string, number> = {
   TECHNICAL_VISIT: 2,
   WAITING_PARTNERS: 3,
   IN_PROGRESS: 4,
+  FINISHED: 4,
+  REJECTED: 0,
 };
 
 @Component({
   selector: 'app-service-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, ClientMaterialSummaryComponent],
+  imports: [CommonModule, RouterLink, ClientMaterialSummaryComponent, LucideAngularModule],
   templateUrl: './service-detail.component.html',
   styleUrl: './service-detail.component.css',
 })
@@ -78,6 +81,31 @@ export class ServiceDetailComponent implements OnInit {
     return null;
   });
 
+  /** Porcentaje de progreso para la barra (estilo Figma). */
+  progressPercentage = computed(() => {
+    const w = this.work();
+    if (!w) return 0;
+    const idx = STATUS_INDEX[w.status] ?? 0;
+    return (idx / (TRACKING_STEPS.length - 1)) * 100;
+  });
+
+  readonly icons = { ArrowLeft, MapPin, Clock, Phone, MessageCircle, Star, CheckCircle2 };
+
+  /** Etiqueta legible del estado (para el badge). */
+  getStatusLabel(status: WorkStatus | string): string {
+    const labels: Record<string, string> = {
+      CREDIT_PENDING: 'Crédito Solicitado',
+      CREDIT_APPROVED: 'Aprobado',
+      TECHNICAL_VISIT_PENDING: 'Visita pendiente',
+      TECHNICAL_VISIT: 'Visita técnica',
+      WAITING_PARTNERS: 'Pedido de materiales',
+      IN_PROGRESS: 'En proceso',
+      REJECTED: 'Rechazado',
+      FINISHED: 'Finalizado',
+    };
+    return labels[status] ?? String(status);
+  }
+
   ngOnInit(): void {
     this.route.queryParams.subscribe((params) => {
       const id = params['workId'] ?? null;
@@ -99,6 +127,6 @@ export class ServiceDetailComponent implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/servicios']);
+    this.router.navigate(['/home']);
   }
 }

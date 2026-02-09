@@ -26,8 +26,8 @@ export const guestGuard: CanActivateFn = (route, state) => {
           resolve(false);
           return;
         }
-        console.log('[guestGuard] logueado → redirigiendo a /calculadora', { url: state.url });
-        router.navigate(['/calculadora']);
+        console.log('[guestGuard] logueado → redirigiendo a /home', { url: state.url });
+        router.navigate(['/home']);
         resolve(false);
         return;
       }

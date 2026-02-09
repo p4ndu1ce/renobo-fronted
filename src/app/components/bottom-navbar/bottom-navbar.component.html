@@ -1,58 +1,71 @@
-<nav class="fixed bottom-6 left-6 right-6 max-w-lg mx-auto bg-[#FF5500]/95 backdrop-blur-lg border border-white/10 rounded-[2rem] shadow-2xl flex justify-around items-center px-4 z-50 safe-area-pb nav-height">
-  <a
-    routerLink="/home"
-    routerLinkActive="nav-item-active"
-    [routerLinkActiveOptions]="{ exact: true }"
-    class="flex flex-col items-center gap-1 py-3 text-white/50 hover:text-white transition-colors min-w-[64px] [&.nav-item-active]:text-[#FF5500]"
-  >
-    <lucide-icon [name]="icons.House" class="w-6 h-6"></lucide-icon>
-    <span class="text-[10px] font-bold">Inicio</span>
-  </a>
-
-  @if (userRole() === 'ENGINEER') {
+<!-- Bottom nav: estilos Figma (fijo abajo, fondo blanco, borde superior, 5 ítems) -->
+<nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-lg z-50 safe-area-pb">
+  <div class="flex justify-around items-center py-3">
     <a
-      routerLink="/engineer"
-      routerLinkActive="nav-item-active"
-      class="flex flex-col items-center gap-1 py-3 text-white/50 hover:text-white transition-colors min-w-[64px] [&.nav-item-active]:text-[#FF5500]"
+      routerLink="/home"
+      routerLinkActive="nav-item-active text-[#FF5500]"
+      [routerLinkActiveOptions]="{ exact: true }"
+      class="flex flex-col items-center gap-1 py-1 px-3 text-slate-600 hover:text-[#FF5500] transition-colors no-underline"
     >
-      <lucide-icon [name]="icons.ClipboardList" class="w-6 h-6"></lucide-icon>
-      <span class="text-[10px] font-bold">Obras</span>
+      <lucide-icon [name]="icons.House" class="w-6 h-6"></lucide-icon>
+      <span class="text-xs">Inicio</span>
     </a>
-  } @else if (userRole() === 'SUPERVISOR') {
-    <a
-      routerLink="/admin"
-      routerLinkActive="nav-item-active"
-      class="flex flex-col items-center gap-1 py-3 text-white/50 hover:text-white transition-colors min-w-[64px] [&.nav-item-active]:text-[#FF5500]"
-    >
-      <lucide-icon [name]="icons.Settings" class="w-6 h-6"></lucide-icon>
-      <span class="text-[10px] font-bold">Panel</span>
-    </a>
-  } @else {
-    <a
-      routerLink="/seguimiento"
-      routerLinkActive="nav-item-active"
-      class="flex flex-col items-center gap-1 py-3 text-white/50 hover:text-white transition-colors min-w-[64px] [&.nav-item-active]:text-[#FF5500]"
-    >
-      <lucide-icon [name]="icons.ClipboardList" class="w-6 h-6"></lucide-icon>
-      <span class="text-[10px] font-bold">Obras</span>
-    </a>
-  }
 
-  <a
-    routerLink="/categories"
-    routerLinkActive="nav-item-active"
-    class="flex flex-col items-center gap-1 py-3 text-white/50 hover:text-white transition-colors min-w-[64px] [&.nav-item-active]:text-[#FF5500]"
-  >
-    <lucide-icon [name]="icons.Wrench" class="w-6 h-6"></lucide-icon>
-    <span class="text-[10px] font-bold">Servicios</span>
-  </a>
+    @if (userRole() === 'ENGINEER') {
+      <a
+        routerLink="/engineer"
+        routerLinkActive="nav-item-active text-[#FF5500]"
+        class="flex flex-col items-center gap-1 py-1 px-3 text-slate-600 hover:text-[#FF5500] transition-colors no-underline"
+      >
+        <lucide-icon [name]="icons.ClipboardList" class="w-6 h-6"></lucide-icon>
+        <span class="text-xs">Obras</span>
+      </a>
+    } @else if (userRole() === 'SUPERVISOR') {
+      <a
+        routerLink="/admin"
+        routerLinkActive="nav-item-active text-[#FF5500]"
+        class="flex flex-col items-center gap-1 py-1 px-3 text-slate-600 hover:text-[#FF5500] transition-colors no-underline"
+      >
+        <lucide-icon [name]="icons.Settings" class="w-6 h-6"></lucide-icon>
+        <span class="text-xs">Panel</span>
+      </a>
+    } @else {
+      <a
+lim        routerLink="/categories"
+        routerLinkActive="nav-item-active text-[#FF5500]"
+        class="flex flex-col items-center gap-1 py-1 px-3 text-slate-600 hover:text-[#FF5500] transition-colors no-underline"
+      >
+        <lucide-icon [name]="icons.Wrench" class="w-6 h-6"></lucide-icon>
+        <span class="text-xs">Servicios</span>
+      </a>
+    }
 
-  <a
-    routerLink="/profile"
-    routerLinkActive="nav-item-active"
-    class="flex flex-col items-center gap-1 py-3 text-white/50 hover:text-white transition-colors min-w-[64px] [&.nav-item-active]:text-[#FF5500]"
-  >
-    <lucide-icon [name]="icons.User" class="w-6 h-6"></lucide-icon>
-    <span class="text-[10px] font-bold">Perfil</span>
-  </a>
+    @if (userRole() !== 'ENGINEER' && userRole() !== 'SUPERVISOR') {
+      <a
+        routerLink="/seguimiento"
+        routerLinkActive="nav-item-active text-[#FF5500]"
+        class="flex flex-col items-center gap-1 py-1 px-3 text-slate-600 hover:text-[#FF5500] transition-colors no-underline"
+      >
+        <lucide-icon [name]="icons.ClipboardList" class="w-6 h-6"></lucide-icon>
+        <span class="text-xs">Seguimiento</span>
+      </a>
+      <a
+        routerLink="/pagos"
+        routerLinkActive="nav-item-active text-[#FF5500]"
+        class="flex flex-col items-center gap-1 py-1 px-3 text-slate-600 hover:text-[#FF5500] transition-colors no-underline"
+      >
+        <lucide-icon [name]="icons.CreditCard" class="w-6 h-6"></lucide-icon>
+        <span class="text-xs">Pagos</span>
+      </a>
+    }
+
+    <a
+      routerLink="/profile"
+      routerLinkActive="nav-item-active text-[#FF5500]"
+      class="flex flex-col items-center gap-1 py-1 px-3 text-slate-600 hover:text-[#FF5500] transition-colors no-underline"
+    >
+      <lucide-icon [name]="icons.User" class="w-6 h-6"></lucide-icon>
+      <span class="text-xs">Perfil</span>
+    </a>
+  </div>
 </nav>

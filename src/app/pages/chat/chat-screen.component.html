@@ -1,0 +1,56 @@
+<div class="chat-screen min-h-screen bg-white flex flex-col">
+  <header class="bg-gradient-to-r from-[#FF5500] to-[#FF6600] text-white p-4 shadow-lg shrink-0">
+    <div class="flex items-center gap-3">
+      <button type="button" (click)="goBack()" class="p-2 -m-2 text-white hover:bg-white/20 rounded-lg transition-colors" aria-label="Volver">
+        <lucide-icon [name]="icons.ArrowLeft" class="w-6 h-6"></lucide-icon>
+      </button>
+      <div class="w-10 h-10 rounded-full bg-white text-[#FF5500] flex items-center justify-center font-bold text-sm shrink-0">
+        {{ technicianInitials }}
+      </div>
+      <div class="min-w-0 flex-1">
+        <h2 class="font-bold text-slate-900">{{ technicianName }}</h2>
+        <p class="text-xs opacity-90">En línea</p>
+      </div>
+    </div>
+  </header>
+
+  <div class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+    @for (msg of messages(); track msg.id) {
+      <div [class]="msg.sender === 'user' ? 'flex justify-end' : 'flex justify-start'">
+        <div
+          [class]="msg.sender === 'user' ? 'bg-[#FF5500] text-white' : 'bg-white shadow border border-slate-200'"
+          class="max-w-[75%] rounded-lg p-3"
+        >
+          <p class="text-sm">{{ msg.text }}</p>
+          <p [class]="msg.sender === 'user' ? 'text-orange-100' : 'text-gray-500'" class="text-xs mt-1">
+            {{ msg.time }}
+          </p>
+        </div>
+      </div>
+    }
+  </div>
+
+  <div class="border-t border-slate-200 bg-white p-4 shrink-0">
+    <div class="flex gap-2">
+      <button type="button" class="p-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50" aria-label="Adjuntar">
+        <lucide-icon [name]="icons.Paperclip" class="w-5 h-5"></lucide-icon>
+      </button>
+      <input
+        type="text"
+        [ngModel]="newMessage()"
+        (ngModelChange)="newMessage.set($event)"
+        (keydown.enter)="sendMessage()"
+        placeholder="Escribe un mensaje..."
+        class="flex-1 px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF5500]/50"
+      />
+      <button
+        type="button"
+        (click)="sendMessage()"
+        class="p-2 rounded-lg bg-[#FF5500] hover:bg-[#FF6600] text-white transition-colors"
+        aria-label="Enviar"
+      >
+        <lucide-icon [name]="icons.Send" class="w-5 h-5"></lucide-icon>
+      </button>
+    </div>
+  </div>
+</div>

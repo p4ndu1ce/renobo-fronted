@@ -5,19 +5,12 @@ import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../services/auth.service';
 import { PartnerService } from '../services/partner.service';
-import { LoadingButtonComponent } from '../shared/components/loading-button/loading-button.component';
 import { LucideAngularModule, Mail, Lock, FingerprintPattern } from 'lucide-angular';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    RouterLink,
-    LoadingButtonComponent,
-    LucideAngularModule,
-  ],
+  imports: [CommonModule, FormsModule, RouterLink, LucideAngularModule],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css',
 })

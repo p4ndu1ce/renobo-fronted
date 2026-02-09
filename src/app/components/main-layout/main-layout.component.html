@@ -1,39 +1,39 @@
 <div class="main-layout min-h-screen flex flex-col bg-background font-outfit pb-24">
-  <header class="bg-[#FF5500] text-white p-6 rounded-b-[2rem] shadow-2xl shrink-0">
+  <!-- Header: estilos Figma (gradient, saludo, avatar blanco con inicial naranja) -->
+  <header class="bg-gradient-to-r from-[#FF5500] to-[#FF6600] text-white p-4 shadow-lg shrink-0">
     <div class="flex items-center justify-between">
-      <div class="flex items-center gap-4">
-        <div class="p-2 bg-white/10 rounded-xl backdrop-blur-md cursor-pointer active:scale-95 transition-transform" aria-label="Menú">
+      <div class="flex items-center gap-3">
+        <button type="button" class="p-1 -m-1 cursor-pointer active:scale-95 transition-transform" aria-label="Menú">
           <lucide-icon [name]="icons.Menu" class="w-6 h-6"></lucide-icon>
-        </div>
+        </button>
         <div>
-          <h2 class="font-poppins font-bold text-xl leading-tight">Hola, {{ userName() }}</h2>
-          <p class="text-xs opacity-70 tracking-wide">Panel de Control Renobo</p>
+          <h2 class="font-bold text-lg">Hola, {{ userName() }}</h2>
+          <p class="text-sm opacity-90">Bienvenido de nuevo</p>
         </div>
       </div>
-      <div class="flex items-center gap-3">
-        <a routerLink="/home" (click)="closeProfileMenu()" class="relative p-2 bg-white/10 rounded-xl backdrop-blur-md" aria-label="Notificaciones">
-          <lucide-icon [name]="icons.Bell" class="w-5 h-5"></lucide-icon>
-          <span class="absolute top-2 right-2 w-2 h-2 bg-white rounded-full border-2 border-[#FF5500]" aria-hidden="true"></span>
+      <div class="flex items-center gap-2">
+        <a routerLink="/home" (click)="closeProfileMenu()" class="p-1 -m-1" aria-label="Notificaciones">
+          <lucide-icon [name]="icons.Bell" class="w-6 h-6 cursor-pointer"></lucide-icon>
         </a>
         <div class="relative">
           <button
             type="button"
             (click)="toggleProfileMenu()"
-            class="w-11 h-11 bg-[#FF5500] rounded-2xl flex items-center justify-center font-bold text-white shadow-lg shadow-orange-500/20"
+            class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-[#FF5500] font-bold text-sm shadow-sm"
             aria-label="Perfil"
             [attr.aria-expanded]="isProfileMenuOpen()"
           >
             {{ userInitials() }}
           </button>
           @if (isProfileMenuOpen()) {
-            <div class="absolute right-0 top-full mt-1 min-w-[180px] rounded-2xl bg-white border border-slate-200 shadow-lg py-1 z-50 text-slate-800">
-              <a routerLink="/profile" (click)="closeProfileMenu()" class="block w-full px-4 py-2.5 text-left text-sm hover:bg-slate-50 rounded-t-2xl">
+            <div class="absolute right-0 top-full mt-1 min-w-[180px] rounded-xl bg-white border border-slate-200 shadow-lg py-1 z-50 text-slate-800">
+              <a routerLink="/profile" (click)="closeProfileMenu()" class="block w-full px-4 py-2.5 text-left text-sm hover:bg-slate-50 rounded-t-xl">
                 Mi Perfil
               </a>
               <button type="button" (click)="closeProfileMenu()" class="w-full px-4 py-2.5 text-left text-sm hover:bg-slate-50">
                 Configuración
               </button>
-              <button type="button" (click)="logout()" class="w-full px-4 py-2.5 text-left text-sm text-rose-600 hover:bg-rose-50 font-medium rounded-b-2xl">
+              <button type="button" (click)="logout()" class="w-full px-4 py-2.5 text-left text-sm text-rose-600 hover:bg-rose-50 font-medium rounded-b-xl">
                 Cerrar Sesión
               </button>
             </div>

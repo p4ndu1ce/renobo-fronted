@@ -4,12 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { LucideAngularModule, ArrowLeft, User, Mail, Phone, FileText, Upload, Send, CircleCheck } from 'lucide-angular';
 import { AuthService } from '../../services/auth.service';
-
-export interface SimulatorData {
-  plan?: string | null;
-  amount?: number | null;
-  installments?: number | null;
-}
+import type { FigmaFinancingFormData } from '../../models/figma-ui.types';
 
 @Component({
   selector: 'app-financing-form',
@@ -22,7 +17,8 @@ export class FinancingFormComponent implements OnInit {
   private auth = inject(AuthService);
   private router = inject(Router);
 
-  simulatorData = computed(() => this.auth.navigationData() as SimulatorData | null);
+  /** Datos del plan/simulador (interfaz Figma); el backend puede devolver esto en el futuro. */
+  simulatorData = computed(() => this.auth.navigationData() as (FigmaFinancingFormData & { amount?: number }) | null);
   data = this.simulatorData;
   planName = computed(() => {
     const planId = this.data()?.plan;
@@ -51,10 +47,12 @@ export class FinancingFormComponent implements OnInit {
   files = signal<File[]>([]);
 
   ngOnInit() {
-    const d = this.auth.navigationData();
-    const data = d && typeof d === 'object' && 'amount' in d ? (d as { amount?: number }) : null;
-    if (data?.amount != null) {
-      this.form.update((f) => ({ ...f, budget: String(data.amount) }));
+    const d = this.auth.navigationData() as FigmaFinancingFormData & { amount?: number } | null;
+    if (d && (d.amount != null || (typeof (d as FigmaFinancingFormData).amount === 'string'))) {
+      const amount = typeof (d as { amount?: number | string }).amount === 'number'
+        ? (d as { amount: number }).amount
+        : parseFloat((d as FigmaFinancingFormData).amount ?? '');
+      if (!isNaN(amount)) this.form.update((f) => ({ ...f, budget: String(amount) }));
     }
   }
 

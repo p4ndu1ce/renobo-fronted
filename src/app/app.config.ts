@@ -34,6 +34,15 @@ import {
   Upload,
   Send,
   CircleCheck,
+  MapPin,
+  Clock,
+  MessageCircle,
+  CheckCircle2,
+  ChevronRight,
+  Calendar,
+  Camera,
+  Image,
+  Paperclip,
 } from 'lucide-angular';
 
 export const appConfig: ApplicationConfig = {
@@ -70,6 +79,15 @@ export const appConfig: ApplicationConfig = {
         Upload,
         Send,
         CircleCheck,
+        MapPin,
+        Clock,
+        MessageCircle,
+        CheckCircle2,
+        ChevronRight,
+        Calendar,
+        Camera,
+        Image,
+        Paperclip,
       }),
     },
     // withHashLocation: en APK/Capacitor no hay servidor real; rutas tipo /home recargan el WebView.

@@ -2,7 +2,7 @@ import { Component, inject, computed, OnInit, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { LucideAngularModule, Wrench, ClipboardList, CreditCard } from 'lucide-angular';
+import { LucideAngularModule, House, Wrench, ClipboardList, CreditCard, Menu, Bell, User, Zap, Droplet, Hammer, PaintBucket, Settings, Wind } from 'lucide-angular';
 import { ConfigService } from '../../services/config.service';
 import type { CreditPlan } from '../../services/config.service';
 import { WorkService } from '../../services/work.service';
@@ -10,6 +10,7 @@ import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
 import { SkeletonCardComponent } from '../../shared/components/skeleton-card/skeleton-card.component';
 import type { WorkStatus, CreditPlanId } from '../../services/work.service';
+import type { FigmaServiceCategory, FigmaRecentService } from '../../models/figma-ui.types';
 
 export interface Categoria {
   nombre: string;
@@ -70,16 +71,23 @@ export class HomeComponent implements OnInit {
 
   recentWorks = computed(() => this.workService.myWorks().slice(0, 3));
 
-  /** Servicios recientes para la sección "Servicios Recientes" (Actividades recientes). Origen: señal local; luego puede venir de API. */
-  recentServices = signal([
-    { id: 1, title: 'Reparación eléctrica', status: 'En proceso', date: '05/01/2026' },
-    { id: 2, title: 'Instalación de lavamanos', status: 'Finalizado', date: '28/12/2025' },
-  ]);
+  /** Servicios recientes en formato Figma (mapeo desde myWorks hasta que el backend devuelva FigmaRecentService). */
+  recentServices = computed<FigmaRecentService[]>(() =>
+    this.recentWorks().map((w) => ({
+      id: w.id,
+      title: w.title ?? w.description ?? 'Solicitud de obra',
+      status: this.getStatusLabel(w.status),
+      date: w.createdAt ? new Date(w.createdAt).toLocaleDateString('es-VE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—',
+    }))
+  );
 
-  /** Navega a seguimiento pasando el servicio en navigationData (para usar en Servicios Recientes). */
-  navigateToTracking(service: { id: number; title: string; status: string; date: string }) {
-    this.authService.navigationData.set(service);
-    this.router.navigate(['/tracking']);
+  /** Si el servicio está finalizado → valoración; si no → seguimiento. */
+  navigateToTracking(service: FigmaRecentService) {
+    if (service.status === 'Finalizado') {
+      this.router.navigate(['/rating'], { state: { workId: String(service.id), title: service.title } });
+    } else {
+      this.router.navigate(['/seguimiento'], { queryParams: { workId: String(service.id) } });
+    }
   }
 
   /** Estados considerados "finalizados": con una obra en estos estados el usuario puede solicitar otra. */
@@ -147,11 +155,11 @@ export class HomeComponent implements OnInit {
     ).length;
   });
 
-  /** Iconos Lucide para el dashboard (Solicitar Servicio, Categorías, etc.). */
-  readonly icons = { Wrench, ClipboardList, CreditCard };
+  /** Iconos Lucide para el dashboard (estilos Figma). */
+  readonly icons = { House, Wrench, ClipboardList, CreditCard, Menu, Bell, User, Zap, Droplet, Hammer, PaintBucket, Settings, Wind };
 
-  /** Categorías para la rejilla del dashboard (nombre de icono Lucide). */
-  categories = signal([
+  /** Categorías del dashboard (interfaz Figma). */
+  categories = signal<FigmaServiceCategory[]>([
     { id: 'electricidad', name: 'Electricidad', icon: 'Zap', color: 'text-yellow-500' },
     { id: 'plomeria', name: 'Plomería', icon: 'Droplet', color: 'text-blue-500' },
     { id: 'carpinteria', name: 'Carpintería', icon: 'Hammer', color: 'text-amber-700' },

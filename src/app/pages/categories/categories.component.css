@@ -1,0 +1,9 @@
+/* Service Categories – vista Figma */
+:host {
+  display: block;
+  min-height: 100%;
+}
+
+.categories-page {
+  min-height: 100%;
+}

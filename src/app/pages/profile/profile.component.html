@@ -1,114 +1,123 @@
-<div class="profile-page max-w-lg mx-auto px-4 sm:px-6 py-6 pb-8">
-  <!-- Header: avatar + nombre + correo -->
-  <header class="flex gap-4 items-center mb-8">
-    <div
-      class="w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-black shrink-0"
-      style="background-color: #fa5404"
-      aria-hidden="true"
-    >
-      {{ initials() }}
-    </div>
-    <div class="min-w-0 flex-1">
-      <h1 class="text-lg font-bold text-slate-900 truncate">
-        {{ currentUser()?.name || currentUser()?.email || 'Usuario' }}
-      </h1>
-      @if (currentUser()?.email) {
-        <p class="text-sm text-slate-500 truncate">{{ currentUser()!.email }}</p>
-      }
-    </div>
-  </header>
+<div class="profile-page min-h-full bg-gradient-to-b from-orange-50 to-white pb-8">
+  <div class="max-w-lg mx-auto px-4 sm:px-6 py-6">
+    <!-- Header: avatar + nombre + correo (Figma: avatar blanco con inicial naranja como en shell) -->
+    <header class="flex gap-4 items-center mb-8">
+      <div
+        class="w-16 h-16 rounded-full bg-white flex items-center justify-center text-[#FF5500] text-xl font-black shrink-0 shadow-md border border-orange-100"
+        aria-hidden="true"
+      >
+        {{ initials() }}
+      </div>
+      <div class="min-w-0 flex-1">
+        <h1 class="text-lg font-bold text-slate-900 truncate">
+          {{ currentUser()?.name || currentUser()?.email || 'Usuario' }}
+        </h1>
+        @if (currentUser()?.email) {
+          <p class="text-sm text-slate-500 truncate">{{ currentUser()!.email }}</p>
+        }
+      </div>
+    </header>
 
-  <!-- Tarjeta de Salud Financiera (o esqueleto mientras carga) -->
-  @if (isLoading()) {
-    <section class="rounded-2xl p-5 mb-6 bg-slate-100 border border-slate-200">
-      <div class="skeleton h-3 w-24 mb-3 rounded"></div>
-      <div class="skeleton h-10 w-20 mb-2 rounded"></div>
-      <div class="skeleton h-4 w-28 mb-3 rounded"></div>
-      <div class="skeleton h-6 w-32 rounded-full"></div>
+    <!-- Tarjeta Salud Financiera (Figma: gradiente naranja) -->
+    @if (isLoading()) {
+      <section class="rounded-xl p-5 mb-6 bg-white border border-slate-200 shadow-sm">
+        <div class="skeleton h-3 w-24 mb-3 rounded bg-slate-200"></div>
+        <div class="skeleton h-10 w-20 mb-2 rounded bg-slate-200"></div>
+        <div class="skeleton h-4 w-28 mb-3 rounded bg-slate-200"></div>
+        <div class="skeleton h-6 w-32 rounded-full bg-slate-200"></div>
+      </section>
+    } @else {
+      <section class="rounded-xl p-5 mb-6 text-white shadow-lg bg-gradient-to-r from-[#FF5500] to-[#FF6600] border border-orange-400/30">
+        <h2 class="text-xs font-bold uppercase tracking-wider opacity-90 mb-3">Salud Financiera</h2>
+        <p class="text-4xl font-black tracking-tight mb-2">{{ userProfile().score }}</p>
+        <p class="text-sm opacity-90 mb-3">Credit Score</p>
+        <span class="inline-block px-3 py-1 rounded-full bg-white/20 text-xs font-bold uppercase tracking-wider">
+          {{ financialBadge() }}
+        </span>
+      </section>
+    }
+
+    <!-- Grid de Estadísticas (Figma: cards blancas con borde) -->
+    <section class="grid grid-cols-3 gap-3 mb-8">
+      <div class="rounded-xl p-4 text-center bg-white border border-slate-200 shadow-sm">
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Créditos</p>
+        <p class="text-lg font-black text-slate-800">{{ creditCount() }}</p>
+      </div>
+      <div class="rounded-xl p-4 text-center bg-white border border-slate-200 shadow-sm">
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Estatus</p>
+        <p class="text-lg font-black text-slate-800">{{ statusLabel() }}</p>
+      </div>
+      <div class="rounded-xl p-4 text-center bg-white border border-slate-200 shadow-sm">
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nivel</p>
+        <p class="text-lg font-black text-slate-800">{{ levelLabel() }}</p>
+      </div>
     </section>
-  } @else {
-    <section class="rounded-2xl p-5 mb-6 text-white" style="background-color: #fa5404">
-      <h2 class="text-xs font-bold uppercase tracking-wider opacity-90 mb-3">Salud Financiera</h2>
-      <p class="text-4xl font-black tracking-tight mb-2">{{ userProfile().score }}</p>
-      <p class="text-sm opacity-90 mb-3">Credit Score</p>
-      <span class="inline-block px-3 py-1 rounded-full bg-white/20 text-xs font-bold uppercase tracking-wider">
-        {{ financialBadge() }}
-      </span>
-    </section>
-  }
 
-  <!-- Grid de Estadísticas -->
-  <section class="grid grid-cols-3 gap-3 mb-8">
-    <div class="stat-card rounded-xl p-4 text-center shadow-sm">
-      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Créditos</p>
-      <p class="text-lg font-black text-slate-800">{{ creditCount() }}</p>
-    </div>
-    <div class="stat-card rounded-xl p-4 text-center shadow-sm">
-      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Estatus</p>
-      <p class="text-lg font-black text-slate-800">{{ statusLabel() }}</p>
-    </div>
-    <div class="stat-card rounded-xl p-4 text-center shadow-sm">
-      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nivel</p>
-      <p class="text-lg font-black text-slate-800">{{ levelLabel() }}</p>
-    </div>
-  </section>
-
-  <!-- Historial de Notificaciones (o esqueletos mientras carga) -->
-  <section>
-    <h2 class="text-sm font-bold text-slate-800 mb-3">Historial de Notificaciones</h2>
-    <div class="rounded-2xl border border-orange-100/50 bg-white shadow-sm overflow-hidden max-h-[50vh] overflow-y-auto">
-      @if (isLoading()) {
-        <div class="p-4 space-y-2">
-          <app-skeleton-card [count]="4"></app-skeleton-card>
-        </div>
-      } @else if (notificationsList().length === 0) {
-        <div class="px-4 py-8 text-center text-slate-500 text-sm">
-          <span class="text-3xl block mb-2">🔔</span>
-          No hay notificaciones
-        </div>
-      } @else {
-        <ul>
-          @for (n of notificationsList(); track n.id) {
-            <li
-              class="p-4 border-b border-orange-100/50 last:border-0 flex gap-3 items-start bg-white hover:bg-orange-50/30 transition-colors"
-            >
-              @if (!n.isRead) {
-                <div class="w-2 h-2 mt-1.5 rounded-full shrink-0" style="background-color: #fa5404"></div>
-              } @else {
-                <div class="w-2 h-2 mt-1.5 shrink-0" aria-hidden="true"></div>
-              }
-              <div class="flex-1 min-w-0">
-                <p class="text-sm font-bold text-slate-900">{{ n.title || 'Notificación' }}</p>
-                <p class="text-xs text-slate-500 leading-tight">{{ n.message }}</p>
-                <p class="text-[9px] text-slate-300 mt-1 uppercase font-bold">{{ n.timestamp | date:'shortTime' }}</p>
-              </div>
-              <div class="flex items-center gap-0.5 shrink-0">
+    <!-- Historial de Notificaciones -->
+    <section class="mb-8">
+      <h2 class="text-sm font-bold text-slate-800 mb-3">Historial de Notificaciones</h2>
+      <div class="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden max-h-[40vh] overflow-y-auto">
+        @if (isLoading()) {
+          <div class="p-4 space-y-2">
+            <app-skeleton-card [count]="4"></app-skeleton-card>
+          </div>
+        } @else if (notificationsList().length === 0) {
+          <div class="px-4 py-8 text-center text-slate-500 text-sm">
+            <span class="text-3xl block mb-2">🔔</span>
+            No hay notificaciones
+          </div>
+        } @else {
+          <ul>
+            @for (n of notificationsList(); track n.id) {
+              <li
+                class="p-4 border-b border-slate-100 last:border-0 flex gap-3 items-start bg-white hover:bg-orange-50/30 transition-colors"
+              >
                 @if (!n.isRead) {
+                  <div class="w-2 h-2 mt-1.5 rounded-full shrink-0 bg-[#FF5500]"></div>
+                } @else {
+                  <div class="w-2 h-2 mt-1.5 shrink-0" aria-hidden="true"></div>
+                }
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-bold text-slate-900">{{ n.title || 'Notificación' }}</p>
+                  <p class="text-xs text-slate-500 leading-tight">{{ n.message }}</p>
+                  <p class="text-[9px] text-slate-300 mt-1 uppercase font-bold">{{ n.timestamp | date:'shortTime' }}</p>
+                </div>
+                <div class="flex items-center gap-0.5 shrink-0">
+                  @if (!n.isRead) {
+                    <button
+                      type="button"
+                      (click)="markAsRead(n.id)"
+                      class="text-slate-400 hover:text-slate-600 p-1 text-xs rounded"
+                      title="Marcar como leída"
+                      aria-label="Marcar como leída"
+                    >
+                      ✓
+                    </button>
+                  }
                   <button
                     type="button"
-                    (click)="markAsRead(n.id)"
-                    class="text-slate-400 hover:text-slate-600 p-1 text-xs rounded"
-                    title="Marcar como leída"
-                    aria-label="Marcar como leída"
+                    (click)="removeNotification(n.id)"
+                    class="text-[#FF5500] hover:opacity-80 p-1 text-xs rounded"
+                    title="Eliminar"
+                    aria-label="Eliminar notificación"
                   >
-                    ✓
+                    ×
                   </button>
-                }
-                <button
-                  type="button"
-                  (click)="removeNotification(n.id)"
-                  class="text-slate-400 hover:opacity-80 p-1 text-xs rounded"
-                  style="color: #fa5404"
-                  title="Eliminar"
-                  aria-label="Eliminar notificación"
-                >
-                  ×
-                </button>
-              </div>
-            </li>
-          }
-        </ul>
-      }
-    </div>
-  </section>
+                </div>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    </section>
+
+    <!-- Cerrar sesión (Figma: botón outline naranja) -->
+    <button
+      type="button"
+      (click)="logout()"
+      class="w-full py-3 px-4 rounded-xl border-2 border-[#FF5500] text-[#FF5500] font-semibold hover:bg-orange-50 transition-colors active:scale-[0.98]"
+    >
+      Cerrar sesión
+    </button>
+  </div>
 </div>

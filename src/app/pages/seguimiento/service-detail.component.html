@@ -1,91 +1,144 @@
-<div class="max-w-lg mx-auto px-4 sm:px-6" style="background-color: #fff9f3; min-height: 100%;">
+<div class="min-h-screen bg-gradient-to-b from-orange-50 to-white pb-20">
   @if (loading()) {
     <div class="py-12 text-center text-slate-500 text-sm">Cargando seguimiento…</div>
   } @else if (!workId() || !work()) {
-    <header class="pt-6 pb-4">
-      <h1 class="text-xl font-bold text-slate-900">Seguimiento de Servicios</h1>
-      <p class="text-slate-500 text-sm mt-0.5">Selecciona un servicio desde la página Servicios para ver su estado.</p>
-    </header>
-    <a routerLink="/servicios" class="inline-flex items-center gap-2 text-[#fa5404] font-bold text-sm mt-4">
-      ← Volver a Servicios
-    </a>
-  } @else {
-    <header class="pt-4 pb-6">
-      <a (click)="goBack()" class="inline-flex items-center gap-2 text-slate-500 hover:text-slate-700 text-sm font-medium mb-4 cursor-pointer">
-        ← Volver a Servicios
+    <!-- Sin obra seleccionada: estilo Figma -->
+    <div class="p-4">
+      <header class="pt-6 pb-4">
+        <h1 class="text-xl font-bold text-slate-900">Seguimiento de Servicios</h1>
+        <p class="text-slate-500 text-sm mt-0.5">Selecciona un servicio desde Inicio o Servicios para ver su estado.</p>
+      </header>
+      <a routerLink="/home" class="inline-flex items-center gap-2 text-[#FF5500] font-bold text-sm mt-4 no-underline hover:underline">
+        <lucide-icon [name]="icons.ArrowLeft" class="w-4 h-4"></lucide-icon>
+        Volver a Inicio
       </a>
-      <h1 class="text-xl font-bold text-slate-900">Seguimiento de tu obra</h1>
-      <p class="text-slate-600 text-sm mt-1 line-clamp-2">{{ work()?.description || 'Solicitud de crédito' }}</p>
-      <p class="text-[10px] text-slate-400 font-medium mt-1">#{{ work()?.id?.slice(0, 8) }} · Plan {{ work()?.planId }}</p>
+    </div>
+  } @else {
+    <!-- Header Figma: gradient, back, título -->
+    <header class="bg-gradient-to-r from-[#FF5500] to-[#FF6600] text-white p-4 shadow-lg sticky top-0 z-10">
+      <div class="flex items-center gap-3">
+        <button type="button" (click)="goBack()" class="p-1 -m-1 text-white hover:bg-white/20 rounded-lg transition-colors" aria-label="Volver">
+          <lucide-icon [name]="icons.ArrowLeft" class="w-6 h-6"></lucide-icon>
+        </button>
+        <h1 class="text-xl font-bold">Seguimiento de Servicio</h1>
+      </div>
     </header>
 
-    <!-- Ingeniero y fecha estimada -->
-    <section class="rounded-2xl bg-white border border-orange-100/50 shadow-sm p-5 mb-6">
-      <h2 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Responsable y plazos</h2>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Ingeniero asignado</p>
-          <p class="font-bold text-slate-800 mt-0.5">{{ engineerName() || 'Pendiente de asignar' }}</p>
-        </div>
-        <div>
-          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Fecha estimada / plazo</p>
-          <p class="font-bold text-slate-800 mt-0.5">
-            @if (estimatedDate()) {
-              {{ estimatedDate() | date:'dd MMM yyyy, HH:mm' }}
-            } @else {
-              Por definir
-            }
-          </p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Stepper vertical -->
-    <section class="rounded-2xl bg-white border border-orange-100/50 shadow-sm p-6 mb-6">
-      <h2 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-5">Progreso de la obra</h2>
-      <div class="flex flex-col">
-        @for (step of steps(); track step.label; let i = $index) {
-          <div class="flex gap-4 items-start">
-            <div class="flex flex-col items-center shrink-0">
-              <div
-                class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors"
-                [class.bg-[#fa5404]]="step.completed || step.current"
-                [class.text-white]="step.completed || step.current"
-                [class.bg-slate-200]="!step.completed && !step.current"
-                [class.text-slate-500]="!step.completed && !step.current"
-              >
-                @if (step.completed) {
-                  <span aria-hidden="true">✓</span>
-                } @else {
-                  <span>{{ i + 1 }}</span>
-                }
-              </div>
-              @if (i < steps().length - 1) {
-                <div
-                  class="w-0.5 flex-1 min-h-[28px] my-0.5 transition-colors"
-                  [class.bg-[#fa5404]]="step.completed"
-                  [class.bg-slate-200]="!step.completed"
-                ></div>
-              }
+    <div class="p-4 space-y-4">
+      <!-- Card: Info del servicio (Figma) -->
+      <section class="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+        <div class="p-4">
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <h3 class="font-bold text-lg text-slate-900">{{ work()?.title || work()?.description || 'Solicitud de obra' }}</h3>
+              <p class="text-sm text-gray-600">ID: #{{ work()?.id?.slice(0, 8) }}</p>
             </div>
-            <div class="pb-6 pt-0.5">
-              <p
-                class="font-medium text-sm"
-                [class.text-slate-800]="step.current || step.completed"
-                [class.text-slate-500]="!step.current && !step.completed"
-              >
-                {{ step.label }}
-              </p>
-              @if (step.current) {
-                <p class="text-[10px] text-[#fa5404] font-bold uppercase tracking-wider mt-0.5">Estado actual</p>
-              }
+            <span class="px-3 py-1 rounded-full text-xs font-bold uppercase bg-[#FF5500] text-white shrink-0">
+              {{ getStatusLabel(work()!.status) }}
+            </span>
+          </div>
+          <div class="space-y-2 text-sm">
+            @if (estimatedDate(); as date) {
+              <div class="flex items-center gap-2 text-slate-700">
+                <lucide-icon [name]="icons.Clock" class="w-4 h-4 text-slate-500 shrink-0"></lucide-icon>
+                <span>Agendado: {{ date | date:'dd/MM/yyyy, HH:mm' }}</span>
+              </div>
+            }
+            <div class="flex items-center gap-2 text-slate-700">
+              <lucide-icon [name]="icons.MapPin" class="w-4 h-4 text-slate-500 shrink-0"></lucide-icon>
+              <span>Ubicación: Tu dirección registrada</span>
             </div>
           </div>
-        }
-      </div>
-    </section>
+        </div>
+      </section>
 
-    <!-- Resumen de materiales para el cliente -->
-    <app-client-material-summary [work]="work()" [engineerName]="engineerName()" />
+      <!-- Card: Estado del servicio (Figma) - barra + pasos -->
+      <section class="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+        <div class="p-4">
+          <h3 class="font-bold text-slate-900 mb-4">Estado del Servicio</h3>
+          <div class="h-2 rounded-full bg-slate-200 overflow-hidden mb-4">
+            <div class="h-full rounded-full bg-gradient-to-r from-[#FF5500] to-[#FF6600] transition-all duration-300" [style.width.%]="progressPercentage()"></div>
+          </div>
+          <div class="space-y-3">
+            @for (step of steps(); track step.label; let i = $index) {
+              <div class="flex items-start gap-3">
+                <div class="mt-0.5 rounded-full p-1 shrink-0"
+                  [class.bg-green-500]="step.completed"
+                  [class.bg-[#FF5500]]="step.current && !step.completed"
+                  [class.bg-slate-200]="!step.completed && !step.current">
+                  <lucide-icon [name]="icons.CheckCircle2" class="w-4 h-4" [class.text-white]="step.completed || step.current" [class.text-slate-400]="!step.completed && !step.current"></lucide-icon>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="font-medium text-sm"
+                    [class.text-green-700]="step.completed"
+                    [class.text-orange-600]="step.current && !step.completed"
+                    [class.text-slate-400]="!step.completed && !step.current">
+                    {{ step.label }}
+                  </p>
+                  @if (step.current) {
+                    <p class="text-xs text-slate-500 mt-0.5">Estado actual</p>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </section>
+
+      <!-- Card: Tu Técnico (Figma) -->
+      <section class="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+        <div class="p-4">
+          <h3 class="font-bold text-slate-900 mb-3">Tu Técnico</h3>
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-12 h-12 bg-orange-200 rounded-full flex items-center justify-center font-bold text-orange-700 text-sm shrink-0">
+                {{ (engineerName() || '?').charAt(0) | uppercase }}
+              </div>
+              <div class="min-w-0">
+                <p class="font-medium text-slate-900">{{ engineerName() || 'Pendiente de asignar' }}</p>
+                <p class="text-sm text-slate-500">Responsable de la obra</p>
+              </div>
+            </div>
+            <div class="flex gap-2 shrink-0">
+              <a href="tel:" class="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-green-600 hover:bg-green-50 transition-colors" aria-label="Llamar">
+                <lucide-icon [name]="icons.Phone" class="w-5 h-5"></lucide-icon>
+              </a>
+              <button type="button" class="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-blue-600 hover:bg-blue-50 transition-colors" aria-label="Mensaje">
+                <lucide-icon [name]="icons.MessageCircle" class="w-5 h-5"></lucide-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Acciones (Figma) -->
+      <div class="space-y-2">
+        @if (work()?.status === 'FINISHED') {
+          <a [routerLink]="['/rating']" [state]="{ workId: work()?.id, title: work()?.title, engineerName: engineerName() }"
+            class="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold bg-gradient-to-r from-[#FF5500] to-[#FF6600] text-white hover:from-[#FF6600] hover:to-[#FF7700] transition-colors no-underline">
+            <lucide-icon [name]="icons.Star" class="w-[18px] h-[18px]"></lucide-icon>
+            Calificar servicio
+          </a>
+        }
+        <a routerLink="/chat" class="w-full flex items-center justify-center gap-2 py-3 px-4 border border-slate-200 rounded-xl font-medium text-slate-700 bg-white hover:bg-slate-50 transition-colors no-underline">
+          <lucide-icon [name]="icons.MessageCircle" class="w-[18px] h-[18px] text-blue-600"></lucide-icon>
+          Enviar Mensaje
+        </a>
+      </div>
+
+      <!-- Resumen de materiales (existente) -->
+      <app-client-material-summary [work]="work()" [engineerName]="engineerName()" />
+
+      <!-- Card: ¿Necesitas ayuda? (Figma) -->
+      <section class="rounded-xl border border-blue-200 bg-blue-50 overflow-hidden">
+        <div class="p-4">
+          <h4 class="font-bold text-slate-900 mb-2">¿Necesitas ayuda?</h4>
+          <p class="text-sm text-slate-700 mb-3">Nuestro equipo de soporte está disponible 24/7</p>
+          <button type="button" class="w-full py-2.5 px-4 border border-blue-600 text-blue-600 font-medium rounded-lg bg-transparent hover:bg-blue-100 transition-colors">
+            Contactar Soporte
+          </button>
+        </div>
+      </section>
+    </div>
   }
 </div>

@@ -1,0 +1,8 @@
+:host {
+  display: block;
+  min-height: 100%;
+}
+
+.service-request {
+  min-height: 100%;
+}

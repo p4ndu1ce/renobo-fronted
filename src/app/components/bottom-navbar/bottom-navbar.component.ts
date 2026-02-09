@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
-import { LucideAngularModule, House, ClipboardList, Wrench, User, Settings } from 'lucide-angular';
+import { LucideAngularModule, House, ClipboardList, Wrench, User, Settings, CreditCard } from 'lucide-angular';
 
 @Component({
   selector: 'app-bottom-navbar',
@@ -13,5 +13,5 @@ import { LucideAngularModule, House, ClipboardList, Wrench, User, Settings } fro
 export class BottomNavbarComponent {
   private auth = inject(AuthService);
   userRole = this.auth.userRole;
-  readonly icons = { House, ClipboardList, Wrench, User, Settings };
+  readonly icons = { House, ClipboardList, Wrench, User, Settings, CreditCard };
 }

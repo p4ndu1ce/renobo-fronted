@@ -1,0 +1,89 @@
+<div class="service-request min-h-screen bg-gradient-to-b from-orange-50 to-white pb-20">
+  <header class="bg-gradient-to-r from-[#FF5500] to-[#FF6600] text-white p-4 shadow-lg sticky top-0 z-10">
+    <div class="flex items-center gap-3">
+      <button type="button" (click)="goBack()" class="p-2 -m-2 text-white hover:bg-white/20 rounded-lg transition-colors" aria-label="Volver">
+        <lucide-icon [name]="icons.ArrowLeft" class="w-6 h-6"></lucide-icon>
+      </button>
+      <div>
+        <h1 class="text-xl font-bold">Solicitar Servicio</h1>
+        @if (serviceData(); as data) {
+          <p class="text-sm opacity-90">{{ data.category }} - {{ data.service }}</p>
+        }
+      </div>
+    </div>
+  </header>
+
+  <div class="p-4 space-y-6">
+    <section class="rounded-xl border border-slate-200 bg-white shadow-sm p-6 space-y-4">
+      <div>
+        <label for="description" class="block text-sm font-medium text-slate-700 mb-2">Descripción del Problema</label>
+        <textarea
+          id="description"
+          [ngModel]="description()"
+          (ngModelChange)="description.set($event)"
+          placeholder="Describe detalladamente el problema que necesitas resolver..."
+          rows="6"
+          class="w-full p-3 border border-slate-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-[#FF5500]/50"
+        ></textarea>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-2">Adjuntar Fotos/Videos</label>
+        <p class="text-sm text-gray-500 mb-3">
+          Ayúdanos a entender mejor el problema adjuntando imágenes o videos
+        </p>
+        <div class="grid grid-cols-2 gap-3 mb-3">
+          <button
+            type="button"
+            (click)="addFile('Imagen')"
+            class="h-24 flex flex-col gap-2 items-center justify-center rounded-xl border border-slate-200 bg-white hover:bg-orange-50 hover:border-orange-200 transition-colors"
+          >
+            <lucide-icon [name]="icons.Camera" class="w-8 h-8 text-[#FF5500]"></lucide-icon>
+            <span class="text-sm font-medium text-slate-700">Tomar Foto</span>
+          </button>
+          <button
+            type="button"
+            (click)="addFile('Archivo')"
+            class="h-24 flex flex-col gap-2 items-center justify-center rounded-xl border border-slate-200 bg-white hover:bg-orange-50 hover:border-orange-200 transition-colors"
+          >
+            <lucide-icon [name]="icons.Upload" class="w-8 h-8 text-[#FF5500]"></lucide-icon>
+            <span class="text-sm font-medium text-slate-700">Subir Archivo</span>
+          </button>
+        </div>
+        @if (files().length > 0) {
+          <div class="space-y-2">
+            <p class="text-sm font-medium text-slate-700">Archivos adjuntos:</p>
+            <div class="flex flex-wrap gap-2">
+              @for (file of files(); track $index) {
+                <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-slate-100 text-slate-700 text-sm">
+                  <lucide-icon [name]="icons.ImageIcon" class="w-3.5 h-3.5"></lucide-icon>
+                  {{ file }}
+                </span>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+
+    <section class="rounded-xl border border-orange-200 bg-orange-50 p-4">
+      <h3 class="font-bold text-slate-900 mb-2">¿Qué sigue?</h3>
+      <ul class="text-sm space-y-1 text-gray-700">
+        <li>• Recibirás presupuestos de técnicos especializados</li>
+        <li>• Podrás revisar y comparar las propuestas</li>
+        <li>• Agendar la visita del técnico seleccionado</li>
+        <li>• Hacer seguimiento en tiempo real</li>
+      </ul>
+    </section>
+
+    <button
+      type="button"
+      (click)="submit()"
+      [disabled]="!description().trim()"
+      class="w-full h-14 rounded-xl bg-gradient-to-r from-[#FF5500] to-[#FF6600] hover:from-[#FF6600] hover:to-[#FF7700] text-white text-lg font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.99]"
+    >
+      <lucide-icon [name]="icons.Send" class="w-5 h-5"></lucide-icon>
+      Enviar Solicitud
+    </button>
+  </div>
+</div>

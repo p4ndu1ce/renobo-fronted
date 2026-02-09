@@ -1,9 +1,6 @@
+/* Figma: barra fija abajo con safe area para dispositivos con notch */
 .safe-area-pb {
-  padding-bottom: max(env(safe-area-inset-bottom, 0), 6px);
-}
-
-.nav-height {
-  height: 4.5rem;
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px);
 }
 
 .nav-item-active {
