@@ -284,3 +284,63 @@ Si quieres, el siguiente paso puede ser: (1) implementar en backend los endpoint
 - **Frontend Categories:** Lista de categorías y servicios desde `configService.catalog()?.services` agrupados por category, con fallback.
 - **Frontend Pagos:** `PaymentsService` para GET payments, GET next-due, POST payment. Datos bancarios desde `configService.catalog()?.bankDetails` con fallback.
 - **Frontend Rating:** `workService.submitRating(workId, rating, comment)` con workId desde `history.state`; mensaje de error y estado de envío en la UI.
+
+---
+
+## Qué sigue por sincronizar (pendiente)
+
+| Prioridad | Área | Qué falta |
+|-----------|------|-----------|
+| Alta | **Pagos** | Comprobante de pago (imagen): subir archivo y guardar referencia en el pago. |
+| Media | **Chat** | Mensajes por obra (GET/POST), nombre del técnico desde obra (engineerId). |
+| Media | **Presupuestos** | Origen de la lista de técnicos (API), endpoint para aceptar/programar. |
+| Media | **Financiación** | Planes desde config (opcional), POST solicitud de financiación con id. |
+| Baja | **Service Request** | Decidir si crea obra/solicitud y conectar submit a API. |
+| Baja | **Resumen** | Usar `environment.apiUrl` y campo ubicación en el payload. |
+| Baja | **URLs** | Unificar auth/config en una sola API base si se desea. |
+| Opcional | **Notificaciones** | Persistir en backend y sincronizar al abrir la app. |
+
+---
+
+## Comprobante de pago (imagen): cómo soportarlo
+
+Las imágenes no conviene guardarlas en DynamoDB (tamaño, coste). La opción habitual es **objeto storage (S3)** y en el pago guardar solo la **referencia** (URL o clave).
+
+### Opción A – Presigned URL (recomendada)
+
+1. **Backend (work-service)**  
+   - Crear bucket S3 (o uno compartido) para comprobantes.  
+   - Nuevo endpoint **GET /payments/upload-url** (o POST): con el token del usuario devuelve una **presigned URL** de S3 (PUT) y una **key** única (ej. `proofs/{userId}/{paymentId}.jpg`).  
+   - **POST /payments** acepta un campo opcional **proofKey** (string). Si viene, se guarda en el ítem de pago en DynamoDB.  
+   - Opcional: endpoint o lógica para generar presigned GET y así poder “ver” el comprobante desde el front (o desde un panel admin).
+
+2. **Frontend**  
+   - Al enviar el pago: si el usuario eligió imagen, primero llamar GET /payments/upload-url, hacer **PUT del archivo** a la URL devuelta, luego **POST /payments** con `proofKey` (y el resto: amount, type, reference, date).  
+   - El comprobante queda en S3; en DynamoDB solo la key (o la URL pública si el bucket es público, no recomendado para datos sensibles).
+
+Ventajas: Lambda no recibe el archivo (límite 6 MB), escalable y estándar en AWS.
+
+### Opción B – Multipart / base64 en Lambda
+
+- **POST /payments** recibe multipart (archivo + campos) o JSON con imagen en base64.  
+- La Lambda sube el archivo a S3 y guarda la key en el ítem de pago.  
+- Limitación: tamaño del body (ej. 6 MB en API Gateway). Para fotos de móvil comprimidas suele bastar; para escaneos grandes la Opción A es mejor.
+
+### Resumen práctico
+
+- Añadir en el ítem de pago un campo **proofKey** (string, opcional).  
+- Implementar **presigned URL** (GET /payments/upload-url) en work-service y subida desde el front a S3; luego POST /payments con **proofKey**.  
+- Para ver el comprobante después: otro endpoint que, dado un paymentId (y comprobando que el usuario es el dueño), genere una presigned GET a la key guardada.
+
+### ✅ Implementado (presigned URL)
+
+- **Backend (work-service):**
+  - Bucket S3 `PaymentProofsBucket` (privado), IAM PutObject/GetObject.
+  - **GET /payments/upload-url?ext=jpg** (ext opcional: jpg, jpeg, png, pdf): devuelve `{ uploadUrl, key }` (presigned PUT, 5 min).
+  - **POST /payments** acepta cuerpo opcional **proofKey** (string que debe empezar por `proofs/`); se guarda en el ítem de pago.
+  - **GET /payments/proof-url?key=xxx**: devuelve `{ viewUrl }` (presigned GET) si el usuario es **dueño** de la key (`proofs/{userId}/...`) o tiene rol **SUPERVISOR** (puede ver cualquier comprobante); si no, 403.
+  - **GET /payments** incluye **proofKey** en cada ítem cuando existe.
+- **Frontend:**
+  - `PaymentsService.getUploadUrl(ext?)`, `getProofViewUrl(proofKey)`.
+  - En Pagos: al enviar pago con archivo adjunto, se pide upload-url, se hace PUT del archivo a S3, luego POST /payments con **proofKey**.
+  - En el historial, enlace "Ver comprobante" cuando el pago tiene proofKey (abre la viewUrl en nueva pestaña).

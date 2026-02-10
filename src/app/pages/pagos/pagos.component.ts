@@ -104,10 +104,50 @@ export class PagosComponent implements OnInit {
     const type = this.paymentType();
     const reference = this.reference().trim() || undefined;
     const date = this.paymentDate().trim() || new Date().toISOString();
-    this.paymentsService.createPayment({ amount: amountNum, type, reference, date }).subscribe({
-      next: () => this.nextStep(),
+    const file = this.proofFile();
+
+    const doCreate = (proofKey?: string) => {
+      this.paymentsService.createPayment({ amount: amountNum, type, reference, date, proofKey }).subscribe({
+        next: () => this.nextStep(),
+        error: () => {},
+      });
+    };
+
+    if (file) {
+      const ext = this.getExtensionForUpload(file.name);
+      this.paymentsService.getUploadUrl(ext).subscribe({
+        next: async (res) => {
+          try {
+            const putRes = await fetch(res.uploadUrl, {
+              method: 'PUT',
+              body: file,
+              headers: { 'Content-Type': file.type || 'application/octet-stream' },
+            });
+            if (!putRes.ok) throw new Error('Error al subir el comprobante');
+            doCreate(res.key);
+          } catch {
+            // Error ya logueado o mostrable; no avanzar a éxito
+          }
+        },
+        error: () => {},
+      });
+    } else {
+      doCreate();
+    }
+  }
+
+  viewProof(proofKey: string): void {
+    this.paymentsService.getProofViewUrl(proofKey).subscribe({
+      next: (res) => window.open(res.viewUrl, '_blank'),
       error: () => {},
     });
+  }
+
+  /** Devuelve ext permitida por el backend: jpg, jpeg, png, pdf. */
+  private getExtensionForUpload(fileName: string): string {
+    const ext = fileName.split('.').pop()?.toLowerCase() ?? 'jpg';
+    if (['jpg', 'jpeg', 'png', 'pdf'].includes(ext)) return ext;
+    return 'jpg';
   }
 
   finishAndBack(): void {

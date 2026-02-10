@@ -72,6 +72,12 @@
                     <lucide-icon [name]="icons.Calendar" class="w-3.5 h-3.5"></lucide-icon>
                     {{ formatDate(payment.date) }}
                   </p>
+                  @if (payment.proofKey) {
+                    <button type="button" (click)="viewProof(payment.proofKey!)"
+                      class="text-xs text-[#FF5500] font-medium hover:underline shrink-0">
+                      Ver comprobante
+                    </button>
+                  }
                 </div>
               </div>
             </li>

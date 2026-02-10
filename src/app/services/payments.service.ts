@@ -9,6 +9,8 @@ export interface PaymentRecord {
   date: string;
   amount: number;
   description?: string;
+  /** Key S3 del comprobante (para pedir URL de visualización). */
+  proofKey?: string;
 }
 
 export type PaymentType = 'inicial' | 'cuota' | 'adelanto';
@@ -25,6 +27,8 @@ export interface CreatePaymentBody {
   reference?: string;
   date?: string;
   workId?: string;
+  /** Key S3 del comprobante (tras subir con la presigned URL). */
+  proofKey?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -55,6 +59,23 @@ export class PaymentsService {
     );
   }
 
+  /**
+   * Obtiene una URL firmada para subir el comprobante de pago a S3.
+   * El frontend debe hacer PUT del archivo a uploadUrl (sin header Authorization).
+   * ext: jpg, jpeg, png o pdf (por defecto jpg).
+   */
+  getUploadUrl(ext?: string): Observable<{ uploadUrl: string; key: string }> {
+    const params: Record<string, string> = ext ? { ext } : {};
+    return this.http.get<{ uploadUrl: string; key: string }>(`${this.API}/upload-url`, { params });
+  }
+
+  /**
+   * Obtiene una URL firmada para ver el comprobante (solo si el pago es del usuario).
+   */
+  getProofViewUrl(proofKey: string): Observable<{ viewUrl: string }> {
+    return this.http.get<{ viewUrl: string }>(`${this.API}/proof-url`, { params: { key: proofKey } });
+  }
+
   getNextDue(): Observable<{ nextDue: NextDue | null }> {
     return this.http.get<{ nextDue: NextDue | null }>(`${this.API}/next-due`).pipe(
       tap((res) => this._nextDue.set(res?.nextDue ?? null)),
@@ -74,7 +95,7 @@ export class PaymentsService {
         tap((res) => {
           const list = this._payments();
           this._payments.set([
-            { id: res.id, date: res.date, amount: res.amount, description: body.description },
+            { id: res.id, date: res.date, amount: res.amount, description: body.description, proofKey: body.proofKey },
             ...list,
           ]);
         }),
