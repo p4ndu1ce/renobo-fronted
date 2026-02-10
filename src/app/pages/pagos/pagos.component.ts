@@ -98,12 +98,12 @@ export class PagosComponent implements OnInit {
   }
 
   submitPayment(): void {
-    const amountStr = this.amount().trim().replace(/,/g, '');
+    const amountStr = String(this.amount() ?? '').trim().replace(/,/g, '');
     const amountNum = parseFloat(amountStr);
     if (isNaN(amountNum) || amountNum <= 0) return;
     const type = this.paymentType();
-    const reference = this.reference().trim() || undefined;
-    const date = this.paymentDate().trim() || new Date().toISOString();
+    const reference = String(this.reference() ?? '').trim() || undefined;
+    const date = String(this.paymentDate() ?? '').trim() || new Date().toISOString();
     const file = this.proofFile();
 
     const doCreate = (proofKey?: string) => {

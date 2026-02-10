@@ -83,7 +83,7 @@ export class BudgetScreenComponent {
   }
 
   goBack(): void {
-    this.router.navigate(['/request']);
+    this.router.navigate(['/service-request']);
   }
 
   initials(name: string): string {

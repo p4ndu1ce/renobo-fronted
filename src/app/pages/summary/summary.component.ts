@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
 import { CartService } from '../../services/cart.service';
 import { AuthService } from '../../services/auth.service';
 import { WorkService } from '../../services/work.service';
@@ -49,7 +50,7 @@ export class SummaryComponent {
 
     // El interceptor añadirá automáticamente el header Authorization
     const api = this.http.post<{ message: string; work: Record<string, unknown> }>(
-      'https://s6txacomrf.execute-api.us-east-1.amazonaws.com/dev/works',
+      `${environment.apiUrl}/works`,
       payload
     );
     api.subscribe({

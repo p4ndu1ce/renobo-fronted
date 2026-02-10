@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 import { LucideAngularModule, User, Mail, Phone, FileText, Lock, FingerprintPattern } from 'lucide-angular';
 
 @Component({
@@ -16,8 +17,7 @@ export class RegisterComponent {
   private http = inject(HttpClient);
   private router = inject(Router);
 
-  private readonly AUTH_API_URL =
-    'https://m587zdkcje.execute-api.us-east-1.amazonaws.com/dev/auth/register';
+  private readonly registerUrl = `${environment.authApiUrl}/auth/register`;
 
   name = signal('');
   email = signal('');
@@ -72,7 +72,7 @@ export class RegisterComponent {
 
     this.http
       .post<{ message: string; usuario: { name: string; email: string; role: string } }>(
-        this.AUTH_API_URL,
+        this.registerUrl,
         { name: n, email: e, password: p, documentId: doc, role: this.role() }
       )
       .subscribe({

@@ -1,6 +1,7 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom, timeout } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface Service {
   id: string;
@@ -57,7 +58,7 @@ export class ConfigService {
   async loadConfig(): Promise<void> {
     try {
       const config = await firstValueFrom(
-        this.http.get<PublicConfig>('https://qvdde3mbs8.execute-api.us-east-1.amazonaws.com/dev/config/public').pipe(
+        this.http.get<PublicConfig>(`${environment.configApiUrl}/config/public`).pipe(
           timeout(8000)
         )
       );

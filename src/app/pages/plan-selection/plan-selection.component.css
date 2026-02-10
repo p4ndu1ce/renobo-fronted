@@ -1,5 +1,0 @@
-/* Plan selection: contenedor con bg-white; cards y formulario con Tailwind en el template */
-:host {
-  display: block;
-  min-height: 0;
-}

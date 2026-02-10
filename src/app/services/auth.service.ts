@@ -1,6 +1,7 @@
 import { Injectable, signal, computed, effect, PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
+import { AUTH_SESSION_EXPIRED_EVENT } from '../interceptors/auth.interceptor';
 import { Observable, of } from 'rxjs';
 import { map, tap, catchError, finalize } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
@@ -113,7 +114,11 @@ export class AuthService {
       hasUser: !!this.currentUser(),
       userRole: this.userRole()
     });
-    
+
+    if (isPlatformBrowser(this.platformId)) {
+      window.addEventListener(AUTH_SESSION_EXPIRED_EVENT, () => this.logout());
+    }
+
     // Sincronizamos el signal con localStorage cuando cambia (solo en el navegador)
     if (isPlatformBrowser(this.platformId)) {
       effect(() => {
@@ -243,16 +248,22 @@ export class AuthService {
     this.currentUser.set(built);
     this.isLoggedIn.set(true);
     this.userRole.set(built.role ?? this.decodeTokenRole(token));
+    // Escribir en localStorage de inmediato para que la siguiente petición (p. ej. loadUserProfile)
+    // ya tenga el token; el effect también lo hace, pero de forma asíncrona.
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.setItem('authToken', token);
+      localStorage.setItem('isLoggedIn', 'true');
+      localStorage.setItem('currentUser', JSON.stringify(built));
+    }
   }
 
   /**
-   * Obtiene rol, credit score e historial financiero real desde GET ${apiUrl}/user/{id}.
-   * Llamar tras el login para reemplazar datos por defecto.
+   * Obtiene rol y perfil financiero desde auth-service (GET auth/user/me).
+   * Llamar tras el login para reemplazar datos por defecto. El backend identifica al usuario por el token.
    */
-  loadUserProfile(userId: string): Observable<UserProfile> {
-    const id = userId.startsWith('user-') ? userId : userId;
+  loadUserProfile(_userId?: string): Observable<UserProfile> {
     this.isLoading.set(true);
-    const url = `${environment.apiUrl}/user/${encodeURIComponent(id)}`;
+    const url = `${environment.authApiUrl}/auth/user/me`;
     return this.http.get<UserProfileApiResponse>(url).pipe(
       tap((res) => {
         const status = (res.status ?? 'AL DÍA').toUpperCase().replace(/\s/g, ' ') as UserProfile['status'];
@@ -282,7 +293,10 @@ export class AuthService {
       })),
       finalize(() => this.isLoading.set(false)),
       catchError((err) => {
-        console.error('Error al cargar perfil de usuario:', err);
+        const status = err?.status;
+        if (status !== 403 && status !== 404) {
+          console.error('Error al cargar perfil de usuario:', err);
+        }
         return of(DEFAULT_USER_PROFILE);
       })
     );

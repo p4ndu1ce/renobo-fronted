@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 import { AuthService } from '../services/auth.service';
 import { PartnerService } from '../services/partner.service';
 import { LucideAngularModule, Mail, Lock, FingerprintPattern } from 'lucide-angular';
@@ -21,8 +22,7 @@ export class LoginComponent {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
 
-  private readonly AUTH_API_URL =
-    'https://m587zdkcje.execute-api.us-east-1.amazonaws.com/dev/auth/login';
+  private readonly loginUrl = `${environment.authApiUrl}/auth/login`;
 
   email = signal('');
   password = signal('');
@@ -55,7 +55,7 @@ export class LoginComponent {
 
     this.http
       .post<{ token: string; user: { name: string; email: string; role: string } }>(
-        this.AUTH_API_URL,
+        this.loginUrl,
         { email: e, password: p }
       )
       .subscribe({
@@ -69,9 +69,7 @@ export class LoginComponent {
           };
           this.authService.setAuth(response.token, user);
           this.partnerService.loadPartners();
-          const userId = user.id ?? user.email ?? '';
-          if (userId) {
-            this.authService.loadUserProfile(userId).subscribe({
+          this.authService.loadUserProfile().subscribe({
               next: () => {},
               complete: () => {
                 const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/home';
@@ -82,10 +80,6 @@ export class LoginComponent {
                 this.router.navigate([returnUrl]);
               },
             });
-          } else {
-            const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/home';
-            this.router.navigate([returnUrl]);
-          }
         },
         error: (err) => {
           this.isSubmitting.set(false);
