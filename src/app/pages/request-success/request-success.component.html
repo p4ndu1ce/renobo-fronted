@@ -22,8 +22,16 @@
 
   <h1 class="success-title">¡Solicitud Enviada con Éxito!</h1>
 
+  @if (requestCode()) {
+    <section class="request-code-box" aria-label="Código de solicitud">
+      <p class="request-code-label">Código de solicitud</p>
+      <p class="request-code-value" aria-live="polite">{{ requestCode() }}</p>
+      <p class="request-code-hint">Guarda este código para consultar el estado de tu solicitud. No cambia hasta que la obra finalice.</p>
+    </section>
+  }
+
   <p class="success-body">
-    Estamos revisando tu perfil financiero. Recibirás una notificación en cuanto un supervisor apruebe tu Plan {{ planName() }}.
+    Estamos revisando tu solicitud. Recibirás una notificación en cuanto un supervisor la apruebe y asigne un ingeniero.
   </p>
 
   <section class="next-steps" aria-label="Próximos pasos">

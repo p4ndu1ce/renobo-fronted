@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { LucideAngularModule, ArrowLeft, User, Mail, Phone, FileText, Upload, Send, CircleCheck } from 'lucide-angular';
 import { AuthService } from '../../services/auth.service';
+import { FinancingService } from '../../services/financing.service';
 import type { FigmaFinancingFormData } from '../../models/figma-ui.types';
 
 @Component({
@@ -16,6 +17,7 @@ import type { FigmaFinancingFormData } from '../../models/figma-ui.types';
 export class FinancingFormComponent implements OnInit {
   private auth = inject(AuthService);
   private router = inject(Router);
+  private financingService = inject(FinancingService);
 
   /** Datos del plan/simulador (interfaz Figma); el backend puede devolver esto en el futuro. */
   simulatorData = computed(() => this.auth.navigationData() as (FigmaFinancingFormData & { amount?: number }) | null);
@@ -31,7 +33,10 @@ export class FinancingFormComponent implements OnInit {
   });
 
   submitted = signal(false);
-  requestId = signal(Math.floor(10000 + Math.random() * 90000));
+  submitting = signal(false);
+  errorMessage = signal<string | null>(null);
+  /** Código de solicitud devuelto por el backend (6 caracteres). */
+  requestId = signal('');
 
   form = signal({
     fullName: '',
@@ -57,7 +62,33 @@ export class FinancingFormComponent implements OnInit {
   }
 
   onSubmit() {
-    this.submitted.set(true);
+    const f = this.form();
+    const planId = this.data()?.plan ?? '';
+    if (!f.fullName?.trim() || !f.email?.trim() || !f.phone?.trim() || !planId || !f.category?.trim() || !f.description?.trim() || !f.budget?.trim()) {
+      this.errorMessage.set('Completa todos los campos requeridos.');
+      return;
+    }
+    this.errorMessage.set(null);
+    this.submitting.set(true);
+    this.financingService.createRequest({
+      fullName: f.fullName.trim(),
+      email: f.email.trim(),
+      phone: f.phone.trim(),
+      planId,
+      category: f.category.trim(),
+      description: f.description.trim(),
+      budget: f.budget.trim(),
+    }).subscribe({
+      next: (res) => {
+        this.requestId.set(res.requestCode ?? res.id ?? '');
+        this.submitted.set(true);
+        this.submitting.set(false);
+      },
+      error: (err) => {
+        this.errorMessage.set(err?.error?.error ?? err?.message ?? 'Error al enviar la solicitud. Intenta de nuevo.');
+        this.submitting.set(false);
+      },
+    });
   }
 
   updateFormField(field: 'fullName' | 'email' | 'phone' | 'category' | 'description' | 'budget', value: string | number) {

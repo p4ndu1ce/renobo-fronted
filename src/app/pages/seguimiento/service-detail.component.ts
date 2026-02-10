@@ -10,6 +10,7 @@ import type { WorkStatus } from '../../services/work.service';
 
 /** Pasos del stepper de seguimiento (orden fijo). */
 const TRACKING_STEPS: { key: WorkStatus | string; label: string }[] = [
+  { key: 'BUDGET_PENDING', label: 'Presupuesto elegido' },
   { key: 'CREDIT_PENDING', label: 'Crédito Solicitado' },
   { key: 'CREDIT_APPROVED', label: 'Aprobado' },
   { key: 'TECHNICAL_VISIT_PENDING', label: 'Visita Técnica' },
@@ -19,13 +20,14 @@ const TRACKING_STEPS: { key: WorkStatus | string; label: string }[] = [
 
 /** Orden lógico para saber en qué índice está el estado actual. */
 const STATUS_INDEX: Record<string, number> = {
-  CREDIT_PENDING: 0,
-  CREDIT_APPROVED: 1,
-  TECHNICAL_VISIT_PENDING: 2,
-  TECHNICAL_VISIT: 2,
-  WAITING_PARTNERS: 3,
-  IN_PROGRESS: 4,
-  FINISHED: 4,
+  BUDGET_PENDING: 0,
+  CREDIT_PENDING: 1,
+  CREDIT_APPROVED: 2,
+  TECHNICAL_VISIT_PENDING: 3,
+  TECHNICAL_VISIT: 3,
+  WAITING_PARTNERS: 4,
+  IN_PROGRESS: 5,
+  FINISHED: 5,
   REJECTED: 0,
 };
 
@@ -94,6 +96,7 @@ export class ServiceDetailComponent implements OnInit {
   /** Etiqueta legible del estado (para el badge). */
   getStatusLabel(status: WorkStatus | string): string {
     const labels: Record<string, string> = {
+      BUDGET_PENDING: 'Presupuesto elegido',
       CREDIT_PENDING: 'Crédito Solicitado',
       CREDIT_APPROVED: 'Aprobado',
       TECHNICAL_VISIT_PENDING: 'Visita pendiente',

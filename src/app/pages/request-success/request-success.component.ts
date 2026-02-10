@@ -1,4 +1,5 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
@@ -22,6 +23,10 @@ const ORANGE_COLORS = ['#fa5404', '#f97316', '#fb923c', '#fdba74'];
 })
 export class RequestSuccessComponent implements OnInit {
   private route = inject(ActivatedRoute);
+  private platformId = inject(PLATFORM_ID);
+
+  /** Código de solicitud enviado desde el backend (state al navegar desde service-request). */
+  requestCode = signal<string>('');
 
   /** Nombre del plan (desde query param planName). */
   planName = signal<string>('');
@@ -30,6 +35,10 @@ export class RequestSuccessComponent implements OnInit {
   confettiPieces = signal<ConfettiPiece[]>([]);
 
   ngOnInit(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      const state = history.state as { requestCode?: string } | undefined;
+      this.requestCode.set(state?.requestCode?.trim() ?? '');
+    }
     const plan = this.route.snapshot.queryParamMap.get('plan') ?? this.route.snapshot.queryParamMap.get('planName');
     this.planName.set(plan ?? 'seleccionado');
     this.spawnConfetti();

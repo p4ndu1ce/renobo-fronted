@@ -181,6 +181,58 @@ export class WorkService {
   }
 
   /**
+   * Crea una solicitud desde service-request (categoría + servicio + descripción).
+   * Backend crea obra con status BUDGET_PENDING; el cliente luego elige ingeniero en /budget.
+   */
+  createServiceRequest(category: string, service: string, description: string): Observable<{ message: string; work: Work }> {
+    if (this.hasActiveWork()) {
+      const msg = 'Ya tienes una solicitud en curso. No se puede crear otra hasta que finalice.';
+      console.error('[WorkService] createServiceRequest bloqueado:', msg);
+      return throwError(() => new Error(msg));
+    }
+    const body = { category: category.trim(), service: service.trim(), description: description.trim() };
+    this._isLoading.set(true);
+    return this.http.post<{ message: string; work: Work }>(this.API_URL, body).pipe(
+      map((res) => {
+        const w = res?.work;
+        if (!w) return { message: res?.message ?? 'OK', work: {} as Work };
+        const transformed = this.transformWork({
+          ...w,
+          userId: (w as { userId?: string }).userId ?? (w as { userEmail?: string }).userEmail ?? '',
+        });
+        this.prependToMyWorks(transformed);
+        return { message: (res as { message?: string }).message ?? 'OK', work: transformed };
+      }),
+      finalize(() => this._isLoading.set(false)),
+      catchError((err) => {
+        console.error('Error al crear solicitud de servicio:', err);
+        return throwError(() => err);
+      })
+    );
+  }
+
+  /**
+   * El cliente elige ingeniero y fecha preferida desde /budget (solo dueño de la obra).
+   */
+  selectEngineer(workId: string, engineerId: string, requestedScheduledDate?: string): Observable<{ message: string }> {
+    const body: { engineerId: string; requestedScheduledDate?: string } = { engineerId };
+    if (requestedScheduledDate?.trim()) body.requestedScheduledDate = requestedScheduledDate.trim();
+    return this.http.post<{ message: string }>(`${this.API_URL}/${workId}/select-engineer`, body).pipe(
+      tap(() => {
+        const myWorks = this._myWorks();
+        const updated = myWorks.map((w) =>
+          w.id === workId ? { ...w, preferredEngineerId: engineerId, requestedScheduledDate: body.requestedScheduledDate } : w
+        );
+        this._myWorks.set(updated);
+      }),
+      catchError((err) => {
+        console.error('Error al seleccionar ingeniero:', err);
+        return throwError(() => err);
+      })
+    );
+  }
+
+  /**
    * Añade una obra al inicio de myWorks (p. ej. tras crear una solicitud).
    * Así se ve de inmediato en Servicios Recientes sin esperar al GET.
    */
@@ -460,8 +512,8 @@ Equipo de Logística Renobo [Logo Naranja #fa5404]`;
       id = String(work.SK).replace('WORK#', '');
     }
 
-    const rawPlanId = work.planId ?? 'BRONZE';
-    const planId = this.mapLegacyPlanId(rawPlanId) as CreditPlanId;
+    const rawPlanId = work.planId ?? (status === 'BUDGET_PENDING' ? undefined : 'BRONZE');
+    const planId = rawPlanId ? (this.mapLegacyPlanId(rawPlanId) as CreditPlanId) : undefined;
 
     const userId = work.userId ?? work.userEmail ?? '';
     const description = work.description ?? work.descripcion ?? '';
@@ -504,6 +556,11 @@ Equipo de Logística Renobo [Logo Naranja #fa5404]`;
       userName: (work as { userName?: string }).userName,
       userEmail: (work as { userEmail?: string }).userEmail,
       userPhone: (work as { userPhone?: string }).userPhone,
+      preferredEngineerId: (work as { preferredEngineerId?: string }).preferredEngineerId,
+      requestedScheduledDate: (work as { requestedScheduledDate?: string }).requestedScheduledDate,
+      category: (work as { category?: string }).category,
+      service: (work as { service?: string }).service,
+      requestCode: (work as { requestCode?: string }).requestCode,
     };
   }
 

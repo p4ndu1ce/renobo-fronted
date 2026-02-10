@@ -66,6 +66,10 @@
       </div>
     </section>
 
+    @if (errorMessage(); as msg) {
+      <p class="text-sm text-red-600 bg-red-50 p-3 rounded-lg">{{ msg }}</p>
+    }
+
     <section class="rounded-xl border border-orange-200 bg-orange-50 p-4">
       <h3 class="font-bold text-slate-900 mb-2">¿Qué sigue?</h3>
       <ul class="text-sm space-y-1 text-gray-700">
@@ -79,11 +83,15 @@
     <button
       type="button"
       (click)="submit()"
-      [disabled]="!description().trim()"
+      [disabled]="!description().trim() || submitting()"
       class="w-full h-14 rounded-xl bg-gradient-to-r from-[#FF5500] to-[#FF6600] hover:from-[#FF6600] hover:to-[#FF7700] text-white text-lg font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.99]"
     >
-      <lucide-icon [name]="icons.Send" class="w-5 h-5"></lucide-icon>
-      Enviar Solicitud
+      @if (submitting()) {
+        <span>Enviando...</span>
+      } @else {
+        <lucide-icon [name]="icons.Send" class="w-5 h-5"></lucide-icon>
+        Enviar Solicitud
+      }
     </button>
   </div>
 </div>

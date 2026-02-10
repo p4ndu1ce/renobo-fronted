@@ -34,6 +34,7 @@ export interface WorkItem {
 
 /** Estados de una obra. */
 export type WorkStatus =
+  | 'BUDGET_PENDING'
   | 'CREDIT_PENDING'
   | 'CREDIT_APPROVED'
   | 'REJECTED'
@@ -50,7 +51,7 @@ export interface Work {
   id: string;
   userId: string;
   engineerId?: string;
-  planId: PlanId;
+  planId?: PlanId;
   /** Título del proyecto (ej: Remodelación de Cocina). */
   title?: string;
   description: string;
@@ -70,6 +71,15 @@ export interface Work {
   userName?: string;
   userEmail?: string;
   userPhone?: string;
+  /** Flujo presupuestos: ingeniero elegido por el cliente. */
+  preferredEngineerId?: string;
+  /** Fecha/hora preferida por el cliente para la visita. */
+  requestedScheduledDate?: string;
+  /** Flujo service-request: categoría y servicio. */
+  category?: string;
+  service?: string;
+  /** Código de solicitud (6 caracteres). Se asigna al crear y se mantiene hasta que la obra finalice. */
+  requestCode?: string;
 }
 
 /** Aliados comerciales. */

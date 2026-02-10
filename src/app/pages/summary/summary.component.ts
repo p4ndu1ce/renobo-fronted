@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
@@ -7,10 +7,11 @@ import { AuthService } from '../../services/auth.service';
 import { WorkService } from '../../services/work.service';
 import type { Work } from '../../services/work.service';
 import { CurrencyPipe, CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-summary',
-  imports: [CommonModule, CurrencyPipe, RouterLink],
+  imports: [CommonModule, CurrencyPipe, RouterLink, FormsModule],
   templateUrl: './summary.component.html',
   styleUrl: './summary.component.css'
 })
@@ -20,6 +21,9 @@ export class SummaryComponent {
   private workService = inject(WorkService);
   private router = inject(Router);
   private http = inject(HttpClient);
+
+  /** Ubicación de la obra (dirección o referencia). */
+  ubicacion = signal('');
 
   logout() {
     this.authService.logout();
@@ -42,9 +46,10 @@ export class SummaryComponent {
       .map(item => `${item.quantity} ${item.unit} de ${item.name} (${item.category})`)
       .join('; ') || 'Obra sin partidas especificadas';
     
+    const ubicacion = this.ubicacion().trim() || 'Por definir';
     const payload = {
       descripcion: descripcion,
-      ubicacion: 'Por definir', // TODO: Agregar campo de ubicación en el formulario
+      ubicacion,
       presupuestoInicial: this.cartService.grandTotal()
     };
 

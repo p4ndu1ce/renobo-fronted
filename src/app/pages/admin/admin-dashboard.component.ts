@@ -91,6 +91,7 @@ export class AdminDashboardComponent implements OnInit {
    */
   private mapStatusToTemplate(status: WorkStatus): string {
     switch (status) {
+      case 'BUDGET_PENDING':
       case 'CREDIT_PENDING':
         return 'PENDING';
       case 'CREDIT_APPROVED':
@@ -151,6 +152,17 @@ export class AdminDashboardComponent implements OnInit {
   getWorkDescription(work: Work): string {
     const d = work.description ?? (work as { descripcion?: string }).descripcion;
     return d?.trim() || '—';
+  }
+
+  /** Título para listado: title, o "Categoría - Servicio", o inicio de descripción. */
+  getWorkTitle(work: Work): string {
+    if (work.title?.trim()) return work.title.trim();
+    const cat = (work as { category?: string }).category;
+    const svc = (work as { service?: string }).service;
+    if (cat && svc) return `${cat} - ${svc}`;
+    const desc = work.description ?? (work as { descripcion?: string }).descripcion;
+    if (desc?.trim()) return desc.length > 45 ? desc.slice(0, 45) + '…' : desc;
+    return 'Sin título';
   }
 
   /** Score para mostrar en el panel (financialProfile o userProfile). */
