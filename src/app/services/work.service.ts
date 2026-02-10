@@ -10,6 +10,15 @@ import type { Work, WorkItem, WorkStatus, PlanId, FinancialProfile } from '../mo
 export type { Work, WorkItem, WorkStatus, FinancialProfile };
 export type CreditPlanId = PlanId;
 
+/** Mensaje del chat de una obra (GET/POST works/:id/messages). */
+export interface WorkChatMessage {
+  id: string;
+  senderId: string;
+  senderRole: 'CLIENT' | 'ENGINEER' | 'SUPERVISOR';
+  text: string;
+  createdAt: string;
+}
+
 /** Objeto "Pedido" por partner para simulación de envío de correo. */
 export interface PedidoParaPartner {
   partnerName: string;
@@ -502,6 +511,29 @@ Equipo de Logística Renobo [Logo Naranja #fa5404]`;
    * Envía la valoración del cliente para una obra finalizada (rating 1-5 y comentario opcional).
    * Solo el dueño de la obra puede valorar.
    */
+  /** Mensaje del chat de una obra (GET/POST /works/:id/messages). */
+  getWorkMessages(workId: string, limit?: number, before?: string): Observable<WorkChatMessage[]> {
+    const params: Record<string, string> = {};
+    if (limit != null) params['limit'] = String(limit);
+    if (before) params['before'] = before;
+    return this.http.get<{ messages: WorkChatMessage[] }>(`${this.API_URL}/${workId}/messages`, { params }).pipe(
+      map((res) => res?.messages ?? []),
+      catchError((err) => {
+        console.error('Error al cargar mensajes del chat:', err);
+        return of([]);
+      })
+    );
+  }
+
+  postWorkMessage(workId: string, text: string): Observable<WorkChatMessage> {
+    return this.http.post<WorkChatMessage>(`${this.API_URL}/${workId}/messages`, { text }).pipe(
+      catchError((err) => {
+        console.error('Error al enviar mensaje:', err);
+        return throwError(() => err);
+      })
+    );
+  }
+
   submitRating(workId: string, rating: number, ratingComment?: string): Observable<{ message: string; work: Work }> {
     const body: { rating: number; ratingComment?: string } = { rating };
     if (ratingComment?.trim()) body.ratingComment = ratingComment.trim();

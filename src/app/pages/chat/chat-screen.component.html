@@ -5,28 +5,36 @@
         <lucide-icon [name]="icons.ArrowLeft" class="w-6 h-6"></lucide-icon>
       </button>
       <div class="w-10 h-10 rounded-full bg-white text-[#FF5500] flex items-center justify-center font-bold text-sm shrink-0">
-        {{ technicianInitials }}
+        {{ technicianInitials() }}
       </div>
       <div class="min-w-0 flex-1">
-        <h2 class="font-bold text-slate-900">{{ technicianName }}</h2>
-        <p class="text-xs opacity-90">En línea</p>
+        <h2 class="font-bold text-slate-900">{{ technicianName() }}</h2>
+        <p class="text-xs opacity-90">Chat de la obra</p>
       </div>
     </div>
   </header>
 
+  @if (error()) {
+    <p class="px-4 py-2 bg-rose-50 text-rose-700 text-sm">{{ error() }}</p>
+  }
+
   <div class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
-    @for (msg of messages(); track msg.id) {
-      <div [class]="msg.sender === 'user' ? 'flex justify-end' : 'flex justify-start'">
-        <div
-          [class]="msg.sender === 'user' ? 'bg-[#FF5500] text-white' : 'bg-white shadow border border-slate-200'"
-          class="max-w-[75%] rounded-lg p-3"
-        >
-          <p class="text-sm">{{ msg.text }}</p>
-          <p [class]="msg.sender === 'user' ? 'text-orange-100' : 'text-gray-500'" class="text-xs mt-1">
-            {{ msg.time }}
-          </p>
+    @if (loading()) {
+      <p class="text-center text-slate-500 text-sm">Cargando mensajes...</p>
+    } @else {
+      @for (msg of messages(); track msg.id) {
+        <div [class]="msg.sender === 'user' ? 'flex justify-end' : 'flex justify-start'">
+          <div
+            [class]="msg.sender === 'user' ? 'bg-[#FF5500] text-white' : 'bg-white shadow border border-slate-200'"
+            class="max-w-[75%] rounded-lg p-3"
+          >
+            <p class="text-sm">{{ msg.text }}</p>
+            <p [class]="msg.sender === 'user' ? 'text-orange-100' : 'text-gray-500'" class="text-xs mt-1">
+              {{ msg.time }}
+            </p>
+          </div>
         </div>
-      </div>
+      }
     }
   </div>
 

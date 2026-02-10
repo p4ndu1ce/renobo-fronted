@@ -120,7 +120,7 @@
             Calificar servicio
           </a>
         }
-        <a routerLink="/chat" class="w-full flex items-center justify-center gap-2 py-3 px-4 border border-slate-200 rounded-xl font-medium text-slate-700 bg-white hover:bg-slate-50 transition-colors no-underline">
+        <a [routerLink]="['/chat']" [state]="{ workId: work()?.id, engineerName: engineerName() }" class="w-full flex items-center justify-center gap-2 py-3 px-4 border border-slate-200 rounded-xl font-medium text-slate-700 bg-white hover:bg-slate-50 transition-colors no-underline">
           <lucide-icon [name]="icons.MessageCircle" class="w-[18px] h-[18px] text-blue-600"></lucide-icon>
           Enviar Mensaje
         </a>
