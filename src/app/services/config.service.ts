@@ -37,10 +37,21 @@ export interface BankDetails {
   referenceFormat: string;
 }
 
+/** Plan de financiación desde config (GET /config/public). */
+export interface FinancingPlanConfig {
+  id: string;
+  name: string;
+  minAmount: number;
+  maxAmount: number;
+  description?: string;
+  features?: string[];
+}
+
 export interface PublicConfig {
   services: Service[];
   creditPlans: CreditPlan[];
   bankDetails?: BankDetails | null;
+  financingPlans?: FinancingPlanConfig[];
 }
 
 @Injectable({

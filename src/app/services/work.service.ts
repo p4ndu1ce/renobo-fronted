@@ -182,7 +182,7 @@ export class WorkService {
 
   /**
    * Crea una solicitud desde service-request (categoría + servicio + descripción).
-   * Backend crea obra con status BUDGET_PENDING; el cliente luego elige ingeniero en /budget.
+   * Backend crea obra con status BUDGET_PENDING (flujo legacy; el supervisor asigna ingeniero).
    */
   createServiceRequest(category: string, service: string, description: string): Observable<{ message: string; work: Work }> {
     if (this.hasActiveWork()) {
@@ -212,7 +212,7 @@ export class WorkService {
   }
 
   /**
-   * El cliente elige ingeniero y fecha preferida desde /budget (solo dueño de la obra).
+   * El cliente elige ingeniero y fecha preferida (solo dueño de la obra).
    */
   selectEngineer(workId: string, engineerId: string, requestedScheduledDate?: string): Observable<{ message: string }> {
     const body: { engineerId: string; requestedScheduledDate?: string } = { engineerId };

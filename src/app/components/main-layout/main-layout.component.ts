@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { PartnerService } from '../../services/partner.service';
+import { NotificationService } from '../../services/notification.service';
 import { BottomNavbarComponent } from '../bottom-navbar/bottom-navbar.component';
 import { LucideAngularModule, Menu, Bell, User } from 'lucide-angular';
 
@@ -23,6 +24,7 @@ import { LucideAngularModule, Menu, Bell, User } from 'lucide-angular';
 export class MainLayoutComponent implements OnInit {
   private authService = inject(AuthService);
   private partnerService = inject(PartnerService);
+  private notificationService = inject(NotificationService);
   private router = inject(Router);
 
   userName = this.authService.userName;
@@ -35,6 +37,7 @@ export class MainLayoutComponent implements OnInit {
   ngOnInit(): void {
     if (this.authService.isLoggedIn()) {
       this.partnerService.loadPartners();
+      this.notificationService.loadFromServer();
     }
   }
 
