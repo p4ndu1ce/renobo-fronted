@@ -1,5 +1,5 @@
-<div class="pagos-page min-h-full bg-gradient-to-b from-orange-50 to-white pb-20 flex flex-col">
-  <header class="bg-gradient-to-r from-[#FF5500] to-[#FF6600] text-white p-4 shadow-lg shrink-0 z-10">
+<div class="pagos-page min-h-full bg-orange-50 pb-20 flex flex-col">
+  <header class="bg-[#FF5500] text-white p-4 shadow-lg shrink-0 z-10">
     <div class="flex items-center gap-3">
       <button type="button" (click)="goBack()" class="p-2 -m-2 text-white hover:bg-white/20 rounded-lg transition-colors" aria-label="Volver">
         <lucide-icon [name]="icons.ArrowLeft" class="w-6 h-6"></lucide-icon>
@@ -22,7 +22,7 @@
       <!-- Próxima cuota -->
       @if (nextDue(); as next) {
         <section class="rounded-xl border border-orange-200 bg-white shadow-sm overflow-hidden">
-          <div class="p-4 border-b border-orange-100 bg-gradient-to-r from-orange-50 to-white">
+          <div class="p-4 border-b border-orange-100 bg-orange-50">
             <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Próxima cuota</h2>
             <div class="flex items-baseline justify-between gap-3 flex-wrap">
               <p class="text-2xl font-black text-slate-900">{{ formatAmount(next.amount) }}</p>
@@ -36,11 +36,11 @@
       }
 
       <section class="rounded-xl border border-orange-200 bg-white shadow-sm overflow-hidden">
-        <div class="p-4 bg-gradient-to-r from-orange-50 to-white border-b border-orange-100">
+        <div class="p-4 bg-orange-50 border-b border-orange-100">
           <h2 class="font-bold text-slate-900">Realizar un pago</h2>
           <p class="text-sm text-slate-600 mt-0.5">Transfiere a nuestra cuenta y registra tu comprobante.</p>
           <button type="button" (click)="startPaymentFlow()"
-            class="mt-3 w-full py-3 px-4 rounded-xl bg-gradient-to-r from-[#FF5500] to-[#FF6600] hover:from-[#FF6600] hover:to-[#FF7700] text-white font-semibold flex items-center justify-center gap-2 transition-colors">
+            class="mt-3 w-full py-3 px-4 rounded-xl bg-[#FF5500] hover:bg-[#FF6600] text-white font-semibold flex items-center justify-center gap-2 transition-colors">
             <lucide-icon [name]="icons.CreditCard" class="w-5 h-5"></lucide-icon>
             Realizar pago
           </button>
@@ -125,7 +125,7 @@
         </div>
       </section>
       <button type="button" (click)="nextStep()"
-        class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-[#FF5500] to-[#FF6600] hover:from-[#FF6600] hover:to-[#FF7700] text-white font-semibold flex items-center justify-center gap-2">
+        class="w-full py-3 px-4 rounded-xl bg-[#FF5500] hover:bg-[#FF6600] text-white font-semibold flex items-center justify-center gap-2">
         Siguiente: registrar comprobante
         <lucide-icon [name]="icons.ChevronRight" class="w-5 h-5"></lucide-icon>
       </button>
@@ -208,7 +208,7 @@
       </section>
 
       <button type="button" (click)="submitPayment()" [disabled]="submitting()"
-        class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-[#FF5500] to-[#FF6600] hover:from-[#FF6600] hover:to-[#FF7700] text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+        class="w-full py-3 px-4 rounded-xl bg-[#FF5500] hover:bg-[#FF6600] text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
         <lucide-icon [name]="icons.Send" class="w-5 h-5"></lucide-icon>
         Enviar comprobante
       </button>
@@ -230,7 +230,7 @@
         Volver al historial
       </button>
       <button type="button" (click)="startPaymentFlow()"
-        class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-[#FF5500] to-[#FF6600] text-white font-semibold hover:from-[#FF6600] hover:to-[#FF7700] transition-colors">
+        class="w-full py-3 px-4 rounded-xl bg-[#FF5500] text-white font-semibold hover:bg-[#FF6600] transition-colors">
         Registrar otro pago
       </button>
     </div>

@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-gradient-to-b from-orange-50 to-white pb-20">
+<div class="min-h-screen bg-orange-50 pb-20">
   @if (loading()) {
     <div class="py-12 text-center text-slate-500 text-sm">Cargando seguimiento…</div>
   } @else if (!workId() || !work()) {
@@ -15,7 +15,7 @@
     </div>
   } @else {
     <!-- Header Figma: gradient, back, título -->
-    <header class="bg-gradient-to-r from-[#FF5500] to-[#FF6600] text-white p-4 shadow-lg sticky top-0 z-10">
+    <header class="bg-[#FF5500] text-white p-4 shadow-lg sticky top-0 z-10">
       <div class="flex items-center gap-3">
         <button type="button" (click)="goBack()" class="p-1 -m-1 text-white hover:bg-white/20 rounded-lg transition-colors" aria-label="Volver">
           <lucide-icon [name]="icons.ArrowLeft" class="w-6 h-6"></lucide-icon>
@@ -57,7 +57,7 @@
         <div class="p-4">
           <h3 class="font-bold text-slate-900 mb-4">Estado del Servicio</h3>
           <div class="h-2 rounded-full bg-slate-200 overflow-hidden mb-4">
-            <div class="h-full rounded-full bg-gradient-to-r from-[#FF5500] to-[#FF6600] transition-all duration-300" [style.width.%]="progressPercentage()"></div>
+            <div class="h-full rounded-full bg-[#FF5500] transition-all duration-300" [style.width.%]="progressPercentage()"></div>
           </div>
           <div class="space-y-3">
             @for (step of steps(); track step.label; let i = $index) {
@@ -115,7 +115,7 @@
       <div class="space-y-2">
         @if (work()?.status === 'FINISHED') {
           <a [routerLink]="['/rating']" [state]="{ workId: work()?.id, title: work()?.title, engineerName: engineerName() }"
-            class="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold bg-gradient-to-r from-[#FF5500] to-[#FF6600] text-white hover:from-[#FF6600] hover:to-[#FF7700] transition-colors no-underline">
+            class="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold bg-[#FF5500] text-white hover:bg-[#FF6600] transition-colors no-underline">
             <lucide-icon [name]="icons.Star" class="w-[18px] h-[18px]"></lucide-icon>
             Calificar servicio
           </a>

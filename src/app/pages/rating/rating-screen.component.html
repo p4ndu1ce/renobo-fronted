@@ -1,5 +1,5 @@
-<div class="rating-screen min-h-screen bg-gradient-to-b from-orange-50 to-white pb-20">
-  <header class="bg-gradient-to-r from-[#FF5500] to-[#FF6600] text-white p-4 shadow-lg sticky top-0 z-10">
+<div class="rating-screen min-h-screen bg-orange-50 pb-20">
+  <header class="bg-[#FF5500] text-white p-4 shadow-lg sticky top-0 z-10">
     <div class="flex items-center gap-3">
       <button type="button" (click)="goBack()" class="p-2 -m-2 text-white hover:bg-white/20 rounded-lg transition-colors" aria-label="Volver">
         <lucide-icon [name]="icons.ArrowLeft" class="w-6 h-6"></lucide-icon>
@@ -83,7 +83,7 @@
         type="button"
         (click)="submit()"
         [disabled]="isSubmitting()"
-        class="w-full h-14 rounded-xl bg-gradient-to-r from-[#FF5500] to-[#FF6600] hover:from-[#FF6600] hover:to-[#FF7700] text-white text-lg font-semibold flex items-center justify-center gap-2 transition-all active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed"
+        class="w-full h-14 rounded-xl bg-[#FF5500] hover:bg-[#FF6600] text-white text-lg font-semibold flex items-center justify-center gap-2 transition-all active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed"
       >
         @if (isSubmitting()) {
           <span>Enviando…</span>

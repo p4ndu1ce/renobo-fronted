@@ -63,8 +63,8 @@
 }
 
 body {
-    /* El degradado: naranja arriba, gris cálido abajo. Fuente: Inter (definida en tailwind.config). */
-    background: linear-gradient(to bottom, #fb5303 0%, #e5e0de 100%);
+    /* Fondo naranja sólido (sin degradado). Fuente: Inter (definida en tailwind.config). */
+    background-color: #fa5404;
     background-attachment: fixed;
     min-height: 100vh;
     margin: 0;
@@ -78,7 +78,7 @@ body {
 
 /* Estado: Login / Register */
 .auth-bg {
-    background: linear-gradient(to bottom, #fb5303 0%, #e5e0de 100%);
+    background-color: #fa5404;
     min-height: 100vh;
 }
 

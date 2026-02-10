@@ -22,7 +22,7 @@ export const routes: Routes = [
       { path: 'tracking', loadComponent: () => import('./pages/seguimiento/service-detail.component').then((m) => m.ServiceDetailComponent), canActivate: [authGuard, roleGuard], data: { title: 'Seguimiento', roles: ['CLIENT'] } },
       { path: 'engineer', loadComponent: () => import('./pages/engineer/engineer-dashboard.component').then((m) => m.EngineerDashboardComponent), canActivate: [authGuard, roleGuard], data: { roles: ['ENGINEER'] } },
       { path: 'supervisor', loadComponent: () => import('./pages/admin/admin-dashboard.component').then((m) => m.AdminDashboardComponent), canActivate: [authGuard, roleGuard], data: { roles: ['SUPERVISOR'] } },
-      { path: 'partner', loadComponent: () => import('./pages/placeholder/placeholder.component').then((m) => m.PlaceholderComponent), canActivate: [authGuard, roleGuard], data: { title: 'Panel Partner', roles: ['PARTNER'] } },
+      { path: 'partner', loadComponent: () => import('./pages/partner-tracking/partner-tracking.component').then((m) => m.PartnerTrackingComponent), canActivate: [authGuard, roleGuard], data: { title: 'Panel Partner', roles: ['PARTNER'] } },
     ],
   },
 
@@ -33,7 +33,7 @@ export const routes: Routes = [
   { path: 'request-success', loadComponent: () => import('./pages/request-success/request-success.component').then((m) => m.RequestSuccessComponent), canActivate: [authGuard, roleGuard], data: { title: 'Solicitud enviada', roles: ['CLIENT'] } },
   { path: 'calculadora', loadComponent: () => import('./calculadora/calculadora.component').then((m) => m.CalculadoraComponent) },
   { path: 'engineer/visit/:workId', loadComponent: () => import('./pages/engineer/technical-calculator.component').then((m) => m.TechnicalCalculatorComponent), canActivate: [authGuard, roleGuard], data: { roles: ['ENGINEER'] } },
-  { path: 'chat', loadComponent: () => import('./pages/chat/chat-screen.component').then((m) => m.ChatScreenComponent), canActivate: [authGuard, roleGuard], data: { title: 'Chat', roles: ['CLIENT', 'ENGINEER'] } },
+  { path: 'chat', loadComponent: () => import('./pages/chat/chat-screen.component').then((m) => m.ChatScreenComponent), canActivate: [authGuard, roleGuard], data: { title: 'Chat', roles: ['CLIENT', 'ENGINEER', 'PARTNER'] } },
   { path: 'rating', loadComponent: () => import('./pages/rating/rating-screen.component').then((m) => m.RatingScreenComponent), canActivate: [authGuard, roleGuard], data: { title: 'Calificar Servicio', roles: ['CLIENT'] } },
   { path: 'service-request', loadComponent: () => import('./pages/service-request/service-request.component').then((m) => m.ServiceRequestComponent), canActivate: [authGuard, roleGuard], data: { title: 'Solicitar Servicio', roles: ['CLIENT'] } },
   { path: 'servicios', loadComponent: () => import('./pages/servicios/servicios.component').then((m) => m.ServiciosComponent), canActivate: [authGuard, roleGuard], data: { roles: ['CLIENT'] } },

@@ -10,7 +10,7 @@ import { RenoboBrandComponent } from '../renobo-brand/renobo-brand.component';
   imports: [CommonModule, RenoboBrandComponent],
   template: `
     <div
-      class="splash-screen min-h-screen bg-gradient-to-b from-[#FF5500] via-[#FF7700] to-white flex flex-col items-center justify-center"
+      class="splash-screen min-h-screen bg-[#FF5500] flex flex-col items-center justify-center"
       animate.enter="splash-enter"
       animate.leave="splash-leave">
       <div class="splash-logo" animate.enter="spring-logo-enter">

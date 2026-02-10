@@ -52,6 +52,15 @@ export class FinancingFormComponent implements OnInit {
   files = signal<File[]>([]);
 
   ngOnInit() {
+    const user = this.auth.currentUser();
+    const userWithPhone = user as { name?: string; email?: string; phone?: string } | null;
+    this.form.update((f) => ({
+      ...f,
+      fullName: (userWithPhone?.name ?? '').trim(),
+      email: (userWithPhone?.email ?? '').trim(),
+      phone: (userWithPhone?.phone ?? '').trim(),
+    }));
+
     const d = this.auth.navigationData() as FigmaFinancingFormData & { amount?: number } | null;
     if (d && (d.amount != null || (typeof (d as FigmaFinancingFormData).amount === 'string'))) {
       const amount = typeof (d as { amount?: number | string }).amount === 'number'

@@ -75,6 +75,7 @@ export class ServiciosComponent implements OnInit {
 
   getStatusLabel(status: WorkStatus): string {
     const labels: Record<WorkStatus, string> = {
+      BUDGET_PENDING: 'Presupuesto pendiente',
       CREDIT_PENDING: 'Pendiente de crédito',
       CREDIT_APPROVED: 'Crédito aprobado',
       REJECTED: 'Rechazado',
@@ -91,6 +92,7 @@ export class ServiciosComponent implements OnInit {
     switch (status) {
       case 'CREDIT_APPROVED':
         return 'bg-emerald-100 text-emerald-700';
+      case 'BUDGET_PENDING':
       case 'CREDIT_PENDING':
         return 'bg-amber-100 text-amber-700';
       case 'TECHNICAL_VISIT_PENDING':

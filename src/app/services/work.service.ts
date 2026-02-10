@@ -307,6 +307,28 @@ export class WorkService {
   }
 
   /**
+   * Obtiene las obras asignadas al partner (GET /works?partnerId=xxx).
+   * Solo obras en WAITING_PARTNERS o IN_PROGRESS que tienen al menos un ítem con ese partnerId.
+   */
+  getWorksByPartnerId(partnerId: string): Observable<Work[]> {
+    this._isLoading.set(true);
+    return this.http.get<Work[]>(this.API_URL, { params: { partnerId } }).pipe(
+      map((works) => (works ?? []).map((work) => this.transformWork(work))),
+      tap((transformed) => {
+        const currentWorks = this._works();
+        const byId = new Map(currentWorks.map((w) => [w.id, w]));
+        transformed.forEach((w) => byId.set(w.id, w));
+        this._works.set(Array.from(byId.values()));
+      }),
+      finalize(() => this._isLoading.set(false)),
+      catchError((err) => {
+        console.error('Error al cargar obras del partner:', err);
+        return of([]);
+      })
+    );
+  }
+
+  /**
    * Actualiza el estado de una obra. Opcionalmente envía motivo de rechazo cuando status es REJECTED.
    */
   updateWorkStatus(id: string, status: WorkStatus, rejectionReason?: string): void {
