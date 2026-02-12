@@ -46,7 +46,7 @@
                   </span>
                 </div>
                 @if (selectedWorkId() === work.id && selectedWork(); as w) {
-                  <div class="border-t border-slate-200 bg-slate-50/80 p-4">
+                  <div class="border-t border-slate-200 bg-slate-50/80 p-4" (click)="$event.stopPropagation()">
                     <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Detalle</h3>
                     <p class="text-slate-700 text-sm whitespace-pre-wrap">{{ getWorkDescription(w) }}</p>
                     <div class="mt-4 rounded-xl bg-white border border-slate-200 p-4">
@@ -116,7 +116,7 @@
                   </span>
                 </div>
                 @if (selectedWorkId() === work.id && selectedWork(); as w) {
-                  <div class="border-t border-slate-200 bg-slate-50/80 p-4">
+                  <div class="border-t border-slate-200 bg-slate-50/80 p-4" (click)="$event.stopPropagation()">
                     <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Intención del Cliente</h3>
                     <p class="text-slate-700 text-sm whitespace-pre-wrap">{{ getWorkDescription(w) }}</p>
                     <button type="button" (click)="openChat(w)"

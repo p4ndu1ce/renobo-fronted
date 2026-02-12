@@ -62,6 +62,12 @@
             </span>
           </div>
           <div class="space-y-2 text-sm">
+            @if (visitScheduledDate(); as visitDate) {
+              <div class="flex items-center gap-2 text-slate-700">
+                <lucide-icon [name]="icons.Clock" class="w-4 h-4 text-slate-500 shrink-0"></lucide-icon>
+                <span>Fecha de visita: {{ visitDate | date:'dd/MM/yyyy, HH:mm' }}</span>
+              </div>
+            }
             @if (estimatedDate(); as date) {
               <div class="flex items-center gap-2 text-slate-700">
                 <lucide-icon [name]="icons.Clock" class="w-4 h-4 text-slate-500 shrink-0"></lucide-icon>

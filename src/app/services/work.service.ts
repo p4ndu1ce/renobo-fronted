@@ -13,7 +13,7 @@ export type CreditPlanId = PlanId;
 export interface WorkChatMessage {
   id: string;
   senderId: string;
-  senderRole: 'CLIENT' | 'ENGINEER' | 'SUPERVISOR';
+  senderRole: 'CLIENT' | 'ENGINEER' | 'SUPERVISOR' | 'PARTNER';
   text: string;
   createdAt: string;
 }
@@ -62,11 +62,29 @@ export interface PartnerEmailResult {
   body: string;
 }
 
+/** Línea de material dentro de una partida de obra (cantidad por unidad de partida). */
+export interface PartidaMaterialLine {
+  materialId: string;
+  materialName: string;
+  quantityPerUnit: number;
+  unit: string;
+}
+
+/** Partida de obra del catálogo (GET /partidas). */
+export interface PartidaObra {
+  id: string;
+  name: string;
+  category: string;
+  unit: string;
+  materials: PartidaMaterialLine[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class WorkService {
   private http = inject(HttpClient);
   private notificationService = inject(NotificationService);
   private readonly API_URL = `${environment.apiUrl}/works`;
+  private readonly PARTIDAS_URL = `${environment.apiUrl}/partidas`;
 
   private readonly HORAS_PLAZO_PARTNERS = 48;
 
@@ -356,6 +374,20 @@ export class WorkService {
   }
 
   /**
+   * Obtiene el catálogo de partidas de obra (GET /partidas). Solo ENGINEER y SUPERVISOR.
+   * Usado en /engineer/visit/:workId para mostrar partidas cargadas con seed-partidas.
+   */
+  getPartidas(): Observable<PartidaObra[]> {
+    return this.http.get<PartidaObra[]>(this.PARTIDAS_URL).pipe(
+      map((list) => list ?? []),
+      catchError((err) => {
+        console.error('Error al cargar partidas de obra:', err);
+        return of([]);
+      })
+    );
+  }
+
+  /**
    * Actualiza el estado de una obra. Opcionalmente envía motivo de rechazo cuando status es REJECTED.
    */
   updateWorkStatus(id: string, status: WorkStatus, rejectionReason?: string): void {
@@ -475,6 +507,40 @@ export class WorkService {
       finalize(() => this._isLoading.set(false)),
       catchError((err) => {
         console.error('Error en confirmTechnicalVisit:', err);
+        throw err;
+      })
+    );
+  }
+
+  /**
+   * Confirma la visita técnica enviando partidas de obra. El backend las expande a items y pone la obra en WAITING_PARTNERS.
+   * Usado cuando el ingeniero arma el pedido solo con Partidas de Obra (no con materiales del catálogo config).
+   */
+  confirmTechnicalVisitWithPartidas(
+    workId: string,
+    partidas: { partidaId: string; quantity: number }[]
+  ): Observable<{ message: string; work?: Work }> {
+    const partnerResponseDeadline = new Date(Date.now() + this.HORAS_PLAZO_PARTNERS * 60 * 60 * 1000).toISOString();
+    const body = {
+      status: 'WAITING_PARTNERS' as WorkStatus,
+      partnerResponseDeadline,
+      partidas: partidas.map((p) => ({ partidaId: p.partidaId, quantity: p.quantity })),
+    };
+    this._isLoading.set(true);
+    return this.http.patch<{ message: string; work: Work }>(`${this.API_URL}/${workId}`, body).pipe(
+      tap((res) => {
+        if (res?.work) {
+          const currentWorks = this._works();
+          const updatedWork = res.work ? this.transformWork(res.work) : null;
+          this._works.set(
+            currentWorks.map((w) => (w.id === workId && updatedWork ? updatedWork : w))
+          );
+        }
+      }),
+      map((res) => ({ message: res?.message ?? 'OK', work: res?.work })),
+      finalize(() => this._isLoading.set(false)),
+      catchError((err) => {
+        console.error('Error en confirmTechnicalVisitWithPartidas:', err);
         throw err;
       })
     );
@@ -762,6 +828,20 @@ Equipo de Logística Renobo [Logo Naranja #fa5404]`;
       }
       console.log('DEBUG: Estado cambiado a', newStatus);
     }
+  }
+
+  /**
+   * Avanza el estado de la obra al siguiente (solo PARTNER). Para simulación mientras se define el flujo real.
+   * WAITING_PARTNERS → IN_PROGRESS, IN_PROGRESS → FINISHED.
+   */
+  partnerAdvanceWorkStatus(workId: string, nextStatus: 'IN_PROGRESS' | 'FINISHED'): Observable<{ message: string; work: Work }> {
+    return this.http.patch<{ message: string; work: Work }>(`${this.API_URL}/${workId}`, { status: nextStatus }).pipe(
+      map((res) => ({ message: res?.message ?? 'OK', work: this.transformWork(res?.work!) })),
+      catchError((err) => {
+        console.error('Error al avanzar estado (partner):', err);
+        return throwError(() => err?.error ?? err);
+      })
+    );
   }
 
   /**

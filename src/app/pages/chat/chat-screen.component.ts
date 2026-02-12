@@ -45,16 +45,23 @@ export class ChatScreenComponent implements OnInit, OnDestroy {
   private readonly POLL_MS = 10000;
 
   ngOnInit(): void {
-    const state = history.state as { workId?: string; engineerName?: string } | undefined;
+    const state = history.state as { workId?: string; engineerName?: string; otherPartyName?: string } | undefined;
     const workId = state?.workId ?? this.route.snapshot.queryParamMap.get('workId') ?? null;
+    const role = this.authService.userRole();
     if (!workId) {
-      this.router.navigate(['/tracking']);
+      this.router.navigate(role === 'PARTNER' ? ['/partner'] : ['/tracking']);
       return;
     }
     this.workId.set(workId);
-    if (state?.engineerName) {
+    if (state?.otherPartyName) {
+      this.technicianName.set(state.otherPartyName);
+      this.technicianInitials.set(this.getInitials(state.otherPartyName));
+    } else if (state?.engineerName) {
       this.technicianName.set(state.engineerName);
       this.technicianInitials.set(this.getInitials(state.engineerName));
+    } else if (role === 'PARTNER') {
+      this.technicianName.set('Cliente');
+      this.technicianInitials.set('CL');
     } else {
       this.setEngineerNameFromWork(workId);
     }
@@ -160,6 +167,7 @@ export class ChatScreenComponent implements OnInit, OnDestroy {
   }
 
   goBack(): void {
-    this.router.navigate(['/tracking']);
+    const role = this.authService.userRole();
+    this.router.navigate(role === 'PARTNER' ? ['/partner'] : ['/tracking']);
   }
 }

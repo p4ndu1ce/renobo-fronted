@@ -1,0 +1,74 @@
+<div class="min-h-screen bg-brand-light pb-20 font-outfit">
+  <header class="flex items-center gap-3 px-4 py-3 border-b border-slate-200/60 bg-white/90">
+    <button
+      type="button"
+      (click)="goBack()"
+      class="p-2 -m-2 rounded-xl hover:bg-slate-100 text-slate-700 transition-colors"
+      aria-label="Volver"
+    >
+      <lucide-icon [name]="icons.ArrowLeft" class="w-6 h-6"></lucide-icon>
+    </button>
+    <h1 class="text-xl font-bold text-slate-900">Detalle del servicio</h1>
+  </header>
+
+  <main class="p-6 space-y-6">
+    @if (!workId()) {
+      <div class="rounded-[2.5rem] bg-white border border-slate-200 shadow-sm p-10 text-center">
+        <p class="text-slate-500 text-sm">No se especificó ningún servicio.</p>
+        <button type="button" (click)="goBack()" class="mt-4 text-primary font-semibold text-sm">Volver al panel</button>
+      </div>
+    } @else if (!job(); as _) {
+      <div class="rounded-[2.5rem] bg-white border border-slate-200 shadow-sm p-10 text-center">
+        <p class="text-slate-500 text-sm">Servicio no encontrado o ya no está asignado.</p>
+        <button type="button" (click)="goBack()" class="mt-4 text-primary font-semibold text-sm">Volver al panel</button>
+      </div>
+    } @else {
+      <!-- Card: datos del servicio -->
+      <section class="bg-primary p-6 rounded-[2rem] text-white shadow-lg">
+        <h2 class="font-poppins font-bold text-lg leading-tight">{{ job()!.title }}</h2>
+        @if (job()!.requestCode) {
+          <p class="text-white/80 text-xs font-medium mt-1">Código {{ job()!.requestCode }}</p>
+        }
+        <div class="flex items-start gap-2 text-white/90 mt-3">
+          <lucide-icon [name]="icons.MapPin" class="w-4 h-4 mt-0.5 shrink-0"></lucide-icon>
+          <p class="text-sm font-medium">{{ job()!.clientAddress }}</p>
+        </div>
+        @if (job()!.description) {
+          <div class="flex items-start gap-2 text-white/90 mt-3 pt-3 border-t border-white/20">
+            <lucide-icon [name]="icons.FileText" class="w-4 h-4 mt-0.5 shrink-0"></lucide-icon>
+            <p class="text-sm">{{ job()!.description }}</p>
+          </div>
+        }
+      </section>
+
+      <!-- Lista de materiales que debe proveer este partner -->
+      <section class="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-slate-100">
+          <h3 class="font-bold text-slate-900 flex items-center gap-2">
+            <lucide-icon [name]="icons.Package" class="w-5 h-5 text-primary"></lucide-icon>
+            Materiales a proveer
+          </h3>
+        </div>
+        @if (job()!.items && job()!.items.length > 0) {
+          <ul class="divide-y divide-slate-100">
+            @for (item of job()!.items; track item.materialId + item.quantity) {
+              <li class="p-4 flex justify-between items-baseline gap-4">
+                <span class="text-slate-800 font-medium">{{ item.name || item.materialId }}</span>
+                <span class="text-slate-600 text-sm tabular-nums shrink-0">{{ item.quantity }} {{ $any(item).unit || 'und' }}</span>
+              </li>
+            }
+          </ul>
+        } @else {
+          <div class="p-8 text-center text-slate-500 text-sm">
+            <p>No hay materiales detallados para este servicio.</p>
+          </div>
+        }
+      </section>
+
+      <a [routerLink]="['/chat']" [queryParams]="{ workId: job()!.workId }"
+        class="block w-full py-3 rounded-2xl border-2 border-slate-200 text-slate-700 font-bold text-sm hover:bg-slate-50 transition-colors text-center">
+        Chat con el cliente
+      </a>
+    }
+  </main>
+</div>

@@ -11,7 +11,7 @@ import { BuildingLogoComponent } from '../building-logo/building-logo.component'
       <app-building-logo [size]="logoSize()" [animate]="animate()" />
       <h1
         [class]="textClass()"
-        class="font-black text-white mt-2 tracking-wider drop-shadow-2xl font-poppins">
+        class="font-black text-white mt-2 tracking-wider drop-shadow-2xl font-advent">
         RENOBO
       </h1>
       @if (showSubtitle()) {

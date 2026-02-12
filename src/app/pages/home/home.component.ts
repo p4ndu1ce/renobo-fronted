@@ -82,18 +82,26 @@ export class HomeComponent implements OnInit {
     this.myFinancingRequests().some((r) => r.status === 'PENDING')
   );
 
-  /** Servicios recientes: solo obras (Works), ordenados por fecha. */
+  /** Servicios recientes: solo obras (Works), ordenados por fecha. Incluye fecha de creación y, si existe, fecha/hora de visita. */
   recentServices = computed<FigmaRecentService[]>(() => {
     const works = this.recentWorks()
-      .map((w) => ({
-        id: w.id,
-        title: w.title ?? w.description ?? 'Solicitud de obra',
-        status: this.getStatusLabel(w.status),
-        date: w.createdAt ? new Date(w.createdAt).toLocaleDateString('es-VE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—',
-        sortKey: w.createdAt ?? '',
-      }))
+      .map((w) => {
+        const createdAt = w.createdAt ? new Date(w.createdAt).toLocaleDateString('es-VE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—';
+        const scheduled = (w as { requestedScheduledDate?: string }).requestedScheduledDate;
+        const visitDate = scheduled
+          ? new Date(scheduled).toLocaleString('es-VE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+          : null;
+        return {
+          id: w.id,
+          title: w.title ?? w.description ?? 'Solicitud de obra',
+          status: this.getStatusLabel(w.status),
+          date: createdAt,
+          visitDate: visitDate ?? undefined,
+          sortKey: w.createdAt ?? '',
+        };
+      })
       .sort((a, b) => (b.sortKey as string).localeCompare(a.sortKey as string));
-    return works.slice(0, 5).map(({ id, title, status, date }) => ({ id, title, status, date }));
+    return works.slice(0, 5).map(({ id, title, status, date, visitDate }) => ({ id, title, status, date, visitDate }));
   });
 
   /** Solicitud de financiamiento en curso (la primera PENDING) para mostrar en Opciones de Financiamiento. */
@@ -377,7 +385,7 @@ export class HomeComponent implements OnInit {
     const labels: Record<string, string> = {
       CREDIT_PENDING: 'Pendiente de crédito',
       CREDIT_APPROVED: 'Crédito aprobado',
-      TECHNICAL_VISIT_PENDING: 'Visita pendiente de asignar',
+      TECHNICAL_VISIT_PENDING: 'Visita pendiente',
       TECHNICAL_VISIT: 'Visita técnica',
       WAITING_PARTNERS: 'Esperando proveedores',
       IN_PROGRESS: 'En proceso',

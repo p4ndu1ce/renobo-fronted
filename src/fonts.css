@@ -1,6 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@700;800;900&family=Outfit:wght@700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Advent+Pro:wght@600;700;800;900&family=Poppins:wght@700;800;900&family=Outfit:wght@700;800;900&display=swap');
 
 :root {
+  --font-advent-pro: 'Advent Pro', sans-serif;
   --font-poppins: 'Poppins', sans-serif;
   --font-outfit: 'Outfit', sans-serif;
 }

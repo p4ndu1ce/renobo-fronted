@@ -27,6 +27,7 @@ module.exports = {
       },
       fontFamily: {
         sans: ['Inter', 'ui-sans-serif', 'system-ui'],
+        advent: ['var(--font-advent-pro)', 'Outfit', 'sans-serif'],
         poppins: ['var(--font-poppins)', 'sans-serif'],
         outfit: ['var(--font-outfit)', 'sans-serif'],
       },

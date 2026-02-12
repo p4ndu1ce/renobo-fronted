@@ -14,6 +14,7 @@ import { interval, Subscription } from 'rxjs';
 import { LucideAngularModule, Timer, MapPin, Camera, AlertTriangle, ChevronRight } from 'lucide-angular';
 import { PartnerService, type PartnerJob } from '../../services/partner.service';
 import { AuthService } from '../../services/auth.service';
+import { WorkService } from '../../services/work.service';
 import { CameraService } from '../../services/camera.service';
 import { ToastService } from '../../services/toast.service';
 
@@ -29,6 +30,7 @@ export type TimeLeft = { hours: number; minutes: number; seconds: number; isCrit
 export class PartnerTrackingComponent implements OnInit, OnDestroy {
   private partnerService = inject(PartnerService);
   private authService = inject(AuthService);
+  private workService = inject(WorkService);
   private cameraService = inject(CameraService);
   private toastService = inject(ToastService);
   private router = inject(Router);
@@ -36,6 +38,9 @@ export class PartnerTrackingComponent implements OnInit, OnDestroy {
 
   /** true mientras se toma la foto o se sube al backend. */
   isUploadingPhoto = signal(false);
+
+  /** true mientras se avanza el estado del servicio (simulación). */
+  isAdvancingStatus = signal(false);
 
   icons = { Timer, MapPin, Camera, AlertTriangle, ChevronRight };
 
@@ -53,6 +58,15 @@ export class PartnerTrackingComponent implements OnInit, OnDestroy {
   hasJobCoordinates = computed(() => {
     const j = this.job();
     return !!(j?.coordinates?.lat != null && j?.coordinates?.lng != null);
+  });
+
+  /** Siguiente estado permitido para simulación: PENDING→IN_PROGRESS, IN_PROGRESS→FINISHED. null si no hay siguiente. */
+  nextStatusForSimulation = computed<{ backend: 'IN_PROGRESS' | 'FINISHED'; label: string } | null>(() => {
+    const j = this.job();
+    if (!j) return null;
+    if (j.status === 'PENDING') return { backend: 'IN_PROGRESS', label: 'En progreso' };
+    if (j.status === 'IN_PROGRESS') return { backend: 'FINISHED', label: 'Finalizado' };
+    return null;
   });
 
   /**
@@ -135,6 +149,28 @@ export class PartnerTrackingComponent implements OnInit, OnDestroy {
 
   goToChat(workId: string): void {
     this.router.navigate(['/chat'], { queryParams: { workId } });
+  }
+
+  /**
+   * Avanza el servicio al siguiente estado (simulación). Para probar el flujo mientras se define la lógica real.
+   */
+  advanceToNextStatus(): void {
+    const j = this.job();
+    const next = this.nextStatusForSimulation();
+    if (!j || !next || this.isAdvancingStatus()) return;
+    this.isAdvancingStatus.set(true);
+    this.workService.partnerAdvanceWorkStatus(j.workId, next.backend).subscribe({
+      next: () => {
+        this.isAdvancingStatus.set(false);
+        this.toastService.show(`Estado actualizado a ${next.label}.`, 'success');
+        const partnerId = this.authService.currentUser()?.id;
+        if (partnerId) this.partnerService.loadAssignedJobs(partnerId);
+      },
+      error: (err) => {
+        this.isAdvancingStatus.set(false);
+        this.toastService.show(err?.error?.error ?? err?.message ?? 'Error al avanzar estado.', 'error');
+      },
+    });
   }
 
   /**

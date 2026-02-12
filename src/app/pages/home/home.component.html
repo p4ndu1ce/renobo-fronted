@@ -69,6 +69,9 @@
               <div>
                 <h4 class="font-medium text-foreground">{{ service.title }}</h4>
                 <p class="text-sm text-gray-500">{{ service.date }}</p>
+                @if (service.visitDate) {
+                  <p class="text-xs text-slate-600 mt-0.5">Visita: {{ service.visitDate }}</p>
+                }
               </div>
               <span [class]="service.status === 'Finalizado' ? 'bg-green-500 text-white' : 'bg-[#FF5500] text-white'"
                 class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider text-white">

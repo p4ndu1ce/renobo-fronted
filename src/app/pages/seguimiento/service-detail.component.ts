@@ -98,6 +98,13 @@ export class ServiceDetailComponent implements OnInit {
     return null;
   });
 
+  /** Fecha y hora de la visita técnica (cuando el ingeniero la agendó). */
+  visitScheduledDate = computed(() => {
+    const w = this.work();
+    const d = (w as { requestedScheduledDate?: string })?.requestedScheduledDate;
+    return d && d.trim() ? d : null;
+  });
+
   /** Porcentaje de progreso para la barra (estilo Figma). */
   progressPercentage = computed(() => {
     const w = this.work();

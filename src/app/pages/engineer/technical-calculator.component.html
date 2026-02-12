@@ -86,31 +86,6 @@
       }
     </section>
   } @else {
-  <!-- Barra de validación de crédito: Total Materiales vs Límite del Plan -->
-  @if (planLimit() > 0) {
-    <div class="bg-white border-b border-slate-200 px-4 py-3 shadow-sm">
-      <div class="max-w-5xl mx-auto">
-        <div class="flex justify-between items-center mb-1.5">
-          <span class="text-xs font-bold text-slate-500 uppercase">Total materiales vs límite del plan</span>
-          <span class="text-sm font-bold" [class.text-rose-600]="isOverPlanLimit()" [class.text-slate-700]="!isOverPlanLimit()">
-            {{ totalMaterialsCost() | currency }} / {{ planLimit() | currency }}
-          </span>
-        </div>
-        <div class="h-2.5 bg-slate-200 rounded-full overflow-hidden">
-          <div
-            class="h-full rounded-full transition-all duration-500"
-            [class.bg-rose-500]="isOverPlanLimit()"
-            [class.bg-emerald-500]="!isOverPlanLimit()"
-            [style.width.%]="isOverPlanLimit() ? 100 : creditProgressPercent()"
-          ></div>
-        </div>
-        @if (isOverPlanLimit()) {
-          <p class="text-xs font-bold text-rose-600 mt-1">Has superado el límite del plan aprobado.</p>
-        }
-      </div>
-    </div>
-  }
-
   <div class="max-w-5xl mx-auto px-4 sm:px-6 pt-4 pb-4">
     <div class="flex items-center gap-3 mb-4">
       <button
@@ -121,88 +96,104 @@
       >
         ←
       </button>
-      <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Orden de Materiales</h1>
+      <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Lo que el cliente necesita</h1>
     </div>
-
+    <p class="text-slate-600 text-sm mb-4">Elige partidas de obra y cantidades. Al enviar, el backend registrará los materiales derivados.</p>
     <div class="relative w-full max-w-md mb-4">
       <span class="absolute left-3 top-2.5 text-slate-400">🔍</span>
       <input
         type="text"
         [value]="searchTerm()"
         (input)="searchTerm.set($any($event.target).value)"
-        placeholder="Buscar material (ej. Cemento)..."
+        placeholder="Buscar partida (ej. Pintura, Electricidad)..."
         class="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm focus:ring-2 focus:ring-orange-400 outline-none transition-all shadow-sm"
       >
     </div>
   </div>
 
-  <main class="max-w-5xl mx-auto px-4 sm:px-6 pb-24 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-    @if (configService.catalog() === null) {
-      <div class="col-span-full flex flex-col items-center justify-center py-16 text-slate-500">
-        <span class="text-4xl mb-4">⏳</span>
-        <p class="font-medium">Cargando catálogo...</p>
+  <!-- Partidas de Obra: catálogo y añadir al pedido -->
+  <section class="max-w-5xl mx-auto px-4 sm:px-6 pb-24">
+    @if (partidasLoading()) {
+      <div class="rounded-2xl bg-white border border-slate-200 p-6 text-center text-slate-500">
+        <span class="text-2xl">⏳</span>
+        <p class="text-sm mt-2">Cargando partidas...</p>
       </div>
-    } @else if (filteredMaterials().length === 0) {
-      <div class="col-span-full rounded-2xl bg-white border border-slate-200 p-8 text-center text-slate-500 shadow-sm">
-        <p class="font-medium">No hay materiales que coincidan con la búsqueda.</p>
+    } @else if (filteredPartidas().length === 0) {
+      <div class="rounded-2xl bg-white border border-slate-200 p-6 text-center text-slate-500">
+        <p class="text-sm">No hay partidas en el catálogo. Ejecuta el seed en el backend si es necesario.</p>
         <button type="button" (click)="searchTerm.set('')" class="text-orange-500 font-medium mt-2">Limpiar búsqueda</button>
       </div>
     } @else {
-      @for (material of filteredMaterials(); track material.id) {
-        <div class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-          <span class="text-[10px] font-bold text-orange-500 uppercase tracking-widest bg-orange-50 px-2 py-1 rounded">{{ material.category }}</span>
-          <h3 class="text-lg font-bold text-slate-800 mt-2">{{ material.name }}</h3>
-          <p class="text-slate-500 text-sm mt-1">{{ material.price.value | currency }} / {{ material.unit }}</p>
-          <div class="mt-2">
-            <label class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">Suministrado por:</label>
-            <select
-              [value]="material.partnerId || ''"
-              (change)="setPartnerForMaterial(material.id, $any($event.target).value)"
-              class="w-full text-sm font-medium text-slate-700 bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 focus:ring-2 focus:ring-[#fa5404]/30 focus:border-[#fa5404] outline-none"
-            >
-              @if (material.partners && material.partners.length > 0) {
-                <option value="">— Elige proveedor —</option>
-                @for (p of material.partners; track p.id) {
-                  <option [value]="p.id">{{ p.name }}</option>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+        @for (partida of filteredPartidas(); track partida.id) {
+          <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition-shadow">
+            <span class="text-[10px] font-bold text-orange-500 uppercase tracking-widest bg-orange-50 px-2 py-1 rounded">{{ partida.category }}</span>
+            <h3 class="text-base font-bold text-slate-800 mt-2">{{ partida.name }}</h3>
+            <p class="text-slate-500 text-xs mt-0.5">Unidad: {{ partida.unit }}</p>
+            @if (partida.materials && partida.materials.length > 0) {
+              <div class="mt-2">
+                <button
+                  type="button"
+                  (click)="togglePartidaMaterials(partida.id)"
+                  class="text-xs text-slate-500 hover:text-slate-700 underline underline-offset-2 transition-colors"
+                >
+                  {{ isPartidaMaterialsExpanded(partida.id) ? 'Ocultar materiales' : 'Ver materiales' }}
+                </button>
+                @if (isPartidaMaterialsExpanded(partida.id)) {
+                  <ul class="mt-2 space-y-1 text-xs text-slate-600 border-t border-slate-100 pt-2">
+                    @for (mat of partida.materials; track mat.materialId) {
+                      <li>{{ mat.materialName }} · {{ mat.quantityPerUnit }} {{ mat.unit }}/{{ partida.unit }}</li>
+                    }
+                  </ul>
                 }
-              } @else {
-                <option value="">— Cargando proveedores... (recarga si tarda) —</option>
-              }
-            </select>
+              </div>
+            }
+            <div class="flex items-center gap-3 mt-4">
+              <input
+                type="number"
+                min="0"
+                [value]="getPartidaQuantityForId(partida.id) || ''"
+                (input)="updatePartidaQuantity(partida.id, $event)"
+                #qtyInput
+                class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-center font-bold focus:border-orange-400 outline-none text-sm"
+                placeholder="0"
+              >
+              <span class="text-slate-400 font-medium text-sm">{{ partida.unit }}</span>
+              <button
+                type="button"
+                (click)="addPartida(partida, qtyInput.value ? +qtyInput.value : 1)"
+                class="shrink-0 px-4 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl text-sm transition-colors"
+              >
+                Añadir
+              </button>
+            </div>
           </div>
-          <div class="flex items-center gap-3 mt-4">
-            <input
-              type="number"
-              min="0"
-              [value]="getQuantityForId(material.id) || ''"
-              (input)="updateQuantity(material.id, $event)"
-              #qtyInput
-              class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-center font-bold focus:border-orange-400 outline-none text-sm"
-              placeholder="0"
-            >
-            <span class="text-slate-400 font-medium text-sm">{{ material.unit }}</span>
-            <button
-              type="button"
-              (click)="addMaterial(material, qtyInput.value ? +qtyInput.value : 1)"
-              class="shrink-0 px-4 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl text-sm transition-colors"
-            >
-              Añadir
-            </button>
-          </div>
-        </div>
-      }
+        }
+      </div>
     }
-  </main>
+  </section>
 
-  <!-- Resumen logístico por proveedor (sección al final) -->
-  @if (cartItemCount() > 0) {
+  <!-- Resumen: lo que el cliente necesita -->
+  @if (partidaCartCount() > 0) {
     <section class="max-w-5xl mx-auto px-4 sm:px-6 py-6">
-      <h2 class="text-lg font-black text-slate-900 tracking-tight mb-4">Resumen por Proveedor</h2>
-      <div class="space-y-4">
-        @for (group of summaryByPartner(); track group.partnerId) {
+      <h2 class="text-lg font-black text-slate-900 tracking-tight mb-4">Resumen del pedido</h2>
+      <div class="space-y-3">
+        @for (line of summaryPartidas(); track line.partidaId) {
           <div class="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm flex justify-between items-center gap-4">
-            <span class="font-bold text-slate-800">{{ group.name }}</span>
-            <span class="text-sm font-black text-slate-900 tabular-nums">{{ group.count }} ítems · {{ group.total | currency }}</span>
+            <div>
+              <span class="font-bold text-slate-800">{{ line.partidaName }}</span>
+              <p class="text-xs text-slate-500 mt-0.5">{{ line.quantity }} {{ line.unit }}</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <input
+                type="number"
+                min="1"
+                [value]="line.quantity"
+                (input)="updatePartidaQuantity(line.partidaId, $event)"
+                class="w-16 bg-slate-50 border border-slate-200 rounded-lg p-2 text-center font-bold text-sm"
+              >
+              <button type="button" (click)="removePartidaLine(line.partidaId)" class="text-rose-500 hover:underline text-xs font-medium">Quitar</button>
+            </div>
           </div>
         }
       </div>
@@ -212,20 +203,21 @@
   <footer class="technical-calc-footer fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 p-4 sm:p-6 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] z-30">
     <div class="max-w-5xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
       <div class="text-center sm:text-left">
-        <p class="text-xs font-bold text-slate-400 uppercase">Materiales en pedido</p>
-        <p class="text-2xl font-black text-slate-900">{{ totalItemsCount() }} ítems</p>
+        <p class="text-xs font-bold text-slate-400 uppercase">Partidas en el pedido</p>
+        <p class="text-2xl font-black text-slate-900">{{ partidaCartCount() }} partidas · {{ totalPartidaUnits() }} unidades</p>
       </div>
       <button
         type="button"
         (click)="isCartOpen.set(true)"
-        class="w-full sm:w-auto px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-2xl transition-colors border border-slate-200"
+        [disabled]="partidaCartCount() === 0"
+        class="w-full sm:w-auto px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-2xl transition-colors border border-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        Ver resumen por proveedor
+        Ver resumen
       </button>
       <app-loading-button
-        label="Solicitar Disponibilidad a Partners"
+        label="Disponibilizar servicio para Partners"
         [isLoading]="isSubmitting()"
-        [disabled]="cartItemCount() === 0"
+        [disabled]="partidaCartCount() === 0"
         btnClass="w-full sm:w-auto px-8 py-4 text-white font-black rounded-2xl transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none hover:opacity-95 bg-[#fa5404]"
         (clicked)="sendToSuppliers()"
       />
@@ -235,15 +227,15 @@
     }
   </footer>
 
-  <!-- Botón flotante para abrir resumen (misma fuente: orderLines → cartItemCount) -->
-  @if (cartItemCount() > 0) {
+  <!-- Botón flotante para abrir resumen -->
+  @if (partidaCartCount() > 0) {
     <button
       (click)="isCartOpen.set(true)"
       class="fixed top-24 right-4 sm:right-6 z-30 bg-white border border-slate-200 p-3 rounded-2xl shadow-xl hover:scale-105 transition-all flex items-center gap-2"
     >
       <span class="text-xl">📋</span>
       <span class="bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-        {{ cartItemCount() }}
+        {{ partidaCartCount() }}
       </span>
     </button>
   }
@@ -262,41 +254,33 @@
     class="fixed top-0 right-0 h-full w-full max-w-md bg-white z-50 shadow-2xl transition-transform duration-300 ease-in-out flex flex-col"
   >
     <div class="p-6 border-b border-slate-100 flex justify-between items-center">
-      <h2 class="text-xl font-black text-slate-900 uppercase tracking-tight">Resumen por Proveedor</h2>
+      <h2 class="text-xl font-black text-slate-900 uppercase tracking-tight">Lo que el cliente necesita</h2>
       <button (click)="isCartOpen.set(false)" class="p-2 hover:bg-slate-100 rounded-full transition-colors">✕</button>
     </div>
 
     <div class="flex-1 overflow-y-auto p-6 space-y-6">
-      <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest sticky top-0 bg-white py-1">Resumen por Proveedor</h3>
-      @for (group of summaryByPartner(); track group.partnerId + group.count) {
+      <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest sticky top-0 bg-white py-1">Partidas en el pedido</h3>
+      @for (line of summaryPartidas(); track line.partidaId) {
         <section class="rounded-2xl border border-slate-200 bg-slate-50/50 p-4">
-          <div class="flex justify-between items-baseline mb-3">
-            <h4 class="text-sm font-bold text-slate-700">{{ group.name }}</h4>
-            <span class="text-sm font-black text-slate-900">{{ group.count }} ítems · {{ group.total | currency }}</span>
+          <div class="flex justify-between items-baseline gap-2">
+            <h4 class="text-sm font-bold text-slate-700">{{ line.partidaName }}</h4>
+            <span class="text-sm font-black text-slate-900 tabular-nums">{{ line.quantity }} {{ line.unit }}</span>
           </div>
-          <ul class="space-y-2">
-            @for (item of group.items; track item.id) {
-              <li class="flex justify-between items-baseline text-sm gap-2">
-                <span class="text-slate-800 font-medium">{{ item.quantity }} {{ item.unit }} {{ item.name }}</span>
-                <span class="text-slate-500 tabular-nums">{{ item.quantity * item.price | currency }}</span>
-                <button (click)="removeLine(item.id)" class="text-rose-500 hover:underline text-xs shrink-0">Quitar</button>
-              </li>
-            }
-          </ul>
+          <button (click)="removePartidaLine(line.partidaId)" class="text-rose-500 hover:underline text-xs mt-2">Quitar</button>
         </section>
       } @empty {
         <div class="h-full flex flex-col items-center justify-center text-center text-slate-500">
           <span class="text-6xl mb-4">🛒</span>
-          <p>No hay materiales en el pedido.<br>Añade materiales para ver el resumen por proveedor.</p>
+          <p>No hay partidas en el pedido.<br>Añade partidas de obra para listar lo que el cliente necesita.</p>
         </div>
       }
     </div>
 
     <div class="p-6 bg-slate-50 border-t border-slate-100">
       <app-loading-button
-        label="Solicitar Disponibilidad a Partners"
+        label="Disponibilizar servicio para Partners"
         [isLoading]="isSubmitting()"
-        [disabled]="cartItemCount() === 0"
+        [disabled]="partidaCartCount() === 0"
         btnClass="w-full py-4 text-white font-black rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-95 bg-[#fa5404]"
         (clicked)="isCartOpen.set(false); sendToSuppliers()"
       />

@@ -30,6 +30,8 @@ export interface FigmaRecentService {
   title: string;
   status: string;
   date: string;
+  /** Fecha y hora de la visita técnica cuando está agendada. */
+  visitDate?: string;
 }
 
 /** Datos que se pasan al formulario de financiación (plan seleccionado + simulador). */
