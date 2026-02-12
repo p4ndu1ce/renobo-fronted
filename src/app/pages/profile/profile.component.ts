@@ -1,6 +1,7 @@
 import { Component, inject, computed, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { Router } from '@angular/router';
+import { LucideAngularModule, ArrowLeft } from 'lucide-angular';
 import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
 import { WorkService } from '../../services/work.service';
@@ -10,7 +11,7 @@ import type { CreditPlanId } from '../../services/work.service';
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, SkeletonCardComponent],
+  imports: [CommonModule, SkeletonCardComponent, LucideAngularModule],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.css',
 })
@@ -21,6 +22,9 @@ export class ProfileComponent implements OnInit {
   private notificationService = inject(NotificationService);
   private workService = inject(WorkService);
   private router = inject(Router);
+  private location = inject(Location);
+
+  readonly icons = { ArrowLeft };
 
   ngOnInit(): void {
     const user = this.auth.currentUser();
@@ -86,6 +90,15 @@ export class ProfileComponent implements OnInit {
 
   removeNotification(id: string): void {
     this.notificationService.remove(id);
+  }
+
+  /** Navega a la vista anterior (o a /home si no hay historial). */
+  goBack(): void {
+    if (window.history.length > 1) {
+      this.location.back();
+    } else {
+      this.router.navigate(['/home']);
+    }
   }
 
   /** Limpia el estado de sesión y navega al login con View Transition. */

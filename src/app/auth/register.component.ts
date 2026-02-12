@@ -23,7 +23,7 @@ export class RegisterComponent {
   email = signal('');
   phone = signal('');
   documentId = signal('');
-  role = signal<'CLIENT' | 'ENGINEER' | 'AFFILIATOR' | 'CREW'>('CLIENT');
+  role = signal<'CLIENT' | 'ENGINEER' | 'SUPERVISOR' | 'PARTNER'>('CLIENT');
   password = signal('');
   confirmPassword = signal('');
 
@@ -36,6 +36,23 @@ export class RegisterComponent {
   readonly FileTextIcon = FileText;
   readonly LockIcon = Lock;
   readonly FingerprintIcon = FingerprintPattern;
+
+  /** Formato Venezuela: 04XX XXXXXXX (11 dígitos). Solo dígitos; se formatea con espacio. */
+  private static formatPhoneVe(value: string): string {
+    const digits = value.replace(/\D/g, '').slice(0, 11);
+    if (digits.length <= 4) return digits;
+    return `${digits.slice(0, 4)} ${digits.slice(4)}`;
+  }
+
+  /** Valida que sea 04 + 9 dígitos (11 en total). */
+  private static isValidPhoneVe(value: string): boolean {
+    const digits = value.replace(/\D/g, '');
+    return /^04\d{9}$/.test(digits);
+  }
+
+  onPhoneInput(value: string) {
+    this.phone.set(RegisterComponent.formatPhoneVe(value));
+  }
 
   onSubmit() {
     const n = this.name().trim();
@@ -59,9 +76,8 @@ export class RegisterComponent {
       this.errorMessage.set('Documento de identidad requerido (mín. 5 caracteres).');
       return;
     }
-    const phoneVal = this.phone().trim();
-    if (phoneVal.length < 8) {
-      this.errorMessage.set('El teléfono es requerido (mín. 8 caracteres).');
+    if (!RegisterComponent.isValidPhoneVe(this.phone().trim())) {
+      this.errorMessage.set('El teléfono debe tener formato 04XX XXXXXXX (11 dígitos, ej. 0412 1234567).');
       return;
     }
     if (p.length < 6) {
@@ -78,7 +94,7 @@ export class RegisterComponent {
     this.http
       .post<{ message: string; usuario: { name: string; email: string; role: string; phone?: string } }>(
         this.registerUrl,
-        { name: n, email: e, password: p, documentId: doc, role: this.role(), phone: this.phone().trim() }
+        { name: n, email: e, password: p, documentId: doc, role: this.role(), phone: this.phone().trim().replace(/\s/g, '') }
       )
       .subscribe({
         next: () => {

@@ -29,6 +29,7 @@ export const routes: Routes = [
   // Rutas full-screen (sin main layout): flujos que no son tabs del bottom nav
   { path: 'profile', loadComponent: () => import('./pages/profile/profile.component').then((m) => m.ProfileComponent), canActivate: [authGuard] },
   { path: 'financing', loadComponent: () => import('./pages/financing/financing-screen.component').then((m) => m.FinancingScreenComponent), canActivate: [authGuard, roleGuard], data: { title: 'Financiación', roles: ['CLIENT'] } },
+  { path: 'financing-tracking', loadComponent: () => import('./pages/financing-tracking/financing-tracking.component').then((m) => m.FinancingTrackingComponent), canActivate: [authGuard, roleGuard], data: { title: 'Seguimiento de Financiamiento', roles: ['CLIENT'] } },
   { path: 'financing-form', loadComponent: () => import('./pages/financing-form/financing-form.component').then((m) => m.FinancingFormComponent), canActivate: [authGuard, roleGuard], data: { title: 'Solicitud de financiación', roles: ['CLIENT'] } },
   { path: 'request-success', loadComponent: () => import('./pages/request-success/request-success.component').then((m) => m.RequestSuccessComponent), canActivate: [authGuard, roleGuard], data: { title: 'Solicitud enviada', roles: ['CLIENT'] } },
   { path: 'calculadora', loadComponent: () => import('./calculadora/calculadora.component').then((m) => m.CalculadoraComponent) },

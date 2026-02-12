@@ -1,1 +1,4 @@
-/* Estilos adicionales si son necesarios */
+/* Panel lateral: padding inferior para no quedar tapado por el bottom navbar */
+.admin-drawer-content {
+  padding-bottom: max(5.5rem, env(safe-area-inset-bottom, 0px) + 4rem);
+}

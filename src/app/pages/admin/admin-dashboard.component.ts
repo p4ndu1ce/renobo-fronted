@@ -5,6 +5,7 @@ import { WorkService, type Work, type CreditPlanId, type WorkStatus } from '../.
 import { AuthService } from '../../services/auth.service';
 import { EngineerService } from '../../services/engineer.service';
 import { ToastService } from '../../services/toast.service';
+import { FinancingService, type AdminFinancingRequestItem } from '../../services/financing.service';
 
 export type AdminFilter = 'all' | 'pending_approval' | 'approved_no_engineer' | 'rejected';
 
@@ -19,9 +20,14 @@ export class AdminDashboardComponent implements OnInit {
   public workService = inject(WorkService);
   public authService = inject(AuthService);
   public engineerService = inject(EngineerService);
+  private financingService = inject(FinancingService);
   private router = inject(Router);
   private platformId = inject(PLATFORM_ID);
   private toastService = inject(ToastService);
+
+  /** Solicitudes de planes de financiamiento (para aprobar/rechazar). */
+  financingRequests = signal<AdminFinancingRequestItem[]>([]);
+  loadingFinancing = signal(false);
 
   /** ID de la obra seleccionada en el drawer. Null cuando el drawer está cerrado. */
   selectedWorkId = signal<string | null>(null);
@@ -79,11 +85,67 @@ export class AdminDashboardComponent implements OnInit {
     return this.workService.works().filter(w => this.mapStatusToTemplate(w.status) === 'PENDING').length;
   });
 
+  /** Solicitudes de financiamiento pendientes de aprobación. */
+  pendingFinancingCount = computed(() =>
+    this.financingRequests().filter(r => r.status === 'PENDING').length
+  );
+
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
       this.workService.getAllWorks().subscribe();
       this.engineerService.getEngineers().subscribe();
+      this.loadAdminFinancingRequests();
     }
+  }
+
+  loadAdminFinancingRequests(): void {
+    this.loadingFinancing.set(true);
+    this.financingService.getAdminRequests().subscribe({
+      next: (res) => this.financingRequests.set(res.requests ?? []),
+      error: () => this.financingRequests.set([]),
+      complete: () => this.loadingFinancing.set(false),
+    });
+  }
+
+  /** Etiqueta del plan de financiamiento (express / standard / expanded). */
+  getFinancingPlanLabel(planId: string): string {
+    const labels: Record<string, string> = {
+      express: 'RENOEXPRESS',
+      standard: 'RENOSTANDAR',
+      expanded: 'RENOAMPLIADO',
+    };
+    return labels[planId] ?? planId ?? '—';
+  }
+
+  getFinancingStatusLabel(status: string): string {
+    const labels: Record<string, string> = {
+      PENDING: 'Pendiente',
+      APPROVED: 'Aprobado',
+      REJECTED: 'Rechazado',
+    };
+    return labels[status] ?? status;
+  }
+
+  approveFinancing(requestId: string): void {
+    this.financingService.approveRequest(requestId).subscribe({
+      next: (res) => {
+        this.toastService.show(`Solicitud aprobada. Obra creada: ${res.requestCode}`, 'success');
+        this.loadAdminFinancingRequests();
+        this.workService.getAllWorks().subscribe();
+      },
+      error: (err) => this.toastService.show(err.error?.error ?? 'Error al aprobar', 'error'),
+    });
+  }
+
+  rejectFinancing(requestId: string): void {
+    if (!confirm('¿Rechazar esta solicitud de financiamiento?')) return;
+    this.financingService.rejectRequest(requestId).subscribe({
+      next: () => {
+        this.toastService.show('Solicitud rechazada', 'success');
+        this.loadAdminFinancingRequests();
+      },
+      error: (err) => this.toastService.show(err.error?.error ?? 'Error al rechazar', 'error'),
+    });
   }
 
   /**

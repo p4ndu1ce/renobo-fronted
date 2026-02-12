@@ -61,7 +61,7 @@ export class FinancingFormComponent implements OnInit {
         ...f,
         fullName: (user?.name ?? '').trim(),
         email: (user?.email ?? '').trim(),
-        phone: (user?.phone ?? f.phone || '').trim() || f.phone,
+        phone: ((user?.phone ?? (f.phone || '')).trim()) || f.phone,
       }));
     };
     applyUserToForm();
@@ -82,6 +82,11 @@ export class FinancingFormComponent implements OnInit {
   /** Mensaje de error para un campo (para el template). */
   fieldError(field: string): string | null {
     return this.fieldErrors()[field] ?? null;
+  }
+
+  /** Si hay errores de validación en algún campo (para el template). */
+  hasFieldErrors(): boolean {
+    return Object.keys(this.fieldErrors()).length > 0;
   }
 
   onSubmit(event?: SubmitEvent) {

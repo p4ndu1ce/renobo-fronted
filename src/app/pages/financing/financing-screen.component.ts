@@ -57,11 +57,11 @@ export class FinancingScreenComponent {
 
   readonly icons = { ArrowLeft, Zap, TrendingUp, Star, Check, Calculator, DollarSign, CreditCard };
 
-  /** Planes desde config (GET /config/public) o fallback local. */
+  /** Planes desde config (GET /config/public) o fallback local, ordenados por rango (menor a mayor). */
   financingPlans = computed<FigmaFinancingPlan[]>(() => {
     const plans = this.configService.catalog()?.financingPlans;
-    if (plans?.length) return plans.map(configToFigma);
-    return FALLBACK_PLANS;
+    const list = plans?.length ? plans.map(configToFigma) : [...FALLBACK_PLANS];
+    return list.slice().sort((a, b) => (a.minAmount ?? 0) - (b.minAmount ?? 0));
   });
 
   downPayment = computed(() => (this.amount() ?? 0) * 0.4);

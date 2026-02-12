@@ -1,4 +1,4 @@
-<div class="home-by-role min-h-screen bg-background pb-24 font-outfit">
+<div class="home-by-role min-h-screen bg-orange-50 pb-24 font-outfit">
   @if (isLoading()) {
   <div class="p-5 space-y-3">
     <app-skeleton-card [count]="3"></app-skeleton-card>
@@ -6,7 +6,7 @@
   } @else {
   <!-- CLIENT: Dashboard (estilos Figma; header y bottom nav vienen del main-layout) -->
   @if (userRole() !== 'ENGINEER' && userRole() !== 'SUPERVISOR' && userRole() !== 'PARTNER') {
-  <div class="min-h-full bg-orange-50">
+  <div class="min-h-full">
     <div class="p-4 space-y-6">
       <!-- Opciones de Financiamiento (primero) -->
       <div class="dashboard-section">
@@ -15,12 +15,34 @@
             <h3 class="font-bold text-orange-800">Opciones de Financiamiento</h3>
           </div>
           <div class="p-4">
-            <p class="text-sm text-orange-900/90 mb-3">Financia tus proyectos desde $200 hasta $1,500</p>
-            <button type="button" (click)="navigateTo('/financing')"
-              class="w-full flex items-center justify-center gap-2 py-2.5 px-4 border border-[#FF5500] text-[#FF5500] font-medium rounded-lg bg-transparent hover:bg-orange-50 transition-colors">
-              <lucide-icon [name]="icons.CreditCard" class="w-[18px] h-[18px]"></lucide-icon>
-              Ver Planes
-            </button>
+            @if (hasFinancingRequestInProgress() && inProgressFinancingRequest(); as req) {
+              <p class="text-sm text-orange-900/90 mb-3">Tienes una solicitud de financiamiento en curso.</p>
+              <a [routerLink]="['/financing-tracking']"
+                class="block rounded-xl border border-orange-200 bg-white p-4 mb-3 cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98] no-underline text-inherit">
+                <div class="flex justify-between items-center">
+                  <div>
+                    <h4 class="font-medium text-foreground">Solicitud de Financiamiento</h4>
+                    <p class="text-sm text-gray-500">{{ req.requestCode }}</p>
+                  </div>
+                  <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800">
+                    Pendiente de aprobación
+                  </span>
+                </div>
+                <p class="text-xs text-orange-700 mt-2">Toca para ver seguimiento</p>
+              </a>
+              <button type="button" disabled
+                class="w-full flex items-center justify-center gap-2 py-2.5 px-4 border border-orange-300 text-orange-400 font-medium rounded-lg bg-orange-50/50 cursor-not-allowed">
+                <lucide-icon [name]="icons.CreditCard" class="w-[18px] h-[18px]"></lucide-icon>
+                Ver Planes
+              </button>
+            } @else {
+              <p class="text-sm text-orange-900/90 mb-3">Financia tus proyectos desde $200 hasta $1,500</p>
+              <button type="button" (click)="navigateTo('/financing')"
+                class="w-full flex items-center justify-center gap-2 py-2.5 px-4 border border-[#FF5500] text-[#FF5500] font-medium rounded-lg bg-transparent hover:bg-orange-50 transition-colors">
+                <lucide-icon [name]="icons.CreditCard" class="w-[18px] h-[18px]"></lucide-icon>
+                Ver Planes
+              </button>
+            }
           </div>
         </div>
       </div>

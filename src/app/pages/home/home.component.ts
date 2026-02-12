@@ -8,6 +8,8 @@ import type { CreditPlan } from '../../services/config.service';
 import { WorkService } from '../../services/work.service';
 import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
+import { FinancingService } from '../../services/financing.service';
+import type { FinancingRequestListItem } from '../../services/financing.service';
 import { SkeletonCardComponent } from '../../shared/components/skeleton-card/skeleton-card.component';
 import type { WorkStatus, CreditPlanId } from '../../services/work.service';
 import type { FigmaServiceCategory, FigmaRecentService } from '../../models/figma-ui.types';
@@ -41,6 +43,7 @@ export class HomeComponent implements OnInit {
   public authService = inject(AuthService);
   private toastService = inject(ToastService);
   public configService = inject(ConfigService);
+  private financingService = inject(FinancingService);
 
   /** Opciones para el select Categoría de Servicio (expuesto en template). */
   readonly SERVICE_CATEGORIES = SERVICE_CATEGORIES;
@@ -69,25 +72,47 @@ export class HomeComponent implements OnInit {
   /** Planes desde DB (catalog.creditPlans). */
   clientPlans = computed(() => this.configService.catalog()?.creditPlans ?? []);
 
-  recentWorks = computed(() => this.workService.myWorks().slice(0, 3));
+  recentWorks = computed(() => this.workService.myWorks().slice(0, 5));
 
-  /** Servicios recientes en formato Figma (mapeo desde myWorks hasta que el backend devuelva FigmaRecentService). */
-  recentServices = computed<FigmaRecentService[]>(() =>
-    this.recentWorks().map((w) => ({
-      id: w.id,
-      title: w.title ?? w.description ?? 'Solicitud de obra',
-      status: this.getStatusLabel(w.status),
-      date: w.createdAt ? new Date(w.createdAt).toLocaleDateString('es-VE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—',
-    }))
+  /** Solicitudes de financiación del usuario (cargadas en ngOnInit para CLIENT). */
+  myFinancingRequests = signal<FinancingRequestListItem[]>([]);
+
+  /** Hay al menos una solicitud de financiación en curso (PENDING). */
+  hasFinancingRequestInProgress = computed(() =>
+    this.myFinancingRequests().some((r) => r.status === 'PENDING')
   );
 
-  /** Si el servicio está finalizado → valoración; si no → seguimiento. */
+  /** Servicios recientes: solo obras (Works), ordenados por fecha. */
+  recentServices = computed<FigmaRecentService[]>(() => {
+    const works = this.recentWorks()
+      .map((w) => ({
+        id: w.id,
+        title: w.title ?? w.description ?? 'Solicitud de obra',
+        status: this.getStatusLabel(w.status),
+        date: w.createdAt ? new Date(w.createdAt).toLocaleDateString('es-VE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—',
+        sortKey: w.createdAt ?? '',
+      }))
+      .sort((a, b) => (b.sortKey as string).localeCompare(a.sortKey as string));
+    return works.slice(0, 5).map(({ id, title, status, date }) => ({ id, title, status, date }));
+  });
+
+  /** Solicitud de financiamiento en curso (la primera PENDING) para mostrar en Opciones de Financiamiento. */
+  inProgressFinancingRequest = computed(() =>
+    this.myFinancingRequests().find((r) => r.status === 'PENDING') ?? null
+  );
+
+  /** Lleva a la vista de seguimiento de la obra. */
   navigateToTracking(service: FigmaRecentService) {
-    if (service.status === 'Finalizado') {
-      this.router.navigate(['/rating'], { state: { workId: String(service.id), title: service.title } });
-    } else {
-      this.router.navigate(['/tracking'], { queryParams: { workId: String(service.id) } });
-    }
+    this.router.navigate(['/tracking'], { queryParams: { workId: String(service.id) } });
+  }
+
+  getFinancingStatusLabel(status: string): string {
+    const labels: Record<string, string> = {
+      PENDING: 'Pendiente de aprobación',
+      APPROVED: 'Aprobado',
+      REJECTED: 'Rechazado',
+    };
+    return labels[status] ?? status;
   }
 
   /** Estados considerados "finalizados": con una obra en estos estados el usuario puede solicitar otra. */
@@ -305,6 +330,12 @@ export class HomeComponent implements OnInit {
       this.workService.getWorksByEngineerId(engineerId).subscribe({ next: () => {}, error: onComplete, complete: onComplete });
     } else if (userId) {
       this.workService.getUserWorks(userId).subscribe({ next: () => {}, error: onComplete, complete: onComplete });
+      if (role === 'CLIENT') {
+        this.financingService.getMyRequests().subscribe({
+          next: (res) => this.myFinancingRequests.set(res.requests ?? []),
+          error: () => {},
+        });
+      }
     } else {
       clearTimeout(timeoutId);
       done();

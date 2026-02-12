@@ -55,6 +55,21 @@ export class ServiceDetailComponent implements OnInit {
     return this.workService.myWorks().find((w) => w.id === id) ?? null;
   });
 
+  /** Historial de solicitudes de servicio (todas las obras del usuario, ordenadas por fecha, sin límite). */
+  serviceHistory = computed(() => {
+    const works = this.workService
+      .myWorks()
+      .map((w) => ({
+        id: w.id,
+        title: w.title ?? w.description ?? 'Solicitud de obra',
+        status: this.getStatusLabel(w.status),
+        date: w.createdAt ? new Date(w.createdAt).toLocaleDateString('es-VE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—',
+        sortKey: w.createdAt ?? '',
+      }))
+      .sort((a, b) => (b.sortKey as string).localeCompare(a.sortKey as string));
+    return works;
+  });
+
   /** Pasos para el stepper con estado completado/actual. */
   steps = computed(() => {
     const w = this.work();
@@ -131,5 +146,10 @@ export class ServiceDetailComponent implements OnInit {
 
   goBack(): void {
     this.router.navigate(['/home']);
+  }
+
+  /** Navega al detalle de una obra (tracking con workId). */
+  openWork(workId: string): void {
+    this.router.navigate(['/tracking'], { queryParams: { workId } });
   }
 }

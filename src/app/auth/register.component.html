@@ -9,16 +9,6 @@
 
   <!-- Card Figma -->
   <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-    <!-- Tabs Iniciar Sesión | Registrarse -->
-    <div class="flex gap-2 mb-6">
-      <a routerLink="/login" class="flex-1 py-2.5 rounded-lg font-semibold border border-slate-200 text-slate-700 hover:bg-slate-50 text-center no-underline transition-colors">
-        Iniciar Sesión
-      </a>
-      <button type="button" class="flex-1 py-2.5 rounded-lg font-semibold bg-[#FF5500] hover:bg-[#FF6600] text-white transition-colors">
-        Registrarse
-      </button>
-    </div>
-
     <form (submit)="$event.preventDefault(); onSubmit()" class="space-y-4">
       @if (errorMessage()) {
         <div class="p-3 bg-red-50 border border-red-200 rounded-lg">
@@ -28,8 +18,10 @@
 
       <div>
         <label for="name" class="block text-sm font-medium text-slate-700 mb-1">Nombre Completo</label>
-        <div class="relative">
-          <lucide-icon [name]="UserIcon" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"></lucide-icon>
+        <div class="relative flex items-center">
+          <span class="absolute left-0 top-0 bottom-0 w-10 flex items-center justify-center pointer-events-none">
+            <lucide-icon [name]="UserIcon" class="w-4 h-4 text-gray-400"></lucide-icon>
+          </span>
           <input id="name" type="text" [ngModel]="name()" (ngModelChange)="name.set($event)" name="name"
             placeholder="Juan Pérez"
             class="auth-input w-full border border-slate-200 rounded-lg py-3 pl-10 pr-3 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-[#FF5500] focus:border-[#FF5500] outline-none transition-all" />
@@ -38,8 +30,10 @@
 
       <div>
         <label for="email" class="block text-sm font-medium text-slate-700 mb-1">Correo Electrónico</label>
-        <div class="relative">
-          <lucide-icon [name]="MailIcon" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"></lucide-icon>
+        <div class="relative flex items-center">
+          <span class="absolute left-0 top-0 bottom-0 w-10 flex items-center justify-center pointer-events-none">
+            <lucide-icon [name]="MailIcon" class="w-4 h-4 text-gray-400"></lucide-icon>
+          </span>
           <input id="email" type="email" [ngModel]="email()" (ngModelChange)="email.set($event)" name="email"
             placeholder="correo@ejemplo.com"
             class="auth-input w-full border border-slate-200 rounded-lg py-3 pl-10 pr-3 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-[#FF5500] focus:border-[#FF5500] outline-none transition-all" />
@@ -48,18 +42,25 @@
 
       <div>
         <label for="phone" class="block text-sm font-medium text-slate-700 mb-1">Teléfono *</label>
-        <div class="relative">
-          <lucide-icon [name]="PhoneIcon" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"></lucide-icon>
-          <input id="phone" type="tel" [ngModel]="phone()" (ngModelChange)="phone.set($event)" name="phone"
-            placeholder="+58 412 1234567"
+        <div class="relative flex items-center">
+          <span class="absolute left-0 top-0 bottom-0 w-10 flex items-center justify-center pointer-events-none">
+            <lucide-icon [name]="PhoneIcon" class="w-4 h-4 text-gray-400"></lucide-icon>
+          </span>
+          <input id="phone" type="tel" [ngModel]="phone()" (ngModelChange)="onPhoneInput($event)" name="phone"
+            placeholder="04XX XXXXXXX"
+            maxlength="12"
+            inputmode="numeric"
+            autocomplete="tel"
             class="auth-input w-full border border-slate-200 rounded-lg py-3 pl-10 pr-3 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-[#FF5500] focus:border-[#FF5500] outline-none transition-all" />
         </div>
       </div>
 
       <div>
         <label for="documentId" class="block text-sm font-medium text-slate-700 mb-1">Documento de identidad</label>
-        <div class="relative">
-          <lucide-icon [name]="FileTextIcon" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"></lucide-icon>
+        <div class="relative flex items-center">
+          <span class="absolute left-0 top-0 bottom-0 w-10 flex items-center justify-center pointer-events-none">
+            <lucide-icon [name]="FileTextIcon" class="w-4 h-4 text-gray-400"></lucide-icon>
+          </span>
           <input id="documentId" type="text" [ngModel]="documentId()" (ngModelChange)="documentId.set($event)" name="documentId"
             placeholder="Número de documento"
             class="auth-input w-full border border-slate-200 rounded-lg py-3 pl-10 pr-3 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-[#FF5500] focus:border-[#FF5500] outline-none transition-all" />
@@ -72,15 +73,17 @@
           class="auth-select w-full border border-slate-200 rounded-lg py-3 px-4 text-slate-900 bg-white focus:ring-2 focus:ring-[#FF5500] focus:border-[#FF5500] outline-none transition-all appearance-none">
           <option value="CLIENT">Cliente</option>
           <option value="ENGINEER">Ingeniero</option>
-          <option value="AFFILIATOR">Afiliador</option>
-          <option value="CREW">Equipo</option>
+          <option value="SUPERVISOR">Supervisor</option>
+          <option value="PARTNER">Partner</option>
         </select>
       </div>
 
       <div>
         <label for="password" class="block text-sm font-medium text-slate-700 mb-1">Contraseña</label>
-        <div class="relative">
-          <lucide-icon [name]="LockIcon" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"></lucide-icon>
+        <div class="relative flex items-center">
+          <span class="absolute left-0 top-0 bottom-0 w-10 flex items-center justify-center pointer-events-none">
+            <lucide-icon [name]="LockIcon" class="w-4 h-4 text-gray-400"></lucide-icon>
+          </span>
           <input id="password" type="password" [ngModel]="password()" (ngModelChange)="password.set($event)" name="password"
             placeholder="••••••••"
             class="auth-input w-full border border-slate-200 rounded-lg py-3 pl-10 pr-3 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-[#FF5500] focus:border-[#FF5500] outline-none transition-all" />
@@ -89,8 +92,10 @@
 
       <div>
         <label for="confirmPassword" class="block text-sm font-medium text-slate-700 mb-1">Confirmar contraseña</label>
-        <div class="relative">
-          <lucide-icon [name]="LockIcon" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"></lucide-icon>
+        <div class="relative flex items-center">
+          <span class="absolute left-0 top-0 bottom-0 w-10 flex items-center justify-center pointer-events-none">
+            <lucide-icon [name]="LockIcon" class="w-4 h-4 text-gray-400"></lucide-icon>
+          </span>
           <input id="confirmPassword" type="password" [ngModel]="confirmPassword()" (ngModelChange)="confirmPassword.set($event)" name="confirmPassword"
             placeholder="••••••••"
             class="auth-input w-full border border-slate-200 rounded-lg py-3 pl-10 pr-3 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-[#FF5500] focus:border-[#FF5500] outline-none transition-all" />

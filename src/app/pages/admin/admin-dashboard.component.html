@@ -7,7 +7,10 @@
       </div>
       <div class="flex items-center gap-4">
         <div class="bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm text-sm font-bold text-slate-600">
-          Pendientes: <span class="text-orange-500">{{ pendingCount() }}</span>
+          Obras pendientes: <span class="text-orange-500">{{ pendingCount() }}</span>
+        </div>
+        <div class="bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm text-sm font-bold text-slate-600">
+          Financiamiento pendientes: <span class="text-orange-500">{{ pendingFinancingCount() }}</span>
         </div>
         <button
           (click)="logout()"
@@ -18,7 +21,68 @@
       </div>
     </div>
 
+    <!-- Solicitudes de planes de financiamiento -->
+    <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200 p-6 mb-8">
+      <h2 class="text-xl font-black text-slate-900 mb-4">Solicitudes de planes de financiamiento</h2>
+      <p class="text-slate-500 text-sm mb-4">Aprueba o rechaza las solicitudes. Al aprobar se crea la obra y podrás asignar ingeniero en la sección inferior.</p>
+      @if (loadingFinancing()) {
+        <p class="text-slate-500 text-sm py-4">Cargando solicitudes…</p>
+      } @else if (financingRequests().length === 0) {
+        <div class="py-8 text-center border-2 border-dashed border-slate-200 rounded-xl">
+          <p class="text-slate-500">No hay solicitudes de financiamiento.</p>
+        </div>
+      } @else {
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-slate-800 text-white uppercase text-[10px] tracking-widest font-bold">
+              <th class="p-4">Cliente · Código</th>
+              <th class="p-4">Plan · Categoría</th>
+              <th class="p-4">Presupuesto</th>
+              <th class="p-4">Estado</th>
+              <th class="p-4 text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            @for (req of financingRequests(); track req.id) {
+              <tr class="hover:bg-slate-50 transition-colors">
+                <td class="p-4">
+                  <p class="font-bold text-slate-900">{{ req.fullName }}</p>
+                  <p class="text-xs text-slate-400">{{ req.email }} · {{ req.requestCode }}</p>
+                </td>
+                <td class="p-4">
+                  <span class="inline-block px-3 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
+                    {{ getFinancingPlanLabel(req.planId) }}
+                  </span>
+                  <p class="text-sm text-slate-600 mt-1">{{ req.category }}</p>
+                </td>
+                <td class="p-4 font-semibold text-slate-800">${{ req.budget }}</td>
+                <td class="p-4">
+                  <span
+                    [class]="req.status === 'PENDING' ? 'bg-amber-100 text-amber-800' : req.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'"
+                    class="px-3 py-1 rounded-full text-[10px] font-bold uppercase">
+                    {{ getFinancingStatusLabel(req.status) }}
+                  </span>
+                </td>
+                <td class="p-4 text-right">
+                  @if (req.status === 'PENDING') {
+                    <div class="flex justify-end gap-2">
+                      <button (click)="approveFinancing(req.id)" class="p-2 bg-emerald-100 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all" title="Aprobar">✔️</button>
+                      <button (click)="rejectFinancing(req.id)" class="p-2 bg-rose-100 text-rose-600 rounded-lg hover:bg-rose-600 hover:text-white transition-all" title="Rechazar">✖️</button>
+                    </div>
+                  } @else {
+                    <span class="text-xs text-slate-400">—</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+
+    <!-- Obras (solicitudes de servicio / crédito) -->
     <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200 p-6">
+      <h2 class="text-xl font-black text-slate-900 mb-4">Obras</h2>
       <div class="mb-6 flex flex-col md:flex-row gap-4 items-center justify-between">
         <div class="relative w-full md:w-96">
           <span class="absolute left-4 top-3.5 text-slate-400">
@@ -162,7 +226,7 @@
       <button (click)="closeDrawer()" class="p-2 hover:bg-slate-200 rounded-lg transition-colors text-slate-500" aria-label="Cerrar">✕</button>
     </header>
 
-    <div class="flex-1 overflow-y-auto px-6 py-5">
+    <div class="flex-1 overflow-y-auto px-6 py-5 admin-drawer-content">
       <!-- Bloque: Datos del solicitante (persistidos en Work) -->
       <section class="bg-slate-50 border border-slate-200 rounded-2xl p-5 mb-5">
         <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Datos del solicitante</h3>

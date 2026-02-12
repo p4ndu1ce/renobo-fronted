@@ -67,7 +67,9 @@ export class ChatScreenComponent implements OnInit, OnDestroy {
   }
 
   private setEngineerNameFromWork(workId: string): void {
-    const work = this.workService.myWorks().find((w) => w.id === workId);
+    const work =
+      this.workService.myWorks().find((w) => w.id === workId) ??
+      this.workService.works().find((w) => w.id === workId);
     if (!work) return;
     const isEngineer = this.authService.userRole() === 'ENGINEER';
     if (isEngineer) {
@@ -109,7 +111,8 @@ export class ChatScreenComponent implements OnInit, OnDestroy {
   loadMessages(): void {
     const id = this.workId();
     if (!id) return;
-    this.loading.set(true);
+    const isInitialLoad = this.messages().length === 0;
+    if (isInitialLoad) this.loading.set(true);
     this.workService.getWorkMessages(id).subscribe({
       next: (list) => {
         const views = list.map((m) => this.toView(m)).reverse();

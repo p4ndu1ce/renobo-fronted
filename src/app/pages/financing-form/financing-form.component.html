@@ -26,7 +26,7 @@
           </div>
         </div>
         <div class="p-4 space-y-4">
-          <p class="text-xs text-slate-500 mb-2">Datos de tu perfil (nombre y correo no editables; teléfono se completa desde el perfil o puedes escribirlo).</p>
+          <p class="text-xs text-slate-500 mb-2">Datos de tu perfil (no editables). El teléfono se tomó al registrarte.</p>
           <div>
             <label for="fullName" class="block text-sm font-medium text-slate-700 mb-1">Nombre Completo *</label>
             <input id="fullName" type="text" [ngModel]="form().fullName" name="fullName" readonly
@@ -39,8 +39,10 @@
           </div>
           <div>
             <label for="email" class="block text-sm font-medium text-slate-700 mb-1">Correo Electrónico *</label>
-            <div class="relative">
-              <lucide-icon [name]="icons.Mail" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"></lucide-icon>
+            <div class="relative flex items-center">
+              <span class="absolute left-0 top-0 bottom-0 w-10 flex items-center justify-center pointer-events-none">
+                <lucide-icon [name]="icons.Mail" class="w-4 h-4 text-gray-400"></lucide-icon>
+              </span>
               <input id="email" type="email" [ngModel]="form().email" name="email" readonly
                 class="w-full border rounded-lg py-3 pl-10 pr-3 text-slate-700 bg-slate-50 cursor-not-allowed"
                 [class.border-red-300]="fieldError('email')"
@@ -52,11 +54,12 @@
           </div>
           <div>
             <label for="phone" class="block text-sm font-medium text-slate-700 mb-1">Teléfono *</label>
-            <div class="relative">
-              <lucide-icon [name]="icons.Phone" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"></lucide-icon>
-              <input id="phone" type="tel" [ngModel]="form().phone" (ngModelChange)="updateFormField('phone', $event)" name="phone"
-                placeholder="Se completa desde tu perfil o escríbelo aquí"
-                class="w-full border rounded-lg py-3 pl-10 pr-3 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-[#FF5500] focus:border-[#FF5500] outline-none transition-all bg-white"
+            <div class="relative flex items-center">
+              <span class="absolute left-0 top-0 bottom-0 w-10 flex items-center justify-center pointer-events-none">
+                <lucide-icon [name]="icons.Phone" class="w-4 h-4 text-gray-400"></lucide-icon>
+              </span>
+              <input id="phone" type="tel" [ngModel]="form().phone" name="phone" readonly
+                class="w-full border rounded-lg py-3 pl-10 pr-3 text-slate-700 bg-slate-50 cursor-not-allowed"
                 [class.border-red-300]="fieldError('phone')"
                 [class.border-slate-200]="!fieldError('phone')" />
             </div>
@@ -153,7 +156,7 @@
         </div>
       </section>
 
-      @if (Object.keys(fieldErrors()).length > 0) {
+      @if (hasFieldErrors()) {
         <p class="text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-200">
           Hay errores en el formulario. Revisa los campos marcados arriba.
         </p>

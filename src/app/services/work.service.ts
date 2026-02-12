@@ -305,6 +305,35 @@ export class WorkService {
   }
 
   /**
+   * Agendar visita técnica (ENGINEER): guarda requestedScheduledDate en la obra.
+   * Se usa para separar "sin visita agendada" vs "con visita agendada" en el dashboard.
+   */
+  scheduleTechnicalVisit(workId: string, requestedScheduledDate: string): Observable<{ message: string; work?: Work }> {
+    const body = { requestedScheduledDate: requestedScheduledDate.trim() };
+    this._isLoading.set(true);
+    return this.http.patch<{ message: string; work: Work }>(`${this.API_URL}/${workId}`, body).pipe(
+      tap((res) => {
+        if (res?.work) {
+          const updated = this.transformWork(res.work);
+          const currentWorks = this._works();
+          this._works.set(currentWorks.map((w) => (w.id === workId ? updated : w)));
+        } else {
+          // fallback local update
+          this._works.update((prev) =>
+            prev.map((w) => (w.id === workId ? { ...w, requestedScheduledDate: body.requestedScheduledDate } : w))
+          );
+        }
+      }),
+      map((res) => ({ message: res?.message ?? 'OK', work: res?.work })),
+      finalize(() => this._isLoading.set(false)),
+      catchError((err) => {
+        console.error('Error al agendar visita técnica:', err);
+        return throwError(() => err);
+      })
+    );
+  }
+
+  /**
    * Obtiene las obras asignadas al partner (GET /works?partnerId=xxx).
    * Solo obras en WAITING_PARTNERS o IN_PROGRESS que tienen al menos un ítem con ese partnerId.
    */
