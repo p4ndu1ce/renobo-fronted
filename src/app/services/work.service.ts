@@ -3,7 +3,6 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, of, throwError } from 'rxjs';
 import { map, tap, catchError, finalize } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
-import { PartnerService } from './partner.service';
 import { NotificationService } from './notification.service';
 import type { Work, WorkItem, WorkStatus, PlanId, FinancialProfile } from '../models/types';
 
@@ -66,7 +65,6 @@ export interface PartnerEmailResult {
 @Injectable({ providedIn: 'root' })
 export class WorkService {
   private http = inject(HttpClient);
-  private partnerService = inject(PartnerService);
   private notificationService = inject(NotificationService);
   private readonly API_URL = `${environment.apiUrl}/works`;
 
@@ -407,13 +405,12 @@ export class WorkService {
       byPartner.set(item.partnerId, list);
     }
 
-    // Simulación de email: para cada proveedor, generar Pedido y console.log
+    // Simulación de email: para cada proveedor, generar Pedido y console.log (sin inyectar PartnerService para evitar dependencia circular)
     const pedidos: PedidoParaPartner[] = [];
     for (const [partnerId, partnerItems] of byPartner) {
-      const partner = this.partnerService.getPartnerById(partnerId);
       pedidos.push({
-        partnerName: partner?.name ?? partnerId,
-        partnerEmail: partner?.email ?? '',
+        partnerName: partnerId,
+        partnerEmail: '',
         materials: partnerItems.map(i => ({ materialId: i.materialId, quantity: i.quantity }))
       });
     }

@@ -34,7 +34,10 @@ export class FinancingFormComponent implements OnInit {
 
   submitted = signal(false);
   submitting = signal(false);
+  /** Mensaje general (ej. error de envío). */
   errorMessage = signal<string | null>(null);
+  /** Errores por campo: clave = nombre del campo, valor = mensaje. */
+  fieldErrors = signal<Record<string, string>>({});
   /** Código de solicitud devuelto por el backend (6 caracteres). */
   requestId = signal('');
 
@@ -52,14 +55,20 @@ export class FinancingFormComponent implements OnInit {
   files = signal<File[]>([]);
 
   ngOnInit() {
-    const user = this.auth.currentUser();
-    const userWithPhone = user as { name?: string; email?: string; phone?: string } | null;
-    this.form.update((f) => ({
-      ...f,
-      fullName: (userWithPhone?.name ?? '').trim(),
-      email: (userWithPhone?.email ?? '').trim(),
-      phone: (userWithPhone?.phone ?? '').trim(),
-    }));
+    const applyUserToForm = () => {
+      const user = this.auth.currentUser();
+      this.form.update((f) => ({
+        ...f,
+        fullName: (user?.name ?? '').trim(),
+        email: (user?.email ?? '').trim(),
+        phone: (user?.phone ?? f.phone || '').trim() || f.phone,
+      }));
+    };
+    applyUserToForm();
+    this.auth.loadUserProfile().subscribe({
+      next: () => applyUserToForm(),
+      error: () => {},
+    });
 
     const d = this.auth.navigationData() as FigmaFinancingFormData & { amount?: number } | null;
     if (d && (d.amount != null || (typeof (d as FigmaFinancingFormData).amount === 'string'))) {
@@ -70,14 +79,31 @@ export class FinancingFormComponent implements OnInit {
     }
   }
 
-  onSubmit() {
+  /** Mensaje de error para un campo (para el template). */
+  fieldError(field: string): string | null {
+    return this.fieldErrors()[field] ?? null;
+  }
+
+  onSubmit(event?: SubmitEvent) {
+    event?.preventDefault();
     const f = this.form();
     const planId = this.data()?.plan ?? '';
-    if (!f.fullName?.trim() || !f.email?.trim() || !f.phone?.trim() || !planId || !f.category?.trim() || !f.description?.trim() || !f.budget?.trim()) {
-      this.errorMessage.set('Completa todos los campos requeridos.');
-      return;
+    const errors: Record<string, string> = {};
+    if (!planId) {
+      errors['plan'] = 'Selecciona un plan desde la pantalla de Financiamiento antes de enviar.';
     }
-    this.errorMessage.set(null);
+    if (!f.fullName?.trim()) errors['fullName'] = 'El nombre es requerido.';
+    if (!f.email?.trim()) errors['email'] = 'El correo es requerido.';
+    if (!f.phone?.trim()) errors['phone'] = 'El teléfono es requerido.';
+    if (!f.category?.trim()) errors['category'] = 'Selecciona una categoría.';
+    if (!f.description?.trim()) errors['description'] = 'La descripción es requerida.';
+    if (!f.budget?.trim()) errors['budget'] = 'El presupuesto es requerido.';
+
+    this.fieldErrors.set(errors);
+    const hasErrors = Object.keys(errors).length > 0;
+    this.errorMessage.set(hasErrors ? (errors['plan'] && Object.keys(errors).length === 1 ? errors['plan'] : 'Revisa los campos marcados.') : null);
+    if (hasErrors) return;
+
     this.submitting.set(true);
     this.financingService.createRequest({
       fullName: f.fullName.trim(),
@@ -89,6 +115,8 @@ export class FinancingFormComponent implements OnInit {
       budget: f.budget.trim(),
     }).subscribe({
       next: (res) => {
+        this.fieldErrors.set({});
+        this.errorMessage.set(null);
         this.requestId.set(res.requestCode ?? res.id ?? '');
         this.submitted.set(true);
         this.submitting.set(false);

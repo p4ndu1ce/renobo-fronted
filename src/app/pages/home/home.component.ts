@@ -280,6 +280,10 @@ export class HomeComponent implements OnInit {
   private static readonly LOADING_TIMEOUT_MS = 8000;
 
   ngOnInit(): void {
+    if (!this.authService.getToken()) {
+      this.isLoading.set(false);
+      return;
+    }
     const user = this.authService.currentUser();
     const role = this.authService.userRole();
     const userId = user?.email ?? user?.id;

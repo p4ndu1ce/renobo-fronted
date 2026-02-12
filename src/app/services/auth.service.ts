@@ -11,6 +11,8 @@ export interface CurrentUser {
   name?: string;
   email?: string;
   role?: string;
+  /** Teléfono (desde perfil GET /auth/user/me o registro). */
+  phone?: string;
 }
 
 /** Perfil financiero del usuario (para revisión del Supervisor). */
@@ -29,9 +31,12 @@ export interface UserProfile {
   isMoroso: boolean;
 }
 
-/** Respuesta esperada de GET /user/{id} (rol, credit score, historial financiero). */
+/** Respuesta esperada de GET /user/{id} (rol, credit score, historial financiero, nombre, email, teléfono). */
 export interface UserProfileApiResponse {
   role?: string;
+  name?: string;
+  email?: string;
+  phone?: string;
   creditScore?: number;
   status?: string;
   previousCredits?: number;
@@ -157,9 +162,12 @@ export class AuthService {
     }
   }
 
+  /** Solo consideramos sesión válida si hay token; evita peticiones 401 por datos viejos en localStorage. */
   private loadAuthState(): boolean {
     if (isPlatformBrowser(this.platformId)) {
-      return localStorage.getItem('isLoggedIn') === 'true';
+      const hasFlag = localStorage.getItem('isLoggedIn') === 'true';
+      const hasToken = !!localStorage.getItem('authToken');
+      return hasFlag && hasToken;
     }
     return false;
   }
@@ -167,19 +175,18 @@ export class AuthService {
   private loadCurrentUser(): CurrentUser | null {
     if (!isPlatformBrowser(this.platformId)) return null;
     const token = localStorage.getItem('authToken');
+    if (!token) return null;
     const userJson = localStorage.getItem('currentUser');
     const stored = userJson ? (JSON.parse(userJson) as CurrentUser) : null;
-    if (token) {
-      const payload = this.decodeJwtPayload(token);
-      if (payload) {
-        const built = this.buildUserFromPayload(payload, stored ?? null);
-        // Preferir nombre/email guardados en localStorage (el JWT suele no incluir name y devuelve prefijo del email)
-        return {
-          ...built,
-          name: stored?.name ?? built.name,
-          email: stored?.email ?? built.email,
-        };
-      }
+    const payload = this.decodeJwtPayload(token);
+    if (payload) {
+      const built = this.buildUserFromPayload(payload, stored ?? null);
+      return {
+        ...built,
+        name: stored?.name ?? built.name,
+        email: stored?.email ?? built.email,
+        phone: stored?.phone ?? built.phone,
+      };
     }
     return stored;
   }
@@ -202,7 +209,7 @@ export class AuthService {
 
   private buildUserFromPayload(
     payload: Record<string, unknown>,
-    fallback: { id?: string; name?: string; email?: string; role?: string } | null
+    fallback: { id?: string; name?: string; email?: string; role?: string; phone?: string } | null
   ): CurrentUser {
     const id = String(payload['sub'] ?? fallback?.id ?? '');
     const name =
@@ -214,7 +221,8 @@ export class AuthService {
       undefined;
     const email = (payload['email'] as string) ?? fallback?.email;
     const role = (payload['role'] as string) ?? fallback?.role;
-    return { id, name, email, role };
+    const phone = (payload['phone'] as string) ?? fallback?.phone;
+    return { id, name, email, role, phone };
   }
 
   private loadToken(): string | null {
@@ -281,8 +289,16 @@ export class AuthService {
         });
         if (res.role) {
           this.userRole.set(res.role);
-          const u = this.currentUser();
-          if (u) this.currentUser.set({ ...u, role: res.role });
+        }
+        const u = this.currentUser();
+        if (u) {
+          this.currentUser.set({
+            ...u,
+            ...(res.role && { role: res.role }),
+            ...(res.name != null && { name: res.name }),
+            ...(res.email != null && { email: res.email }),
+            ...(res.phone != null && { phone: res.phone }),
+          });
         }
       }),
       map((res): UserProfile => ({

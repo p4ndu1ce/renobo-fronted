@@ -59,6 +59,11 @@ export class RegisterComponent {
       this.errorMessage.set('Documento de identidad requerido (mín. 5 caracteres).');
       return;
     }
+    const phoneVal = this.phone().trim();
+    if (phoneVal.length < 8) {
+      this.errorMessage.set('El teléfono es requerido (mín. 8 caracteres).');
+      return;
+    }
     if (p.length < 6) {
       this.errorMessage.set('La contraseña debe tener al menos 6 caracteres.');
       return;
@@ -71,9 +76,9 @@ export class RegisterComponent {
     this.isSubmitting.set(true);
 
     this.http
-      .post<{ message: string; usuario: { name: string; email: string; role: string } }>(
+      .post<{ message: string; usuario: { name: string; email: string; role: string; phone?: string } }>(
         this.registerUrl,
-        { name: n, email: e, password: p, documentId: doc, role: this.role() }
+        { name: n, email: e, password: p, documentId: doc, role: this.role(), phone: this.phone().trim() }
       )
       .subscribe({
         next: () => {

@@ -1,6 +1,7 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
+import { AuthService } from './auth.service';
 import { catchError, tap } from 'rxjs/operators';
 import { of } from 'rxjs';
 
@@ -36,6 +37,7 @@ interface NotificationsApiResponse {
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
   private readonly http = inject(HttpClient);
+  private readonly authService = inject(AuthService);
   private readonly API = `${environment.apiUrl}/notifications`;
   private notifications = signal<AppNotification[]>([]);
 
@@ -48,9 +50,10 @@ export class NotificationService {
   );
 
   /**
-   * Carga notificaciones desde el backend (persistidas). Llamar al iniciar la app o al entrar al layout.
+   * Carga notificaciones desde el backend (persistidas). No hace petición si no hay token (evita 401).
    */
   loadFromServer(): void {
+    if (!this.authService.getToken()) return;
     this.http.get<NotificationsApiResponse>(this.API).pipe(
       tap((res) => {
         const list = (res?.notifications ?? []).map((n) => ({

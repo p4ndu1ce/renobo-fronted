@@ -13,9 +13,9 @@
       </div>
     </header>
 
-    <form (ngSubmit)="onSubmit()" class="p-4 space-y-4">
+    <form (ngSubmit)="onSubmit($event)" class="p-4 space-y-4" novalidate>
       @if (errorMessage(); as msg) {
-        <p class="text-sm text-red-600 bg-red-50 p-3 rounded-lg">{{ msg }}</p>
+        <p class="text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-200">{{ msg }}</p>
       }
       <!-- Datos Personales Figma -->
       <section class="rounded-xl bg-white border border-slate-200 shadow-sm overflow-hidden">
@@ -26,27 +26,43 @@
           </div>
         </div>
         <div class="p-4 space-y-4">
-          <p class="text-xs text-slate-500 mb-2">Datos de tu perfil (no editables).</p>
+          <p class="text-xs text-slate-500 mb-2">Datos de tu perfil (nombre y correo no editables; teléfono se completa desde el perfil o puedes escribirlo).</p>
           <div>
             <label for="fullName" class="block text-sm font-medium text-slate-700 mb-1">Nombre Completo *</label>
-            <input id="fullName" type="text" [ngModel]="form().fullName" name="fullName" required readonly
-              class="w-full border border-slate-200 rounded-lg py-3 px-3 text-slate-700 bg-slate-50 cursor-not-allowed" />
+            <input id="fullName" type="text" [ngModel]="form().fullName" name="fullName" readonly
+              class="w-full border rounded-lg py-3 px-3 text-slate-700 bg-slate-50 cursor-not-allowed"
+              [class.border-red-300]="fieldError('fullName')"
+              [class.border-slate-200]="!fieldError('fullName')" />
+            @if (fieldError('fullName'); as err) {
+              <p class="text-sm text-red-600 mt-1">{{ err }}</p>
+            }
           </div>
           <div>
             <label for="email" class="block text-sm font-medium text-slate-700 mb-1">Correo Electrónico *</label>
             <div class="relative">
               <lucide-icon [name]="icons.Mail" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"></lucide-icon>
-              <input id="email" type="email" [ngModel]="form().email" name="email" required readonly
-                class="w-full border border-slate-200 rounded-lg py-3 pl-10 pr-3 text-slate-700 bg-slate-50 cursor-not-allowed" />
+              <input id="email" type="email" [ngModel]="form().email" name="email" readonly
+                class="w-full border rounded-lg py-3 pl-10 pr-3 text-slate-700 bg-slate-50 cursor-not-allowed"
+                [class.border-red-300]="fieldError('email')"
+                [class.border-slate-200]="!fieldError('email')" />
             </div>
+            @if (fieldError('email'); as err) {
+              <p class="text-sm text-red-600 mt-1">{{ err }}</p>
+            }
           </div>
           <div>
             <label for="phone" class="block text-sm font-medium text-slate-700 mb-1">Teléfono *</label>
             <div class="relative">
               <lucide-icon [name]="icons.Phone" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"></lucide-icon>
-              <input id="phone" type="tel" [ngModel]="form().phone" name="phone" required readonly
-                class="w-full border border-slate-200 rounded-lg py-3 pl-10 pr-3 text-slate-700 bg-slate-50 cursor-not-allowed" />
+              <input id="phone" type="tel" [ngModel]="form().phone" (ngModelChange)="updateFormField('phone', $event)" name="phone"
+                placeholder="Se completa desde tu perfil o escríbelo aquí"
+                class="w-full border rounded-lg py-3 pl-10 pr-3 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-[#FF5500] focus:border-[#FF5500] outline-none transition-all bg-white"
+                [class.border-red-300]="fieldError('phone')"
+                [class.border-slate-200]="!fieldError('phone')" />
             </div>
+            @if (fieldError('phone'); as err) {
+              <p class="text-sm text-red-600 mt-1">{{ err }}</p>
+            }
           </div>
         </div>
       </section>
@@ -62,28 +78,43 @@
         <div class="p-4 space-y-4">
           <div>
             <label for="category" class="block text-sm font-medium text-slate-700 mb-1">Categoría de Servicio *</label>
-            <select id="category" [ngModel]="form().category" (ngModelChange)="updateFormField('category', $event)" name="category" required
-              class="financing-form-select w-full border border-slate-200 rounded-lg py-3 px-4 text-slate-900 bg-white focus:ring-2 focus:ring-[#FF5500] focus:border-[#FF5500] outline-none transition-all appearance-none">
+            <select id="category" [ngModel]="form().category" (ngModelChange)="updateFormField('category', $event)" name="category"
+              class="financing-form-select w-full border rounded-lg py-3 px-4 text-slate-900 bg-white focus:ring-2 focus:ring-[#FF5500] focus:border-[#FF5500] outline-none transition-all appearance-none"
+              [class.border-red-300]="fieldError('category')"
+              [class.border-slate-200]="!fieldError('category')">
               <option value="" disabled>Selecciona una categoría</option>
               @for (cat of categories; track cat) {
                 <option [value]="cat">{{ cat }}</option>
               }
             </select>
+            @if (fieldError('category'); as err) {
+              <p class="text-sm text-red-600 mt-1">{{ err }}</p>
+            }
           </div>
           <div>
             <label for="description" class="block text-sm font-medium text-slate-700 mb-1">Descripción del Trabajo *</label>
             <textarea id="description" placeholder="Describe el trabajo que necesitas realizar..."
-              [ngModel]="form().description" (ngModelChange)="updateFormField('description', $event)" name="description" rows="5" required
-              class="w-full border border-slate-200 rounded-lg py-3 px-3 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-[#FF5500] focus:border-[#FF5500] outline-none transition-all resize-none min-h-[120px]"></textarea>
+              [ngModel]="form().description" (ngModelChange)="updateFormField('description', $event)" name="description" rows="5"
+              class="w-full border rounded-lg py-3 px-3 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-[#FF5500] focus:border-[#FF5500] outline-none transition-all resize-none min-h-[120px]"
+              [class.border-red-300]="fieldError('description')"
+              [class.border-slate-200]="!fieldError('description')"></textarea>
+            @if (fieldError('description'); as err) {
+              <p class="text-sm text-red-600 mt-1">{{ err }}</p>
+            }
           </div>
           <div>
             <label for="budget" class="block text-sm font-medium text-slate-700 mb-1">Presupuesto Estimado *</label>
             <div class="relative">
               <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">$</span>
               <input id="budget" type="number" placeholder="800" [ngModel]="form().budget"
-                (ngModelChange)="updateFormField('budget', $event)" name="budget" required
-                class="w-full border border-slate-200 rounded-lg py-3 pl-8 pr-3 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-[#FF5500] focus:border-[#FF5500] outline-none transition-all" />
+                (ngModelChange)="updateFormField('budget', $event)" name="budget"
+                class="w-full border rounded-lg py-3 pl-8 pr-3 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-[#FF5500] focus:border-[#FF5500] outline-none transition-all"
+                [class.border-red-300]="fieldError('budget')"
+                [class.border-slate-200]="!fieldError('budget')" />
             </div>
+            @if (fieldError('budget'); as err) {
+              <p class="text-sm text-red-600 mt-1">{{ err }}</p>
+            }
           </div>
           <div>
             <label class="block text-sm font-medium text-slate-700 mb-1">Adjuntar Fotos/Videos (opcional)</label>
@@ -122,6 +153,11 @@
         </div>
       </section>
 
+      @if (Object.keys(fieldErrors()).length > 0) {
+        <p class="text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-200">
+          Hay errores en el formulario. Revisa los campos marcados arriba.
+        </p>
+      }
       <!-- Botón enviar Figma -->
       <button type="submit" [disabled]="submitting()"
         class="w-full h-14 rounded-lg font-semibold text-white flex items-center justify-center gap-2 bg-[#FF5500] hover:bg-[#FF6600] transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed">
