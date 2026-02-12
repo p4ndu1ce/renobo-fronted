@@ -8,7 +8,8 @@
     "build-android": "ng build --configuration production --base-href ./ && cp dist/renobo-frontend/browser/index.csr.html dist/renobo-frontend/browser/index.html",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "serve:ssr:renobo-frontend": "node dist/renobo-frontend/server/server.mjs"
+    "serve:ssr:renobo-frontend": "node dist/renobo-frontend/server/server.mjs",
+    "generate-icons": "capacitor-assets generate --assetPath assets"
   },
   "prettier": {
     "printWidth": 100,
