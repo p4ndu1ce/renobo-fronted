@@ -175,3 +175,8 @@ body {
   .toast-success {
     border-left: 5px solid #fa5404; /* Naranja Renobo para éxitos rápidos */
   }
+
+  /* Safe area: evita que el header tape la barra de estado (hora, batería) en móvil/Capacitor */
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
