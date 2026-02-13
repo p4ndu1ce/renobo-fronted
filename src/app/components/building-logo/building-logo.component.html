@@ -1,43 +1,14 @@
-<svg [attr.width]="size()" [attr.height]="size()" viewBox="0 0 120 120" [class]="className()" fill="none">
-  <defs>
-    <linearGradient id="orangeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#FF5500" />
-      <stop offset="100%" stop-color="#FF6600" />
-    </linearGradient>
-    <filter id="glow">
-      <feGaussianBlur stdDeviation="3" result="coloredBlur" />
-      <feMerge>
-        <feMergeNode in="coloredBlur" />
-        <feMergeNode in="SourceGraphic" />
-      </feMerge>
-    </filter>
-  </defs>
-
-  <circle
-    cx="60"
-    cy="60"
-    r="55"
-    fill="url(#orangeGradient)"
-    filter="url(#glow)"
-    animate.enter="circle-entrance"
+<div
+  class="building-logo"
+  [class.animate]="animate()"
+  [class]="className()"
+  [style.width.px]="size()"
+  [style.height.px]="size()">
+  <img
+    [src]="iconSrc"
+    [attr.width]="size()"
+    [attr.height]="size()"
+    alt="Renobo"
+    class="building-logo-img"
   />
-
-  <g class="logo-cycle">
-    <path
-      d="M 35 30 L 35 90 L 45 90 L 45 65 L 65 65 C 75 65 80 60 80 50 C 80 40 75 30 65 30 L 35 30 Z M 45 40 L 65 40 C 68 40 70 42 70 50 C 70 58 68 55 65 55 L 45 55 L 45 40 Z"
-      fill="white"
-    />
-  </g>
-
-  @if (animate()) {
-    <circle
-      class="pulse-anim"
-      cx="60"
-      cy="60"
-      r="55"
-      stroke="white"
-      stroke-width="3"
-      fill="none"
-    />
-  }
-</svg>
+</div>

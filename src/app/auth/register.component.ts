@@ -5,11 +5,12 @@ import { Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { LucideAngularModule, User, Mail, Phone, FileText, Lock, FingerprintPattern } from 'lucide-angular';
+import { BuildingLogoComponent } from '../components/building-logo/building-logo.component';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, LucideAngularModule],
+  imports: [CommonModule, FormsModule, RouterLink, LucideAngularModule, BuildingLogoComponent],
   templateUrl: './register.component.html',
   styleUrl: './register.component.css',
 })

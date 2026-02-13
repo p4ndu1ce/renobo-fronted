@@ -1,14 +1,19 @@
 <div class="auth-page min-h-screen bg-[#FF5500] flex flex-col items-center justify-center px-4">
-  <!-- Brand Figma -->
+  <!-- Brand Figma (animación tipo splash: logo pop + breathe, título escalonado) -->
   <div class="mb-8 text-center">
-    <div class="w-20 h-20 bg-white rounded-2xl flex items-center justify-center shadow-xl mb-3 mx-auto">
-      <span class="text-[#FF5500] text-4xl font-black">R</span>
+    <div class="mb-3 mx-auto" animate.enter="auth-logo-enter">
+      <app-building-logo [size]="80" [animate]="false" />
     </div>
-    <h1 class="text-white text-3xl font-black tracking-wider drop-shadow-md" style="font-family: 'Advent Pro', 'Outfit', sans-serif; text-shadow: 0 4px 20px rgba(0,0,0,0.2);">RENOBO</h1>
+    <h1
+      class="text-white text-3xl font-black tracking-wider drop-shadow-md"
+      style="font-family: 'Advent Pro', 'Outfit', sans-serif; text-shadow: 0 4px 20px rgba(0,0,0,0.2);"
+      animate.enter="auth-title-enter">
+      RENOBO
+    </h1>
   </div>
 
   <!-- Card Figma -->
-  <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+  <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md" animate.enter="auth-card-enter">
     <form (submit)="$event.preventDefault(); onLogin()" class="space-y-4">
       @if (errorMessage()) {
         <div class="p-3 bg-red-50 border border-red-200 rounded-lg">

@@ -180,3 +180,57 @@ body {
   .safe-area-top {
     padding-top: env(safe-area-inset-top, 0px);
   }
+
+  /* Animaciones de marca (splash / login / register): logo pop + breathe, título escalonado */
+  .auth-logo-enter {
+    animation: auth-logo-pop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+      auth-logo-breathe 2.2s ease-in-out 0.8s infinite;
+    transform-origin: center;
+  }
+
+  @keyframes auth-logo-pop {
+    from {
+      opacity: 0;
+      transform: scale(0.4) rotate(-12deg);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) rotate(0deg);
+    }
+  }
+
+  @keyframes auth-logo-breathe {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.04);
+    }
+  }
+
+  .auth-title-enter {
+    animation: auth-title-in 0.55s ease-out 0.2s forwards;
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  @keyframes auth-title-in {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .auth-card-enter {
+    animation: auth-card-in 0.5s ease-out 0.4s forwards;
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  @keyframes auth-card-in {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }

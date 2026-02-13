@@ -7,11 +7,12 @@ import { environment } from '../../environments/environment';
 import { AuthService } from '../services/auth.service';
 import { PartnerService } from '../services/partner.service';
 import { LucideAngularModule, Mail, Lock, FingerprintPattern } from 'lucide-angular';
+import { BuildingLogoComponent } from '../components/building-logo/building-logo.component';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, LucideAngularModule],
+  imports: [CommonModule, FormsModule, RouterLink, LucideAngularModule, BuildingLogoComponent],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css',
 })

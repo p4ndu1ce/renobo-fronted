@@ -1,10 +1,11 @@
 import { Component, input } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
+/** Ruta relativa al base href: el navegador la resuelve solo (dev y Capacitor con base ./). */
+const ICON_PATH = 'assets/icon-empty.png';
 
 @Component({
   selector: 'app-building-logo',
   standalone: true,
-  imports: [CommonModule],
   templateUrl: './building-logo.component.html',
   styleUrl: './building-logo.component.css',
 })
@@ -13,5 +14,5 @@ export class BuildingLogoComponent {
   className = input<string>('');
   animate = input<boolean>(true);
 
-  particles = [0, 1, 2, 3];
+  readonly iconSrc = ICON_PATH;
 }

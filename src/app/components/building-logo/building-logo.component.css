@@ -1,63 +1,28 @@
-/* Circle entrance on enter */
-.circle-entrance {
-  animation: circle-entrance 600ms cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+.building-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-@keyframes circle-entrance {
+.building-logo-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Opcional: animación suave al montar */
+.building-logo.animate .building-logo-img {
+  animation: logo-fade-in 500ms ease-out forwards;
+}
+
+@keyframes logo-fade-in {
   from {
-    transform: scale(0) rotate(-180deg);
     opacity: 0;
+    transform: scale(0.92);
   }
   to {
-    transform: scale(1) rotate(0deg);
-    opacity: 1;
-  }
-}
-
-/* Logo cycle: dip every 3s */
-.logo-cycle {
-  animation: logo-cycle 3s ease-in-out infinite;
-}
-
-@keyframes logo-cycle {
-  0% {
     opacity: 1;
     transform: scale(1);
-  }
-  45% {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-  55% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  90% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-}
-
-/* Pulse ring */
-.pulse-anim {
-  animation: pulse-kf 2s ease-in-out infinite;
-}
-
-@keyframes pulse-kf {
-  0% {
-    transform: scale(0.95);
-    opacity: 0;
-  }
-  50% {
-    transform: scale(1.05);
-    opacity: 0.6;
-  }
-  100% {
-    transform: scale(0.95);
-    opacity: 0;
   }
 }

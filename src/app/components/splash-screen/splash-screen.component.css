@@ -1,6 +1,33 @@
+/* ========== Container ========== */
+.splash-screen {
+  position: relative;
+}
+
+.splash-screen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 120% 80% at 50% -20%,
+    rgba(255, 255, 255, 0.12) 0%,
+    transparent 50%
+  );
+  pointer-events: none;
+  animation: splash-bg-pulse 4s ease-in-out infinite;
+}
+
+@keyframes splash-bg-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
 /* Enter: fade in */
 .splash-enter {
-  animation: splash-fade-in 500ms ease-in forwards;
+  animation: splash-fade-in 500ms ease-out forwards;
 }
 
 @keyframes splash-fade-in {
@@ -26,16 +53,102 @@
   }
 }
 
-/* Logo: spring scale + rotate on enter (Figma: 0.6s spring) */
-.spring-logo-enter {
-  animation: spring-logo-in 600ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+/* ========== Logo (building icon): pop in + subtle breath ========== */
+.logo-enter {
+  animation: logo-pop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+    logo-breathe 2.2s ease-in-out 0.8s infinite;
 }
 
-@keyframes spring-logo-in {
+.splash-logo-wrap {
+  transform-origin: center;
+}
+
+.splash-logo-icon {
+  display: block;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.15));
+}
+
+@keyframes logo-pop {
   from {
-    transform: scale(0) rotate(-180deg);
+    opacity: 0;
+    transform: scale(0.4) rotate(-12deg);
   }
   to {
+    opacity: 1;
     transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes logo-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.04);
+  }
+}
+
+/* ========== Title: fade + slide up (staggered) ========== */
+.title-enter {
+  animation: title-in 0.55s ease-out 0.2s forwards;
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+.splash-title {
+  font-size: clamp(2.5rem, 12vw, 4rem);
+  letter-spacing: 0.35em;
+}
+
+@keyframes title-in {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========== Subtitle: fade in last + pulso suave continuo ========== */
+.subtitle-enter {
+  animation: subtitle-in 0.5s ease-out 0.5s forwards,
+    subtitle-soft-pulse 2.5s ease-in-out 1.2s infinite;
+  opacity: 0;
+}
+
+.splash-subtitle {
+  font-size: clamp(0.95rem, 3vw, 1.15rem);
+  letter-spacing: 0.02em;
+}
+
+@keyframes subtitle-in {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes subtitle-soft-pulse {
+  0%, 100% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+}
+
+/* Título: pulso muy sutil de opacidad (no estático) */
+.splash-title {
+  animation: title-soft-glow 3s ease-in-out 1s infinite;
+}
+
+@keyframes title-soft-glow {
+  0%, 100% {
+    opacity: 0.95;
+    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  }
+  50% {
+    opacity: 1;
+    text-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
   }
 }
